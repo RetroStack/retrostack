@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { KNOWN_MANUFACTURERS, getSystemsForManufacturer } from "@/lib/character-editor";
 import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 
@@ -54,7 +54,6 @@ export function LibraryFilters({
   totalCount,
   filteredCount,
 }: LibraryFiltersProps) {
-  const [localSearch, setLocalSearch] = useState(searchQuery);
 
   // Get all known manufacturers for dropdown
   const allManufacturers = useMemo(() => {
@@ -90,25 +89,7 @@ export function LibraryFilters({
     return Array.from(new Set(availableSizes.map((s) => s.height))).sort((a, b) => a - b);
   }, [availableSizes]);
 
-  const handleSearchSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      onSearchChange(localSearch);
-    },
-    [localSearch, onSearchChange]
-  );
-
-  const handleSearchKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        onSearchChange(localSearch);
-      }
-    },
-    [localSearch, onSearchChange]
-  );
-
   const handleClearFilters = useCallback(() => {
-    setLocalSearch("");
     onSearchChange("");
     onSizeFilterChange([], []);
     onManufacturerFilterChange?.([]);
@@ -125,18 +106,15 @@ export function LibraryFilters({
   return (
     <div className="flex flex-col gap-3">
       {/* Search input */}
-      <form onSubmit={handleSearchSubmit}>
-        <div className="relative">
-          <input
-            type="text"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            onBlur={() => onSearchChange(localSearch)}
-            placeholder="Search character sets..."
-            className="w-full px-4 py-2 pl-10 bg-retro-navy/50 border border-retro-grid/50 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-retro-cyan/50 transition-colors"
-            aria-label="Search character sets"
-          />
+      <div className="relative">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search character sets..."
+          className="w-full px-4 py-2 pl-10 bg-retro-navy/50 border border-retro-grid/50 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-retro-cyan/50 transition-colors"
+          aria-label="Search character sets"
+        />
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
             fill="none"
@@ -151,13 +129,10 @@ export function LibraryFilters({
             />
           </svg>
 
-          {localSearch && (
+          {searchQuery && (
             <button
               type="button"
-              onClick={() => {
-                setLocalSearch("");
-                onSearchChange("");
-              }}
+              onClick={() => onSearchChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
               aria-label="Clear search"
             >
@@ -172,7 +147,6 @@ export function LibraryFilters({
             </button>
           )}
         </div>
-      </form>
 
       {/* Filter dropdowns */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

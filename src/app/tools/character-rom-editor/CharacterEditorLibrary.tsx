@@ -71,14 +71,16 @@ export function CharacterEditorLibrary() {
   const filteredSets = useMemo(() => {
     let result = characterSets;
 
-    // Apply search filter
+    // Apply search filter (full-text search across all fields)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (set) =>
           set.metadata.name.toLowerCase().includes(query) ||
           set.metadata.description.toLowerCase().includes(query) ||
-          set.metadata.source.toLowerCase().includes(query)
+          set.metadata.source.toLowerCase().includes(query) ||
+          (set.metadata.manufacturer && set.metadata.manufacturer.toLowerCase().includes(query)) ||
+          (set.metadata.system && set.metadata.system.toLowerCase().includes(query))
       );
     }
 
