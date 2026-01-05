@@ -91,6 +91,9 @@ export type { ManufacturerSystemSelectProps } from "./ManufacturerSystemSelect";
 export { SizePresetDropdown } from "./SizePresetDropdown";
 export type { SizePresetDropdownProps } from "./SizePresetDropdown";
 
+export { CharacterCountPresetDropdown } from "./CharacterCountPresetDropdown";
+export type { CharacterCountPresetDropdownProps } from "./CharacterCountPresetDropdown";
+
 // Import from library modals
 export { ImportFromLibraryModal } from "./ImportFromLibraryModal";
 export type { ImportFromLibraryModalProps } from "./ImportFromLibraryModal";

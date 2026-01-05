@@ -259,3 +259,90 @@ export function getSystemPresetsByManufacturer(): Record<string, SystemDimension
   }
   return grouped;
 }
+
+/**
+ * Character count preset based on common ROM sizes
+ */
+export interface CharacterCountPreset {
+  /** Preset name */
+  name: string;
+  /** Number of characters */
+  count: number;
+  /** Systems that commonly use this count */
+  systems: string[];
+}
+
+/**
+ * Common character count presets based on ROM sizes
+ */
+export const CHARACTER_COUNT_PRESETS: CharacterCountPreset[] = [
+  {
+    name: "64 (Quarter ROM)",
+    count: 64,
+    systems: ["Custom", "Partial Sets"],
+  },
+  {
+    name: "128 (ASCII)",
+    count: 128,
+    systems: ["PC CGA", "PC VGA", "Standard ASCII"],
+  },
+  {
+    name: "256 (Full Set)",
+    count: 256,
+    systems: ["C64", "VIC-20", "ZX Spectrum", "Amstrad CPC", "MSX"],
+  },
+  {
+    name: "512 (Extended)",
+    count: 512,
+    systems: ["NES/Famicom", "Custom ROMs"],
+  },
+];
+
+/**
+ * System-specific character count preset
+ * Used for organizing presets by system in dropdowns
+ */
+export interface SystemCharacterCountPreset {
+  /** System name */
+  system: string;
+  /** Hardware manufacturer */
+  manufacturer: string;
+  /** Number of characters */
+  count: number;
+}
+
+/**
+ * System-organized character count presets for 8-bit classics
+ * Used in CharacterCountPresetDropdown for quick system-based selection
+ */
+export const SYSTEM_CHARACTER_COUNT_PRESETS: SystemCharacterCountPreset[] = [
+  { system: "C64", manufacturer: "Commodore", count: 256 },
+  { system: "VIC-20", manufacturer: "Commodore", count: 256 },
+  { system: "PET", manufacturer: "Commodore", count: 256 },
+  { system: "ZX80", manufacturer: "Sinclair", count: 64 },
+  { system: "ZX81", manufacturer: "Sinclair", count: 64 },
+  { system: "ZX Spectrum", manufacturer: "Sinclair", count: 96 },
+  { system: "Apple II", manufacturer: "Apple", count: 256 },
+  { system: "Atari 400/800", manufacturer: "Atari", count: 128 },
+  { system: "NES/Famicom", manufacturer: "Nintendo", count: 512 },
+  { system: "CPC 464", manufacturer: "Amstrad", count: 256 },
+  { system: "CPC 6128", manufacturer: "Amstrad", count: 256 },
+  { system: "BBC Micro", manufacturer: "Acorn", count: 256 },
+  { system: "TRS-80 Model I", manufacturer: "Tandy", count: 128 },
+  { system: "MSX", manufacturer: "MSX", count: 256 },
+  { system: "TI-99/4A", manufacturer: "Texas Instruments", count: 256 },
+];
+
+/**
+ * Get system character count presets grouped by manufacturer
+ */
+export function getSystemCharacterCountPresetsByManufacturer(): Record<string, SystemCharacterCountPreset[]> {
+  const grouped: Record<string, SystemCharacterCountPreset[]> = {};
+  for (const preset of SYSTEM_CHARACTER_COUNT_PRESETS) {
+    if (!grouped[preset.manufacturer]) {
+      grouped[preset.manufacturer] = [];
+    }
+    grouped[preset.manufacturer].push(preset);
+  }
+  return grouped;
+}

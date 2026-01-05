@@ -13,6 +13,7 @@ import {
   ImportStepIndicator,
   LibraryCardCompact,
   SizePresetDropdown,
+  CharacterCountPresetDropdown,
 } from "@/components/character-editor";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
@@ -710,27 +711,12 @@ export function AddView() {
                           max={512}
                           value={characterCount}
                           onChange={handleCharacterCountChange}
-                          className="w-full px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                          className="w-full px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50 mb-3"
                         />
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {[64, 128, 256, 512].map((count) => (
-                            <button
-                              key={count}
-                              type="button"
-                              onClick={() => setCharacterCount(count)}
-                              className={`
-                                px-2 py-1 text-xs rounded border transition-colors
-                                ${
-                                  characterCount === count
-                                    ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                                    : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                                }
-                              `}
-                            >
-                              {count}
-                            </button>
-                          ))}
-                        </div>
+                        <CharacterCountPresetDropdown
+                          currentCount={characterCount}
+                          onSelect={(count) => setCharacterCount(count)}
+                        />
                       </div>
                     </div>
                   )}

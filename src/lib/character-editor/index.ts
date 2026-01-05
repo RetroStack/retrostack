@@ -81,8 +81,17 @@ export {
   findPresetByDimensions,
   SYSTEM_PRESETS,
   getSystemPresetsByManufacturer,
+  CHARACTER_COUNT_PRESETS,
+  SYSTEM_CHARACTER_COUNT_PRESETS,
+  getSystemCharacterCountPresetsByManufacturer,
 } from "./manufacturers";
-export type { ManufacturerSystems, DimensionPreset, SystemDimensionPreset } from "./manufacturers";
+export type {
+  ManufacturerSystems,
+  DimensionPreset,
+  SystemDimensionPreset,
+  CharacterCountPreset,
+  SystemCharacterCountPreset,
+} from "./manufacturers";
 
 // ASCII utilities
 export {
