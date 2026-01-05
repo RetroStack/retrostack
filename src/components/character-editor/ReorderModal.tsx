@@ -110,6 +110,7 @@ export function ReorderModal({
   // Reset local characters when modal opens
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional sync when modal opens
       setLocalCharacters([...characters]);
     }
   }, [isOpen, characters]);

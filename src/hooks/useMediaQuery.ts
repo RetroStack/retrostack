@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 
 /**
+ * Get initial match state for SSR safety
+ */
+function getInitialMatch(query: string): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(query).matches;
+}
+
+/**
  * Hook that tracks whether a media query matches.
  * Useful for responsive logic in components.
  *
@@ -17,13 +25,16 @@ import { useState, useEffect } from "react";
  * const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState(() => getInitialMatch(query));
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(query);
 
-    // Set initial value
-    setMatches(mediaQuery.matches);
+    // Sync state if it differs from initial (handles SSR hydration)
+    if (mediaQuery.matches !== matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional sync for SSR hydration
+      setMatches(mediaQuery.matches);
+    }
 
     // Create event listener
     const handler = (event: MediaQueryListEvent) => {
@@ -36,7 +47,7 @@ export function useMediaQuery(query: string): boolean {
     return () => {
       mediaQuery.removeEventListener("change", handler);
     };
-  }, [query]);
+  }, [query, matches]);
 
   return matches;
 }

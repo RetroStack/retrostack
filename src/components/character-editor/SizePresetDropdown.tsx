@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import {
   DIMENSION_PRESETS,
-  SYSTEM_PRESETS,
   getSystemPresetsByManufacturer,
 } from "@/lib/character-editor";
 

@@ -128,7 +128,7 @@ export function useCharacterEditor(
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [batchSelection, setBatchSelection] = useState<Set<number>>(new Set());
   const [isDirty, setIsDirty] = useState(false);
-  const [lastSavedState, setLastSavedState] = useState<EditorState | null>(null);
+  const [, setLastSavedState] = useState<EditorState | null>(null);
 
   // Get selected indices (including batch)
   const selectedIndices = useMemo(() => {

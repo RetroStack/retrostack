@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 export interface UseUndoRedoResult<T> {
   /** Current state */
@@ -33,76 +33,70 @@ export function useUndoRedo<T>(
   initialState: T,
   maxHistory: number = Infinity
 ): UseUndoRedoResult<T> {
-  // Use refs to avoid unnecessary re-renders
-  const pastRef = useRef<T[]>([]);
-  const futureRef = useRef<T[]>([]);
-
-  // Current state
+  // Use state for all values to ensure proper re-renders
+  const [past, setPast] = useState<T[]>([]);
+  const [future, setFuture] = useState<T[]>([]);
   const [present, setPresent] = useState<T>(initialState);
-
-  // Force re-render when history changes
-  const [, forceUpdate] = useState({});
 
   const setState = useCallback(
     (newState: T) => {
-      // Add current state to past
-      pastRef.current = [...pastRef.current, present];
-
-      // Limit history if needed
-      if (pastRef.current.length > maxHistory) {
-        pastRef.current = pastRef.current.slice(-maxHistory);
-      }
-
+      setPast((prevPast) => {
+        // Add current state to past
+        let newPast = [...prevPast, present];
+        // Limit history if needed
+        if (newPast.length > maxHistory) {
+          newPast = newPast.slice(-maxHistory);
+        }
+        return newPast;
+      });
       // Clear future (new branch in history)
-      futureRef.current = [];
-
+      setFuture([]);
       // Set new present
       setPresent(newState);
-      forceUpdate({});
     },
     [present, maxHistory]
   );
 
   const resetState = useCallback((newState: T) => {
     // Reset without adding to history
-    pastRef.current = [];
-    futureRef.current = [];
+    setPast([]);
+    setFuture([]);
     setPresent(newState);
-    forceUpdate({});
   }, []);
 
   const undo = useCallback(() => {
-    if (pastRef.current.length === 0) return;
+    setPast((prevPast) => {
+      if (prevPast.length === 0) return prevPast;
 
-    // Move present to future
-    futureRef.current = [present, ...futureRef.current];
+      const previous = prevPast[prevPast.length - 1];
+      const newPast = prevPast.slice(0, -1);
 
-    // Pop from past
-    const previous = pastRef.current[pastRef.current.length - 1];
-    pastRef.current = pastRef.current.slice(0, -1);
+      // Move present to future
+      setFuture((prevFuture) => [present, ...prevFuture]);
+      setPresent(previous);
 
-    setPresent(previous);
-    forceUpdate({});
+      return newPast;
+    });
   }, [present]);
 
   const redo = useCallback(() => {
-    if (futureRef.current.length === 0) return;
+    setFuture((prevFuture) => {
+      if (prevFuture.length === 0) return prevFuture;
 
-    // Move present to past
-    pastRef.current = [...pastRef.current, present];
+      const next = prevFuture[0];
+      const newFuture = prevFuture.slice(1);
 
-    // Pop from future
-    const next = futureRef.current[0];
-    futureRef.current = futureRef.current.slice(1);
+      // Move present to past
+      setPast((prevPast) => [...prevPast, present]);
+      setPresent(next);
 
-    setPresent(next);
-    forceUpdate({});
+      return newFuture;
+    });
   }, [present]);
 
   const clearHistory = useCallback(() => {
-    pastRef.current = [];
-    futureRef.current = [];
-    forceUpdate({});
+    setPast([]);
+    setFuture([]);
   }, []);
 
   return {
@@ -111,9 +105,9 @@ export function useUndoRedo<T>(
     resetState,
     undo,
     redo,
-    canUndo: pastRef.current.length > 0,
-    canRedo: futureRef.current.length > 0,
-    historyLength: pastRef.current.length + futureRef.current.length,
+    canUndo: past.length > 0,
+    canRedo: future.length > 0,
+    historyLength: past.length + future.length,
     clearHistory,
   };
 }

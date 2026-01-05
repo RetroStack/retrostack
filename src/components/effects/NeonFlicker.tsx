@@ -49,6 +49,7 @@ export function NeonFlicker({
 
   // Set mounted after hydration
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional hydration flag
     setMounted(true);
   }, []);
 

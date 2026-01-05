@@ -77,6 +77,7 @@ export function ImportCharactersModal({
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional reset when modal closes
       setStep("select-set");
       setSelectedSetId(null);
       setSearchQuery("");

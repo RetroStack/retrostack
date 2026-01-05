@@ -77,6 +77,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
         const data: AutoSaveData = JSON.parse(saved);
         // Only offer recovery if it's for the same character set and is dirty
         if (data.characterSetId === characterSetId && data.isDirty) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional recovery data load
           setRecoveryData(data);
         }
       }

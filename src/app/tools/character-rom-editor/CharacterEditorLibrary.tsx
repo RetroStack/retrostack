@@ -15,7 +15,6 @@ import {
   LibraryFilters,
 } from "@/components/character-editor";
 import { useCharacterLibrary } from "@/hooks/character-editor";
-import { SerializedCharacterSet } from "@/lib/character-editor";
 
 /**
  * Main library view for the Character ROM Editor

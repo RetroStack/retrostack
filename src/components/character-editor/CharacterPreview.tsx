@@ -47,9 +47,6 @@ export function CharacterPreview({
   className = "",
   forceColumns,
 }: CharacterPreviewProps) {
-  // Preferred column counts for nice grid layouts
-  const PREFERRED_COLUMNS = [64, 32, 16, 8, 4];
-
   // Calculate how many characters we can display
   const { displayChars, columns, rows } = useMemo(() => {
     const charWidth = config.width * scale;
@@ -74,8 +71,11 @@ export function CharacterPreview({
     // Calculate max rows based on height
     const maxRows = Math.floor(maxHeight / charHeight);
 
+    // Preferred column counts for nice grid layouts
+    const preferredColumns = [64, 32, 16, 8, 4];
+
     // Find the largest preferred column count that fits
-    let cols = PREFERRED_COLUMNS.find(c => c <= maxCols) || Math.min(maxCols, 4);
+    let cols = preferredColumns.find(c => c <= maxCols) || Math.min(maxCols, 4);
 
     // Ensure we have at least 1 column
     cols = Math.max(cols, 1);
@@ -161,14 +161,12 @@ export function CharacterPreview({
  */
 export function SingleCharacterPreview({
   character,
-  config,
   label,
   foregroundColor = "#ffffff",
   backgroundColor = "#000000",
   className = "",
 }: {
   character: Character;
-  config: CharacterSetConfig;
   label?: string;
   foregroundColor?: string;
   backgroundColor?: string;

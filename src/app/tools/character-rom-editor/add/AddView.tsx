@@ -122,7 +122,6 @@ export function AddView() {
 
   // Step validation
   const canProceedStep1 = name.trim().length > 0;
-  const canProceedStep2 = true;
   const canProceedStep3 = sourceMode === "new" || selectedSourceId !== null;
   const canSave = canProceedStep1 && canProceedStep3;
 
@@ -266,11 +265,6 @@ export function AddView() {
     save,
     router,
   ]);
-
-  // Determine if we're on the final step
-  const isFinalStep =
-    (sourceMode === "new" && step === 3) ||
-    (sourceMode === "copy" && step === 4);
 
   return (
     <div className="min-h-screen flex flex-col safe-top">

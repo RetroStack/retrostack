@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useMemo } from "react";
 import { CharacterDisplay, EmptyCharacterDisplay } from "./CharacterDisplay";
 import { Character, CharacterSetConfig } from "@/lib/character-editor";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
@@ -72,7 +72,6 @@ export function CharacterGrid({
 
   // Calculate character display size (scaled)
   const charWidth = config.width * smallScale;
-  const charHeight = config.height * smallScale;
 
   // Calculate optimal number of columns based on container width
   const columns = useMemo(() => {
@@ -84,16 +83,6 @@ export function CharacterGrid({
 
     return Math.max(minColumns, Math.min(maxColumns, cols));
   }, [size.width, charWidth, gap, minColumns, maxColumns]);
-
-  const handleCharacterClick = useCallback(
-    (index: number, e: React.MouseEvent | React.KeyboardEvent) => {
-      if (onSelect) {
-        const shiftKey = "shiftKey" in e ? e.shiftKey : false;
-        onSelect(index, shiftKey);
-      }
-    },
-    [onSelect]
-  );
 
   return (
     <div

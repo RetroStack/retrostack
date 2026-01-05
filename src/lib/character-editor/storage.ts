@@ -5,7 +5,7 @@
  * Handles CRUD operations, search, and filtering.
  */
 
-import { SerializedCharacterSet, CharacterSetMetadata, generateId } from "./types";
+import { SerializedCharacterSet, generateId } from "./types";
 
 const DB_NAME = "retrostack-character-editor";
 const DB_VERSION = 3; // Bumped for isPinned field migration
@@ -50,7 +50,7 @@ class CharacterStorage {
       return;
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {

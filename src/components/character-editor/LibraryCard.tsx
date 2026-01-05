@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { CharacterPreview } from "./CharacterPreview";
 import { OverflowMenu } from "@/components/ui/OverflowMenu";
 import {

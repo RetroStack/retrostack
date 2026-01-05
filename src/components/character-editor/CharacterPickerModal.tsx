@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CharacterSet, Character } from "@/lib/character-editor";
 import { CharacterDisplay } from "./CharacterDisplay";
 
@@ -28,11 +28,12 @@ export function CharacterPickerModal({
   maxSelection = 0,
 }: CharacterPickerModalProps) {
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-  const [selectionMode, setSelectionMode] = useState<"single" | "range">("single");
+  const [selectionMode] = useState<"single" | "range">("single");
   const [rangeStart, setRangeStart] = useState<number | null>(null);
 
   // Reset selection when source changes
-  useMemo(() => {
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional reset when source changes
     setSelectedIndices(new Set());
     setRangeStart(null);
   }, [sourceSet?.metadata.id]);
@@ -89,11 +90,6 @@ export function CharacterPickerModal({
 
   const handleSelectNone = useCallback(() => {
     setSelectedIndices(new Set());
-  }, []);
-
-  const handleSelectRange = useCallback(() => {
-    // TODO: Could add a dialog for entering start/end range
-    setSelectionMode("range");
   }, []);
 
   const handleImport = useCallback(() => {

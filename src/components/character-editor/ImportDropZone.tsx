@@ -54,7 +54,7 @@ export function ImportDropZone({
       try {
         const data = await file.arrayBuffer();
         onFileSelect(file, data);
-      } catch (e) {
+      } catch {
         setLocalError("Failed to read file. Please try again.");
       }
     },

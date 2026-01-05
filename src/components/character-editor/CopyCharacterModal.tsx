@@ -32,6 +32,7 @@ export function CopyCharacterModal({
   // Reset selection when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional reset when modal closes
       setSelectedIndex(null);
     }
   }, [isOpen]);

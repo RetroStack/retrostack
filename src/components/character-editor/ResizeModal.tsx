@@ -53,13 +53,6 @@ export function ResizeModal({
   const [height, setHeight] = useState(currentHeight);
   const [anchor, setAnchor] = useState<AnchorPoint>("tl");
 
-  // Reset to current values when modal opens
-  const handleOpen = useCallback(() => {
-    setWidth(currentWidth);
-    setHeight(currentHeight);
-    setAnchor("tl");
-  }, [currentWidth, currentHeight]);
-
   // Apply resize
   const handleApply = useCallback(() => {
     if (width > 0 && height > 0) {

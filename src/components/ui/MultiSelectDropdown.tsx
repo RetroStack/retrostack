@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 export interface MultiSelectDropdownProps<T extends string | number> {

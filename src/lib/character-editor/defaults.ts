@@ -5,7 +5,7 @@
  * These are representative samples - for authentic ROMs, import the actual binaries.
  */
 
-import { SerializedCharacterSet, generateId } from "./types";
+import { SerializedCharacterSet } from "./types";
 import { binaryToBase64 } from "./binary";
 
 /**

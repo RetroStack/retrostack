@@ -68,6 +68,7 @@ export function ResponsiveToolbar({
   }, [actions, minVisibleItems]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional calculation on mount/resize
     calculateVisibleItems();
 
     const observer = new ResizeObserver(() => {
