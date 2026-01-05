@@ -13,6 +13,7 @@ import {
   KeyboardShortcutsHelp,
   TransformToolbar,
   MetadataEditModal,
+  ResizeModal,
 } from "@/components/character-editor";
 import {
   useCharacterLibrary,
@@ -27,6 +28,7 @@ import {
   CustomColors,
   base64ToBinary,
   parseCharacterRom,
+  AnchorPoint,
 } from "@/lib/character-editor";
 
 /**
@@ -68,6 +70,9 @@ export function EditView() {
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
   const [saveAsName, setSaveAsName] = useState("");
   const [savingAs, setSavingAs] = useState(false);
+
+  // Resize modal state
+  const [showResizeModal, setShowResizeModal] = useState(false);
 
   // Auto-save
   const autoSave = useAutoSave({
@@ -138,12 +143,14 @@ export function EditView() {
   const handleBack = useCallback(() => {
     if (editor.isDirty) {
       if (confirm("You have unsaved changes. Are you sure you want to leave?")) {
+        // User explicitly chose not to save, clear auto-save to prevent recovery dialog
+        autoSave.clearAutoSave();
         router.push("/tools/character-rom-editor");
       }
     } else {
       router.push("/tools/character-rom-editor");
     }
-  }, [editor.isDirty, router]);
+  }, [editor.isDirty, router, autoSave]);
 
   // Handle export
   const handleExport = useCallback(() => {
@@ -151,6 +158,21 @@ export function EditView() {
       router.push(`/tools/character-rom-editor/export?id=${id}`);
     }
   }, [id, router]);
+
+  // Handle reset to last saved state
+  const handleReset = useCallback(() => {
+    if (characterSet) {
+      editor.reset(characterSet);
+    }
+  }, [characterSet, editor]);
+
+  // Handle resize
+  const handleResize = useCallback(
+    (newWidth: number, newHeight: number, anchor: AnchorPoint) => {
+      editor.resizeCharacters(newWidth, newHeight, anchor);
+    },
+    [editor]
+  );
 
   // Handle recovery
   const handleRecover = useCallback(() => {
@@ -275,6 +297,7 @@ export function EditView() {
   useKeyboardShortcuts(shortcuts, { enabled: !showShortcutsHelp });
 
   // Toolbar actions - simplified (transforms moved to right sidebar)
+  // Order: Undo, Redo, [sep], Save, Save As, Delete, [sep], Edit Info, Resize, Export, Reset, [sep], Shortcuts
   const toolbarActions: ToolbarItem[] = [
     // Undo/Redo group
     {
@@ -324,14 +347,15 @@ export function EditView() {
       onClick: openSaveAsDialog,
     },
     {
-      id: "export",
-      label: "Export",
+      id: "delete",
+      label: "Delete",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       ),
-      onClick: handleExport,
+      onClick: () => setShowDeleteConfirm(true),
+      disabled: characterSet?.metadata.isBuiltIn,
     },
     { type: "separator", id: "sep-2" },
     {
@@ -345,15 +369,35 @@ export function EditView() {
       onClick: () => setShowMetadataModal(true),
     },
     {
-      id: "delete",
-      label: "Delete",
+      id: "resize",
+      label: "Resize",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
       ),
-      onClick: () => setShowDeleteConfirm(true),
-      disabled: characterSet?.metadata.isBuiltIn,
+      onClick: () => setShowResizeModal(true),
+    },
+    {
+      id: "export",
+      label: "Export",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      onClick: handleExport,
+    },
+    {
+      id: "reset",
+      label: "Reset",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      ),
+      onClick: handleReset,
+      disabled: !editor.isDirty,
     },
     { type: "separator", id: "sep-3" },
     {
@@ -528,6 +572,15 @@ export function EditView() {
           onSave={handleMetadataUpdate}
         />
       )}
+
+      {/* Resize modal */}
+      <ResizeModal
+        isOpen={showResizeModal}
+        onClose={() => setShowResizeModal(false)}
+        currentWidth={editor.config.width}
+        currentHeight={editor.config.height}
+        onResize={handleResize}
+      />
 
       {/* Save As dialog */}
       {showSaveAsDialog && (

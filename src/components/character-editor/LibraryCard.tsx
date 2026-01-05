@@ -101,7 +101,7 @@ export function LibraryCard({
 
   return (
     <div className="card-retro p-4 flex flex-col gap-3 hover-glow-cyan transition-all">
-      {/* Header with title and menu */}
+      {/* Header with title, source, date, and menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-retro-cyan truncate">
@@ -119,9 +119,19 @@ export function LibraryCard({
           )}
         </div>
 
-        {menuItems.length > 0 && (
-          <OverflowMenu items={menuItems} align="right" label="Character set actions" />
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {metadata.source && metadata.source !== "yourself" && (
+            <span className="text-[10px] text-gray-500 truncate max-w-[80px]" title={metadata.source}>
+              {metadata.source}
+            </span>
+          )}
+          <span className="text-[10px] text-gray-500">
+            {formatTimestamp(metadata.updatedAt)}
+          </span>
+          {menuItems.length > 0 && (
+            <OverflowMenu items={menuItems} align="right" label="Character set actions" />
+          )}
+        </div>
       </div>
 
       {/* Character preview */}
@@ -135,7 +145,7 @@ export function LibraryCard({
         />
       </div>
 
-      {/* Footer with size, count, date, and actions */}
+      {/* Footer with size, count, and actions */}
       <div className="flex items-center justify-between pt-2 border-t border-retro-grid/30 text-[10px]">
         <div className="flex items-center gap-2">
           {/* Size badge */}
@@ -154,11 +164,6 @@ export function LibraryCard({
               Built-in
             </span>
           )}
-
-          {/* Date */}
-          <span className="text-gray-500">
-            {formatTimestamp(metadata.updatedAt)}
-          </span>
         </div>
 
         {/* Quick action buttons */}

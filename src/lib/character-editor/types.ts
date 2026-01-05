@@ -13,8 +13,11 @@ export type PaddingDirection = "left" | "right";
 // Bit direction within bytes
 export type BitDirection = "ltr" | "rtl";
 
-// Anchor points for resize operations
-export type AnchorPoint = "tl" | "tr" | "bl" | "br";
+// Anchor points for resize operations (3x3 grid)
+export type AnchorPoint =
+  | "tl" | "tc" | "tr"   // top-left, top-center, top-right
+  | "ml" | "mc" | "mr"   // middle-left, middle-center, middle-right
+  | "bl" | "bc" | "br";  // bottom-left, bottom-center, bottom-right
 
 /**
  * Character set configuration

@@ -82,6 +82,9 @@ export type { CharacterSetOverviewProps } from "./CharacterSetOverview";
 export { MetadataEditModal } from "./MetadataEditModal";
 export type { MetadataEditModalProps } from "./MetadataEditModal";
 
+export { ResizeModal } from "./ResizeModal";
+export type { ResizeModalProps } from "./ResizeModal";
+
 export { MakerSystemSelect, MakerSystemSelectCompact } from "./MakerSystemSelect";
 export type { MakerSystemSelectProps } from "./MakerSystemSelect";
 

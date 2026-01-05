@@ -56,9 +56,6 @@ export function EditorSidebar({
   const hasMultipleSelected = totalSelected > 1;
   const [gridCollapsed, setGridCollapsed] = useState(false);
 
-  // Check if selected character is printable ASCII (32-126)
-  const isPrintableAscii = selectedIndex >= 32 && selectedIndex <= 126;
-
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const charCount = characters.length;
@@ -106,11 +103,6 @@ export function EditorSidebar({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-300">Characters</span>
             <span className="text-xs text-gray-500">({characters.length})</span>
-            {isPrintableAscii && (
-              <span className="px-1.5 py-0.5 bg-retro-purple/30 text-retro-cyan rounded text-xs font-mono">
-                &apos;{String.fromCharCode(selectedIndex)}&apos;
-              </span>
-            )}
           </div>
         </div>
         {hasMultipleSelected && (
@@ -140,21 +132,8 @@ export function EditorSidebar({
         {/* Character grid - collapsible, improved density */}
         <div className="border-b border-retro-grid/30">
           <div className="flex items-center justify-between p-2">
-            <button
-              onClick={() => setGridCollapsed(!gridCollapsed)}
-              className="flex items-center gap-1 text-sm text-gray-300 hover:text-retro-cyan transition-colors"
-            >
-              <span className="font-medium">Characters</span>
-              <svg
-                className={`w-4 h-4 transition-transform ${gridCollapsed ? "" : "rotate-180"}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
             <div className="flex items-center gap-2">
+              <span className="font-medium text-sm text-gray-300">Characters</span>
               {onSelectAll && (
                 <button
                   onClick={(e) => {
@@ -178,6 +157,20 @@ export function EditorSidebar({
                 </button>
               )}
             </div>
+            <button
+              onClick={() => setGridCollapsed(!gridCollapsed)}
+              className="p-1 text-gray-400 hover:text-retro-cyan transition-colors"
+              aria-label={gridCollapsed ? "Expand characters" : "Collapse characters"}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${gridCollapsed ? "" : "rotate-180"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
 
           {!gridCollapsed && (

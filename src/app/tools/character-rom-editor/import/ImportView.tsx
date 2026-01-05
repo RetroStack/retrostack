@@ -540,13 +540,13 @@ export function ImportView() {
 
                     {characters.length > 0 ? (
                       <div>
-                        <div className="bg-black/50 rounded-lg p-3 overflow-auto max-h-[280px]">
+                        <div className="bg-black/50 rounded-lg p-3 overflow-auto max-h-[400px]">
                           <CharacterPreview
                             characters={characters}
                             config={config}
                             maxCharacters={256}
-                            maxWidth={280}
-                            maxHeight={280}
+                            maxWidth={400}
+                            maxHeight={400}
                           />
                         </div>
                         <p className="text-xs text-gray-500 mt-3">

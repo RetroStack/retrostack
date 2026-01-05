@@ -128,6 +128,7 @@ export function shiftCharacter(
 
 /**
  * Resize character maintaining content relative to anchor point
+ * Supports all 9 anchor positions in a 3x3 grid
  */
 export function resizeCharacter(
   character: Character,
@@ -138,27 +139,32 @@ export function resizeCharacter(
   const oldHeight = character.pixels.length;
   const oldWidth = character.pixels[0]?.length || 0;
 
-  // Calculate offsets based on anchor
+  // Calculate offsets based on anchor (3x3 grid)
   let offsetX = 0;
   let offsetY = 0;
 
-  switch (anchor) {
-    case "tl":
-      offsetX = 0;
-      offsetY = 0;
-      break;
-    case "tr":
-      offsetX = newWidth - oldWidth;
-      offsetY = 0;
-      break;
-    case "bl":
-      offsetX = 0;
-      offsetY = newHeight - oldHeight;
-      break;
-    case "br":
-      offsetX = newWidth - oldWidth;
-      offsetY = newHeight - oldHeight;
-      break;
+  // Horizontal offset
+  if (anchor.endsWith("l")) {
+    // Left-aligned: tl, ml, bl
+    offsetX = 0;
+  } else if (anchor.endsWith("c")) {
+    // Center-aligned: tc, mc, bc
+    offsetX = Math.floor((newWidth - oldWidth) / 2);
+  } else if (anchor.endsWith("r")) {
+    // Right-aligned: tr, mr, br
+    offsetX = newWidth - oldWidth;
+  }
+
+  // Vertical offset
+  if (anchor.startsWith("t")) {
+    // Top-aligned: tl, tc, tr
+    offsetY = 0;
+  } else if (anchor.startsWith("m")) {
+    // Middle-aligned: ml, mc, mr
+    offsetY = Math.floor((newHeight - oldHeight) / 2);
+  } else if (anchor.startsWith("b")) {
+    // Bottom-aligned: bl, bc, br
+    offsetY = newHeight - oldHeight;
   }
 
   const newPixels: boolean[][] = [];

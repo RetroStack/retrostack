@@ -193,7 +193,7 @@ export function TransformToolbar({
   return (
     <div
       className={`
-        flex flex-col items-center p-2 bg-retro-navy/50 border-l border-retro-grid/30
+        flex flex-col items-center p-2 bg-retro-navy/50 border-l border-retro-grid/30 overflow-hidden
         ${className}
       `}
     >
