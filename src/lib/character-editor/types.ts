@@ -65,6 +65,8 @@ export interface CharacterSetMetadata {
   updatedAt: number;
   /** Whether this is a built-in character set */
   isBuiltIn: boolean;
+  /** Whether this character set is pinned to appear first in search results */
+  isPinned?: boolean;
 }
 
 /**

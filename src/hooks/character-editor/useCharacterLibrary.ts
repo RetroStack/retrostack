@@ -30,6 +30,8 @@ export interface UseCharacterLibraryResult {
   rename: (id: string, newName: string) => Promise<void>;
   /** Delete a character set */
   deleteSet: (id: string) => Promise<void>;
+  /** Toggle pinned state of a character set */
+  togglePinned: (id: string) => Promise<void>;
   /** Search character sets */
   search: (query: string) => Promise<SerializedCharacterSet[]>;
   /** Filter by size */
@@ -173,6 +175,16 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
     }
   }, [refresh]);
 
+  // Toggle pinned state
+  const togglePinned = useCallback(async (id: string): Promise<void> => {
+    try {
+      await characterStorage.togglePinned(id);
+      await refresh();
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : "Failed to toggle pinned state");
+    }
+  }, [refresh]);
+
   // Search character sets
   const searchSets = useCallback(async (query: string): Promise<SerializedCharacterSet[]> => {
     if (!query.trim()) {
@@ -210,6 +222,7 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
     saveAs,
     rename,
     deleteSet,
+    togglePinned,
     search: searchSets,
     filterBySize,
     availableSizes,

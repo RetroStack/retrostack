@@ -30,6 +30,7 @@ export function CharacterEditorLibrary() {
     deleteSet,
     saveAs,
     rename,
+    togglePinned,
     availableSizes,
     getById,
   } = useCharacterLibrary();
@@ -104,7 +105,13 @@ export function CharacterEditorLibrary() {
       );
     }
 
-    return result;
+    // Sort with pinned items first, then by updated date
+    return [...result].sort((a, b) => {
+      const aPinned = a.metadata.isPinned ? 1 : 0;
+      const bPinned = b.metadata.isPinned ? 1 : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      return b.metadata.updatedAt - a.metadata.updatedAt;
+    });
   }, [characterSets, searchQuery, widthFilters, heightFilters, manufacturerFilters, systemFilters]);
 
   // Handlers
@@ -171,6 +178,14 @@ export function CharacterEditorLibrary() {
       setRenameName(set.metadata.name);
     }
   }, [characterSets]);
+
+  const handleTogglePinned = useCallback(async (id: string) => {
+    try {
+      await togglePinned(id);
+    } catch (e) {
+      console.error("Failed to toggle pinned:", e);
+    }
+  }, [togglePinned]);
 
   const confirmRename = useCallback(async () => {
     if (!renameId || !renameName.trim()) return;
@@ -309,6 +324,7 @@ export function CharacterEditorLibrary() {
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onRename={handleRename}
+              onTogglePinned={handleTogglePinned}
               onImport={handleImport}
               onCreate={handleCreate}
             />

@@ -29,6 +29,7 @@ export function MetadataEditModal({
   const [source, setSource] = useState(metadata.source);
   const [manufacturer, setManufacturer] = useState(metadata.manufacturer);
   const [system, setSystem] = useState(metadata.system);
+  const [isPinned, setIsPinned] = useState(metadata.isPinned ?? false);
   const [saving, setSaving] = useState(false);
 
   // Reset form when modal opens with new metadata
@@ -39,6 +40,7 @@ export function MetadataEditModal({
       setSource(metadata.source);
       setManufacturer(metadata.manufacturer);
       setSystem(metadata.system);
+      setIsPinned(metadata.isPinned ?? false);
     }
   }, [isOpen, metadata]);
 
@@ -53,6 +55,7 @@ export function MetadataEditModal({
         source: source.trim() || "yourself",
         manufacturer: manufacturer,
         system: system,
+        isPinned: isPinned,
       });
       onClose();
     } finally {
@@ -129,6 +132,29 @@ export function MetadataEditModal({
               placeholder="yourself"
               className="w-full px-3 py-2 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-retro-cyan"
             />
+          </div>
+
+          {/* Pinned toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm text-gray-300">Pin to top</label>
+              <p className="text-xs text-gray-500">Pinned items appear first in search results</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPinned(!isPinned)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-retro-cyan focus:ring-offset-2 focus:ring-offset-retro-dark ${
+                isPinned ? "bg-retro-yellow" : "bg-retro-grid/50"
+              }`}
+              role="switch"
+              aria-checked={isPinned}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  isPinned ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
         </div>
 

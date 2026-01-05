@@ -8,7 +8,7 @@
 import { SerializedCharacterSet, CharacterSetMetadata, generateId } from "./types";
 
 const DB_NAME = "retrostack-character-editor";
-const DB_VERSION = 2; // Bumped for manufacturer/system fields migration
+const DB_VERSION = 3; // Bumped for isPinned field migration
 const STORE_NAME = "character-sets";
 const FALLBACK_KEY = "retrostack-character-sets";
 
@@ -113,6 +113,26 @@ class CharacterStorage {
               }
             };
           }
+
+          // Migration from v2 to v3: add isPinned field
+          if (oldVersion < 3) {
+            const store = transaction.objectStore(STORE_NAME);
+
+            // Migrate existing records to add isPinned field
+            const cursorRequest = store.openCursor();
+            cursorRequest.onsuccess = (e) => {
+              const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+              if (cursor) {
+                const record = cursor.value;
+                // Add isPinned field if missing
+                if (record.metadata && record.metadata.isPinned === undefined) {
+                  record.metadata.isPinned = false;
+                }
+                cursor.update(record);
+                cursor.continue();
+              }
+            };
+          }
         }
       };
     });
@@ -133,13 +153,14 @@ class CharacterStorage {
       const data = localStorage.getItem(FALLBACK_KEY);
       if (!data) return [];
       const sets = JSON.parse(data) as SerializedCharacterSet[];
-      // Ensure manufacturer/system fields exist for migrated data
+      // Ensure manufacturer/system/isPinned fields exist for migrated data
       return sets.map((set) => ({
         ...set,
         metadata: {
           ...set.metadata,
           manufacturer: set.metadata.manufacturer ?? "",
           system: set.metadata.system ?? "",
+          isPinned: set.metadata.isPinned ?? false,
         },
       }));
     } catch {
@@ -175,9 +196,16 @@ class CharacterStorage {
       const request = store.getAll();
 
       request.onsuccess = () => {
-        // Sort by updated date, newest first
+        // Sort by pinned first, then by updated date (newest first)
         const results = request.result as SerializedCharacterSet[];
-        results.sort((a, b) => b.metadata.updatedAt - a.metadata.updatedAt);
+        results.sort((a, b) => {
+          // Pinned items come first
+          const aPinned = a.metadata.isPinned ? 1 : 0;
+          const bPinned = b.metadata.isPinned ? 1 : 0;
+          if (aPinned !== bPinned) return bPinned - aPinned;
+          // Then sort by updated date
+          return b.metadata.updatedAt - a.metadata.updatedAt;
+        });
         resolve(results);
       };
 
@@ -281,6 +309,30 @@ class CharacterStorage {
 
     await this.save(newSet);
     return newId;
+  }
+
+  /**
+   * Toggle the pinned state of a character set
+   */
+  async togglePinned(id: string): Promise<boolean> {
+    await this.initialize();
+
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const newPinnedState = !set.metadata.isPinned;
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        isPinned: newPinnedState,
+      },
+    };
+
+    await this.save(updated);
+    return newPinnedState;
   }
 
   /**

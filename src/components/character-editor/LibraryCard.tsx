@@ -23,6 +23,8 @@ export interface LibraryCardProps {
   onDuplicate?: () => void;
   /** Callback when rename is clicked */
   onRename?: () => void;
+  /** Callback when pin is toggled */
+  onTogglePinned?: () => void;
 }
 
 /**
@@ -35,6 +37,7 @@ export function LibraryCard({
   onDelete,
   onDuplicate,
   onRename,
+  onTogglePinned,
 }: LibraryCardProps) {
   const { metadata, config } = characterSet;
 
@@ -53,6 +56,14 @@ export function LibraryCard({
   // Build menu items
   const menuItems = useMemo(() => {
     const items = [];
+
+    if (onTogglePinned) {
+      items.push({
+        id: "pin",
+        label: metadata.isPinned ? "Unpin" : "Pin to top",
+        onClick: onTogglePinned,
+      });
+    }
 
     if (onEdit) {
       items.push({
@@ -96,14 +107,23 @@ export function LibraryCard({
     }
 
     return items;
-  }, [onEdit, onRename, onExport, onDuplicate, onDelete, metadata.isBuiltIn]);
+  }, [onEdit, onRename, onExport, onDuplicate, onDelete, onTogglePinned, metadata.isBuiltIn, metadata.isPinned]);
 
   return (
-    <div className="card-retro p-4 flex flex-col gap-3 hover-glow-cyan transition-all h-full">
+    <div className={`card-retro p-4 flex flex-col gap-3 hover-glow-cyan transition-all h-full ${metadata.isPinned ? "ring-1 ring-retro-yellow/50" : ""}`}>
       {/* Header with title and menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-retro-cyan truncate">
+          <h3 className="text-sm font-semibold text-retro-cyan truncate flex items-center gap-1.5">
+            {metadata.isPinned && (
+              <svg
+                className="w-3.5 h-3.5 text-retro-yellow flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+              </svg>
+            )}
             {metadata.name}
           </h3>
           {(metadata.manufacturer || metadata.system) && (
