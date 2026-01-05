@@ -18,6 +18,10 @@ import {
   CopyCharacterModal,
   ReorderModal,
   ScaleModal,
+  GoToCharacterModal,
+  AsciiMapModal,
+  CharacterContextMenu,
+  useContextMenu,
 } from "@/components/character-editor";
 import {
   useCharacterLibrary,
@@ -97,6 +101,11 @@ export function EditView() {
 
   // Scale modal state
   const [showScaleModal, setShowScaleModal] = useState(false);
+  const [showGoToModal, setShowGoToModal] = useState(false);
+  const [showAsciiMap, setShowAsciiMap] = useState(false);
+
+  // Context menu state
+  const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
 
   // Auto-save
   const autoSave = useAutoSave({
@@ -313,6 +322,39 @@ export function EditView() {
     setShowSaveAsDialog(true);
   }, [characterSet?.metadata.name]);
 
+  // Navigation handlers
+  const totalCharacters = editor.characters.length;
+
+  const navigatePrev = useCallback(() => {
+    if (editor.selectedIndex > 0) {
+      editor.setSelectedIndex(editor.selectedIndex - 1);
+    }
+  }, [editor]);
+
+  const navigateNext = useCallback(() => {
+    if (editor.selectedIndex < totalCharacters - 1) {
+      editor.setSelectedIndex(editor.selectedIndex + 1);
+    }
+  }, [editor, totalCharacters]);
+
+  const navigatePageUp = useCallback(() => {
+    const newIndex = Math.max(0, editor.selectedIndex - 16);
+    editor.setSelectedIndex(newIndex);
+  }, [editor]);
+
+  const navigatePageDown = useCallback(() => {
+    const newIndex = Math.min(totalCharacters - 1, editor.selectedIndex + 16);
+    editor.setSelectedIndex(newIndex);
+  }, [editor, totalCharacters]);
+
+  const navigateFirst = useCallback(() => {
+    editor.setSelectedIndex(0);
+  }, [editor]);
+
+  const navigateLast = useCallback(() => {
+    editor.setSelectedIndex(totalCharacters - 1);
+  }, [editor, totalCharacters]);
+
   // Keyboard shortcuts
   const shortcuts = useMemo(
     () =>
@@ -333,11 +375,65 @@ export function EditView() {
         deleteSelected: editor.deleteSelected,
         addCharacter: editor.addCharacter,
         showHelp: () => setShowShortcutsHelp(true),
+        // Navigation
+        navigatePrev,
+        navigateNext,
+        navigatePageUp,
+        navigatePageDown,
+        navigateFirst,
+        navigateLast,
+        goToCharacter: () => setShowGoToModal(true),
+        showAsciiMap: () => setShowAsciiMap(true),
       }),
-    [editor, handleSave]
+    [editor, handleSave, navigatePrev, navigateNext, navigatePageUp, navigatePageDown, navigateFirst, navigateLast]
   );
 
   useKeyboardShortcuts(shortcuts, { enabled: !showShortcutsHelp });
+
+  // Context menu items
+  const contextMenuItems = useMemo(() => {
+    if (!contextMenu) return [];
+
+    const index = contextMenu.index;
+    const isMultiSelect = editor.batchSelection.size > 0;
+    const selectedCount = isMultiSelect ? editor.batchSelection.size + 1 : 1;
+
+    return [
+      {
+        label: "Edit",
+        onClick: () => editor.setSelectedIndex(index),
+      },
+      {
+        label: "Copy From...",
+        shortcut: "C",
+        onClick: () => setShowCopyModal(true),
+      },
+      { label: "", onClick: () => {}, divider: true },
+      {
+        label: "Invert",
+        shortcut: "I",
+        onClick: () => editor.invertSelected(),
+      },
+      {
+        label: "Clear",
+        onClick: () => editor.clearSelected(),
+      },
+      {
+        label: "Fill",
+        onClick: () => editor.fillSelected(),
+      },
+      { label: "", onClick: () => {}, divider: true },
+      {
+        label: `Delete${isMultiSelect ? ` (${selectedCount})` : ""}`,
+        shortcut: "Del",
+        onClick: () => {
+          editor.deleteSelected();
+          toast.success(isMultiSelect ? `${selectedCount} characters deleted` : "Character deleted");
+        },
+        danger: true,
+      },
+    ];
+  }, [contextMenu, editor, toast]);
 
   // Toolbar actions - simplified (transforms moved to right sidebar)
   // Order: Undo, Redo, [sep], Save, Save As, Delete, [sep], Edit Info, Resize, Export, Reset, [sep], Shortcuts
@@ -571,6 +667,7 @@ export function EditView() {
             onDeleteSelected={editor.deleteSelected}
             onSelectAll={editor.selectAll}
             onSelectNone={() => editor.toggleBatchSelection(editor.selectedIndex, false)}
+            onContextMenu={showContextMenu}
             foregroundColor={colors.foreground}
             backgroundColor={colors.background}
           />
@@ -724,6 +821,36 @@ export function EditView() {
         foregroundColor={colors.foreground}
         backgroundColor={colors.background}
       />
+
+      {/* Go to character modal */}
+      <GoToCharacterModal
+        isOpen={showGoToModal}
+        onClose={() => setShowGoToModal(false)}
+        totalCharacters={totalCharacters}
+        currentIndex={editor.selectedIndex}
+        onGoTo={(index) => editor.setSelectedIndex(index)}
+      />
+
+      {/* ASCII map modal */}
+      <AsciiMapModal
+        isOpen={showAsciiMap}
+        onClose={() => setShowAsciiMap(false)}
+        characters={editor.characters}
+        selectedIndex={editor.selectedIndex}
+        onSelect={(index) => editor.setSelectedIndex(index)}
+        foregroundColor={colors.foreground}
+        backgroundColor={colors.background}
+      />
+
+      {/* Character context menu */}
+      {contextMenu && (
+        <CharacterContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onClose={hideContextMenu}
+        />
+      )}
 
       {/* Save As dialog */}
       {showSaveAsDialog && (

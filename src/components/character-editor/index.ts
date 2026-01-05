@@ -113,6 +113,15 @@ export type { ReorderModalProps } from "./ReorderModal";
 export { ScaleModal } from "./ScaleModal";
 export type { ScaleModalProps } from "./ScaleModal";
 
+export { GoToCharacterModal } from "./GoToCharacterModal";
+export type { GoToCharacterModalProps } from "./GoToCharacterModal";
+
+export { AsciiMapModal } from "./AsciiMapModal";
+export type { AsciiMapModalProps } from "./AsciiMapModal";
+
+export { CharacterContextMenu, useContextMenu } from "./CharacterContextMenu";
+export type { CharacterContextMenuProps, ContextMenuItem } from "./CharacterContextMenu";
+
 // Import wizard
 export { ImportStepIndicator } from "./ImportStepIndicator";
 export type { ImportStepIndicatorProps } from "./ImportStepIndicator";

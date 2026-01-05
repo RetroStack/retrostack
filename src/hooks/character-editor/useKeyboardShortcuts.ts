@@ -127,6 +127,15 @@ export function createEditorShortcuts(actions: {
   deleteSelected: () => void;
   addCharacter: () => void;
   showHelp: () => void;
+  // Navigation
+  navigatePrev?: () => void;
+  navigateNext?: () => void;
+  navigatePageUp?: () => void;
+  navigatePageDown?: () => void;
+  navigateFirst?: () => void;
+  navigateLast?: () => void;
+  goToCharacter?: () => void;
+  showAsciiMap?: () => void;
 }): KeyboardShortcut[] {
   return [
     // Undo/Redo
@@ -256,5 +265,87 @@ export function createEditorShortcuts(actions: {
       description: "Show keyboard shortcuts",
       context: "Global",
     },
+
+    // Navigation (optional - only added if handlers provided)
+    ...(actions.navigatePrev
+      ? [
+          {
+            key: "ArrowUp",
+            action: actions.navigatePrev,
+            description: "Previous character",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.navigateNext
+      ? [
+          {
+            key: "ArrowDown",
+            action: actions.navigateNext,
+            description: "Next character",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.navigatePageUp
+      ? [
+          {
+            key: "PageUp",
+            action: actions.navigatePageUp,
+            description: "Jump 16 characters up",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.navigatePageDown
+      ? [
+          {
+            key: "PageDown",
+            action: actions.navigatePageDown,
+            description: "Jump 16 characters down",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.navigateFirst
+      ? [
+          {
+            key: "Home",
+            action: actions.navigateFirst,
+            description: "First character",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.navigateLast
+      ? [
+          {
+            key: "End",
+            action: actions.navigateLast,
+            description: "Last character",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.goToCharacter
+      ? [
+          {
+            key: "g",
+            action: actions.goToCharacter,
+            description: "Go to character",
+            context: "Navigation",
+          },
+        ]
+      : []),
+    ...(actions.showAsciiMap
+      ? [
+          {
+            key: "m",
+            action: actions.showAsciiMap,
+            description: "Show ASCII map",
+            context: "Navigation",
+          },
+        ]
+      : []),
   ];
 }

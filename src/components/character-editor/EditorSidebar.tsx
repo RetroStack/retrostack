@@ -24,6 +24,8 @@ export interface EditorSidebarProps {
   onSelectAll?: () => void;
   /** Callback to clear batch selection */
   onSelectNone?: () => void;
+  /** Callback for right-click context menu */
+  onContextMenu?: (x: number, y: number, index: number) => void;
   /** Whether to show add button */
   showAddButton?: boolean;
   /** Foreground color */
@@ -47,6 +49,7 @@ export function EditorSidebar({
   onDeleteSelected,
   onSelectAll,
   onSelectNone,
+  onContextMenu,
   showAddButton = true,
   foregroundColor = "#ffffff",
   backgroundColor = "#000000",
@@ -191,6 +194,7 @@ export function EditorSidebar({
                 maxColumns={10}
                 gap={4}
                 className="max-h-[400px] overflow-y-auto"
+                onContextMenu={onContextMenu}
               />
             </div>
           )}

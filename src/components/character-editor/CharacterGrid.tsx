@@ -38,6 +38,8 @@ export interface CharacterGridProps {
   interactive?: boolean;
   /** Scale factor for small character display (default 2) */
   smallScale?: number;
+  /** Callback for right-click context menu */
+  onContextMenu?: (x: number, y: number, index: number) => void;
 }
 
 /**
@@ -232,6 +234,7 @@ export function InteractiveCharacterGrid({
   gap = 4,
   className = "",
   smallScale = 2,
+  onContextMenu,
 }: CharacterGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { size } = useResizeObserver<HTMLDivElement>();
@@ -267,6 +270,16 @@ export function InteractiveCharacterGrid({
           <div
             key={index}
             onClick={(e) => onSelect?.(index, e.shiftKey, e.metaKey || e.ctrlKey)}
+            onContextMenu={(e) => {
+              if (onContextMenu) {
+                e.preventDefault();
+                // Select the character on right-click if not already selected
+                if (selectedIndex !== index && !batchSelection?.has(index)) {
+                  onSelect?.(index, false, false);
+                }
+                onContextMenu(e.clientX, e.clientY, index);
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
