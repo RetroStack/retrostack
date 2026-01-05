@@ -14,6 +14,8 @@ import {
   ManufacturerSystemSelect,
   ImportStepIndicator,
   SizePresetDropdown,
+  ImportFromImageModal,
+  ImportFromFontModal,
 } from "@/components/character-editor";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
@@ -25,6 +27,7 @@ import {
   BitDirection,
   calculateCharacterCount,
   formatFileSize,
+  Character,
 } from "@/lib/character-editor";
 
 type WizardStep = 1 | 2 | 3;
@@ -85,15 +88,26 @@ export function ImportView() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Parse characters from file data
+  // Image import modal state
+  const [showImageImport, setShowImageImport] = useState(false);
+
+  // Font import modal state
+  const [showFontImport, setShowFontImport] = useState(false);
+
+  // State for imported characters from image (bypasses file parsing)
+  const [importedCharacters, setImportedCharacters] = useState<Character[] | null>(null);
+
+  // Parse characters from file data (or use imported characters)
   const characters = useMemo(() => {
+    // Use imported characters if available (from image import)
+    if (importedCharacters) return importedCharacters;
     if (!fileData) return [];
     try {
       return parseCharacterRom(fileData, config);
     } catch {
       return [];
     }
-  }, [fileData, config]);
+  }, [fileData, config, importedCharacters]);
 
   // Calculate character count for preview info
   const characterCount = useMemo(() => {
@@ -165,6 +179,56 @@ export function ImportView() {
   const handlePresetClick = useCallback((width: number, height: number) => {
     setConfig((prev) => ({ ...prev, width, height }));
   }, []);
+
+  // Handler for image import completion
+  const handleImageImport = useCallback(
+    (chars: Character[], importedConfig: CharacterSetConfig) => {
+      // Store imported characters directly
+      setImportedCharacters(chars);
+
+      // Update config to match imported dimensions
+      setConfig(importedConfig);
+
+      // Create a synthetic file for display
+      const blob = new Blob([new ArrayBuffer(0)], { type: "application/octet-stream" });
+      const syntheticFile = new File([blob], "imported-from-image.bin");
+      setFile(syntheticFile);
+      setFileData(new ArrayBuffer(0));
+
+      // Set a default name
+      setName("Imported Character Set");
+
+      // Close modal and go to step 2
+      setShowImageImport(false);
+      setStep(2);
+    },
+    []
+  );
+
+  // Handler for font import completion
+  const handleFontImport = useCallback(
+    (chars: Character[], importedConfig: CharacterSetConfig, fontName: string) => {
+      // Store imported characters directly
+      setImportedCharacters(chars);
+
+      // Update config to match imported dimensions
+      setConfig(importedConfig);
+
+      // Create a synthetic file for display
+      const blob = new Blob([new ArrayBuffer(0)], { type: "application/octet-stream" });
+      const syntheticFile = new File([blob], "imported-from-font.bin");
+      setFile(syntheticFile);
+      setFileData(new ArrayBuffer(0));
+
+      // Set name from font
+      setName(fontName || "Imported Font");
+
+      // Close modal and go to step 2
+      setShowFontImport(false);
+      setStep(2);
+    },
+    []
+  );
 
   const handleLoadExample = useCallback(async (example: ExampleFile) => {
     try {
@@ -313,6 +377,75 @@ export function ImportView() {
                     <span>{formatFileSize(file.size)}</span>
                   </div>
                 )}
+
+                {/* Alternative import options */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Import from Image option */}
+                  <div className="card-retro p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg
+                        className="w-5 h-5 text-retro-pink"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <h3 className="text-sm font-medium text-gray-200">
+                        From Image
+                      </h3>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Extract from PNG/image with a character grid.
+                    </p>
+                    <Button
+                      variant="pink"
+                      size="sm"
+                      onClick={() => setShowImageImport(true)}
+                      className="w-full"
+                    >
+                      Choose Image
+                    </Button>
+                  </div>
+
+                  {/* Import from Font option */}
+                  <div className="card-retro p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg
+                        className="w-5 h-5 text-retro-purple"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <h3 className="text-sm font-medium text-gray-200">
+                        From Font
+                      </h3>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Rasterize TTF/OTF/WOFF font files.
+                    </p>
+                    <Button
+                      variant="cyan"
+                      size="sm"
+                      onClick={() => setShowFontImport(true)}
+                      className="w-full"
+                    >
+                      Choose Font
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Example files */}
                 {EXAMPLE_FILES.length > 0 && (
@@ -729,6 +862,20 @@ export function ImportView() {
       </main>
 
       <Footer />
+
+      {/* Image Import Modal */}
+      <ImportFromImageModal
+        isOpen={showImageImport}
+        onClose={() => setShowImageImport(false)}
+        onImport={handleImageImport}
+      />
+
+      {/* Font Import Modal */}
+      <ImportFromFontModal
+        isOpen={showFontImport}
+        onClose={() => setShowFontImport(false)}
+        onImport={handleFontImport}
+      />
     </div>
   );
 }

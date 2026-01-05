@@ -122,6 +122,12 @@ export type { AsciiMapModalProps } from "./AsciiMapModal";
 export { TextPreviewModal } from "./TextPreviewModal";
 export type { TextPreviewModalProps } from "./TextPreviewModal";
 
+export { ImportFromImageModal } from "./ImportFromImageModal";
+export type { ImportFromImageModalProps } from "./ImportFromImageModal";
+
+export { ImportFromFontModal } from "./ImportFromFontModal";
+export type { ImportFromFontModalProps } from "./ImportFromFontModal";
+
 export { CharacterContextMenu, useContextMenu } from "./CharacterContextMenu";
 export type { CharacterContextMenuProps, ContextMenuItem } from "./CharacterContextMenu";
 

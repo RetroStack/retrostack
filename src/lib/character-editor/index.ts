@@ -130,6 +130,31 @@ export {
   charactersEqual,
 } from "./utils";
 
+// Image import
+export {
+  loadImageData,
+  parseImageToCharacters,
+  detectCharacterDimensions,
+  createGridOverlayImage,
+  isValidImageFile,
+  getSupportedImageExtensions,
+  getDefaultImageImportOptions,
+} from "./imageImport";
+export type { ImageImportOptions, ImageParseResult } from "./imageImport";
+
+// Font import
+export {
+  loadFontFile,
+  parseFontToCharacters,
+  isValidFontFile,
+  getSupportedFontExtensions,
+  getDefaultFontImportOptions,
+  CHARACTER_RANGES,
+  getCharacterRangePreview,
+  isOpentypeAvailable,
+} from "./fontImport";
+export type { FontImportOptions, FontParseResult } from "./fontImport";
+
 // Export formats
 export {
   EXPORT_FORMATS,
