@@ -10,6 +10,7 @@ import {
   EditorSidebar,
   ColorPresetSelector,
   KeyboardShortcutsHelp,
+  TransformToolbar,
 } from "@/components/character-editor";
 import {
   useCharacterLibrary,
@@ -183,7 +184,7 @@ export function EditView() {
 
   useKeyboardShortcuts(shortcuts, { enabled: !showShortcutsHelp });
 
-  // Toolbar actions with separators
+  // Toolbar actions - simplified (transforms moved to right sidebar)
   const toolbarActions: ToolbarItem[] = [
     // Undo/Redo group
     {
@@ -209,105 +210,10 @@ export function EditView() {
       disabled: !editor.canRedo,
     },
     { type: "separator", id: "sep-1" },
-    // Transform group - Rotate
-    {
-      id: "rotate-left",
-      label: "Rotate Left",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-      ),
-      onClick: () => editor.rotateSelected("left"),
-    },
-    {
-      id: "rotate-right",
-      label: "Rotate Right",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" transform="scale(-1,1) translate(-24,0)" />
-        </svg>
-      ),
-      onClick: () => editor.rotateSelected("right"),
-    },
-    // Transform group - Shift
-    {
-      id: "shift-up",
-      label: "Shift Up",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        </svg>
-      ),
-      onClick: () => editor.shiftSelected("up"),
-    },
-    {
-      id: "shift-down",
-      label: "Shift Down",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      ),
-      onClick: () => editor.shiftSelected("down"),
-    },
-    {
-      id: "shift-left",
-      label: "Shift Left",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      ),
-      onClick: () => editor.shiftSelected("left"),
-    },
-    {
-      id: "shift-right",
-      label: "Shift Right",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      ),
-      onClick: () => editor.shiftSelected("right"),
-    },
-    { type: "separator", id: "sep-2" },
-    // Transform group - Flip/Invert
-    {
-      id: "flip-h",
-      label: "Flip H",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 12h8m-8 5h8M4 3v18m16-18v18" />
-        </svg>
-      ),
-      onClick: editor.flipSelectedHorizontal,
-    },
-    {
-      id: "flip-v",
-      label: "Flip V",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8v8M12 8v8m5-8v8M3 4h18M3 20h18" />
-        </svg>
-      ),
-      onClick: editor.flipSelectedVertical,
-    },
-    {
-      id: "invert",
-      label: "Invert",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      ),
-      onClick: editor.invertSelected,
-    },
-    { type: "separator", id: "sep-3" },
     // File operations group
     {
       id: "save",
-      label: saving ? "Saving..." : "Save",
+      label: saving ? "Saving..." : "Save (Ctrl+S)",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -327,9 +233,10 @@ export function EditView() {
       ),
       onClick: handleExport,
     },
+    { type: "separator", id: "sep-2" },
     {
       id: "help",
-      label: "Shortcuts",
+      label: "Shortcuts (?)",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -396,7 +303,6 @@ export function EditView() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         Back
-        {editor.isDirty && <span className="text-retro-pink">*</span>}
       </button>
 
       {/* Title overlay */}
@@ -414,7 +320,7 @@ export function EditView() {
       </div>
 
       <ToolContent
-        sidebar={
+        leftSidebar={
           <EditorSidebar
             characters={editor.characters}
             config={editor.config}
@@ -427,8 +333,22 @@ export function EditView() {
             backgroundColor={colors.background}
           />
         }
-        sidebarPosition="left"
-        sidebarWidth="220px"
+        leftSidebarWidth="240px"
+        rightSidebar={
+          <TransformToolbar
+            onShift={(direction) => editor.shiftSelected(direction)}
+            onRotate={(direction) => editor.rotateSelected(direction)}
+            onFlipHorizontal={editor.flipSelectedHorizontal}
+            onFlipVertical={editor.flipSelectedVertical}
+            onInvert={editor.invertSelected}
+            onClear={editor.clearSelected}
+            onFill={editor.fillSelected}
+            disabled={!selectedCharacter}
+            className="h-full"
+          />
+        }
+        rightSidebarWidth="80px"
+        rightSidebarCollapsible={false}
       >
         <EditorCanvas
           character={selectedCharacter}

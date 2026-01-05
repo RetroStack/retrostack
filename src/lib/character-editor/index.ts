@@ -68,6 +68,20 @@ export {
   isBuiltInCharacterSet,
 } from "./defaults";
 
+// Makers and systems
+export {
+  KNOWN_MAKERS,
+  getAllMakers,
+  getSystemsForMaker,
+  getAllSystems,
+  isKnownMaker,
+  isKnownSystem,
+  DIMENSION_PRESETS,
+  getPresetsForSystem,
+  findPresetByDimensions,
+} from "./makers";
+export type { MakerSystems, DimensionPreset } from "./makers";
+
 // Utilities
 export {
   formatFileSize,

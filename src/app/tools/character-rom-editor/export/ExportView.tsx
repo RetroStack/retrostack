@@ -127,6 +127,17 @@ export function ExportView() {
     return formatInfo?.extension || ".bin";
   }, [format]);
 
+  // Update filename extension when format changes
+  useEffect(() => {
+    if (filename) {
+      // Remove existing extension and add new one
+      const baseName = filename.replace(/\.(bin|h|asm|inc|png)$/i, "");
+      const newExtension = EXPORT_FORMATS.find((f) => f.id === format)?.extension || ".bin";
+      setFilename(baseName + newExtension);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [format]);
+
   // Handle export
   const handleExport = useCallback(async () => {
     if (!characterSet) return;

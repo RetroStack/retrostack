@@ -131,27 +131,29 @@ export function LibraryCard({
       </div>
 
       {/* Metadata */}
-      <div className="flex flex-wrap items-center gap-2 text-[10px]">
-        {/* Size badge */}
-        <span className="px-1.5 py-0.5 bg-retro-purple/30 text-retro-pink rounded">
-          {formatSize(config)}
-        </span>
-
-        {/* Character count */}
-        <span className="text-gray-500">
-          {characterCount} char{characterCount !== 1 ? "s" : ""}
-        </span>
-
-        {/* Built-in badge */}
-        {metadata.isBuiltIn && (
-          <span className="px-1.5 py-0.5 bg-retro-navy text-gray-400 rounded">
-            Built-in
+      <div className="flex items-center justify-between gap-2 text-[10px]">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Size badge */}
+          <span className="px-1.5 py-0.5 bg-retro-purple/30 text-retro-pink rounded">
+            {formatSize(config)}
           </span>
-        )}
 
-        {/* Source */}
+          {/* Character count */}
+          <span className="text-gray-500">
+            {characterCount} char{characterCount !== 1 ? "s" : ""}
+          </span>
+
+          {/* Built-in badge */}
+          {metadata.isBuiltIn && (
+            <span className="px-1.5 py-0.5 bg-retro-navy text-gray-400 rounded">
+              Built-in
+            </span>
+          )}
+        </div>
+
+        {/* Source - right aligned */}
         {!metadata.isBuiltIn && metadata.source && (
-          <span className="text-gray-500 truncate max-w-[100px]" title={metadata.source}>
+          <span className="text-gray-500 truncate max-w-[100px] text-right" title={metadata.source}>
             by {metadata.source}
           </span>
         )}

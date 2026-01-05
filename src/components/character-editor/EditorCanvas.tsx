@@ -177,17 +177,25 @@ export function EditorCanvas({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-retro-grid/30">
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-400 flex items-center flex-wrap gap-2">
           {characterIndex !== undefined && totalCharacters !== undefined ? (
-            <span>
-              Character <span className="text-retro-cyan">{characterIndex}</span>{" "}
-              of {totalCharacters}
-            </span>
+            <>
+              <span>
+                Character <span className="text-retro-cyan">{characterIndex}</span>{" "}
+                of {totalCharacters}
+              </span>
+              {/* ASCII character preview for printable characters (32-126) */}
+              {characterIndex >= 32 && characterIndex <= 126 && (
+                <span className="px-2 py-0.5 bg-retro-purple/30 text-retro-cyan rounded text-xs font-mono">
+                  = &apos;{String.fromCharCode(characterIndex)}&apos;
+                </span>
+              )}
+            </>
           ) : (
             <span>Editor</span>
           )}
           {batchMode && (
-            <span className="ml-2 px-1.5 py-0.5 text-xs bg-retro-pink/20 text-retro-pink rounded">
+            <span className="px-1.5 py-0.5 text-xs bg-retro-pink/20 text-retro-pink rounded">
               Batch
             </span>
           )}

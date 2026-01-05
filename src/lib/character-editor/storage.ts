@@ -8,7 +8,7 @@
 import { SerializedCharacterSet, CharacterSetMetadata, generateId } from "./types";
 
 const DB_NAME = "retrostack-character-editor";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped for maker/system fields migration
 const STORE_NAME = "character-sets";
 const FALLBACK_KEY = "retrostack-character-sets";
 
@@ -65,8 +65,10 @@ class CharacterStorage {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = (event.target as IDBOpenDBRequest).transaction!;
+        const oldVersion = event.oldVersion;
 
-        // Create the character sets store
+        // Create the character sets store (if new database)
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, {
             keyPath: "metadata.id",
@@ -78,6 +80,39 @@ class CharacterStorage {
             unique: false,
           });
           store.createIndex("by-size", "sizeKey", { unique: false });
+          store.createIndex("by-maker", "metadata.maker", { unique: false });
+          store.createIndex("by-system", "metadata.system", { unique: false });
+        } else {
+          // Migration from v1 to v2: add maker/system indexes and fields
+          if (oldVersion < 2) {
+            const store = transaction.objectStore(STORE_NAME);
+
+            // Add new indexes if they don't exist
+            if (!store.indexNames.contains("by-maker")) {
+              store.createIndex("by-maker", "metadata.maker", { unique: false });
+            }
+            if (!store.indexNames.contains("by-system")) {
+              store.createIndex("by-system", "metadata.system", { unique: false });
+            }
+
+            // Migrate existing records to add maker/system fields
+            const cursorRequest = store.openCursor();
+            cursorRequest.onsuccess = (e) => {
+              const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+              if (cursor) {
+                const record = cursor.value;
+                // Add maker/system fields if missing
+                if (record.metadata && record.metadata.maker === undefined) {
+                  record.metadata.maker = "";
+                }
+                if (record.metadata && record.metadata.system === undefined) {
+                  record.metadata.system = "";
+                }
+                cursor.update(record);
+                cursor.continue();
+              }
+            };
+          }
         }
       };
     });
@@ -97,7 +132,16 @@ class CharacterStorage {
     try {
       const data = localStorage.getItem(FALLBACK_KEY);
       if (!data) return [];
-      return JSON.parse(data);
+      const sets = JSON.parse(data) as SerializedCharacterSet[];
+      // Ensure maker/system fields exist for migrated data
+      return sets.map((set) => ({
+        ...set,
+        metadata: {
+          ...set.metadata,
+          maker: set.metadata.maker ?? "",
+          system: set.metadata.system ?? "",
+        },
+      }));
     } catch {
       return [];
     }
@@ -268,7 +312,7 @@ class CharacterStorage {
   }
 
   /**
-   * Search character sets by name or description
+   * Search character sets by name, description, source, maker, or system
    */
   async search(query: string): Promise<SerializedCharacterSet[]> {
     const all = await this.getAll();
@@ -278,7 +322,9 @@ class CharacterStorage {
       (set) =>
         set.metadata.name.toLowerCase().includes(lowerQuery) ||
         set.metadata.description.toLowerCase().includes(lowerQuery) ||
-        set.metadata.source.toLowerCase().includes(lowerQuery)
+        set.metadata.source.toLowerCase().includes(lowerQuery) ||
+        set.metadata.maker.toLowerCase().includes(lowerQuery) ||
+        set.metadata.system.toLowerCase().includes(lowerQuery)
     );
   }
 
@@ -296,6 +342,62 @@ class CharacterStorage {
       if (height !== null && set.config.height !== height) return false;
       return true;
     });
+  }
+
+  /**
+   * Filter character sets by makers (OR logic)
+   */
+  async filterByMakers(makers: string[]): Promise<SerializedCharacterSet[]> {
+    if (makers.length === 0) {
+      return this.getAll();
+    }
+    const all = await this.getAll();
+    const lowerMakers = makers.map((m) => m.toLowerCase());
+    return all.filter((set) =>
+      lowerMakers.includes(set.metadata.maker.toLowerCase())
+    );
+  }
+
+  /**
+   * Filter character sets by systems (OR logic)
+   */
+  async filterBySystems(systems: string[]): Promise<SerializedCharacterSet[]> {
+    if (systems.length === 0) {
+      return this.getAll();
+    }
+    const all = await this.getAll();
+    const lowerSystems = systems.map((s) => s.toLowerCase());
+    return all.filter((set) =>
+      lowerSystems.includes(set.metadata.system.toLowerCase())
+    );
+  }
+
+  /**
+   * Get unique makers available in the library
+   */
+  async getAvailableMakers(): Promise<string[]> {
+    const all = await this.getAll();
+    const makers = new Set<string>();
+    for (const set of all) {
+      if (set.metadata.maker) {
+        makers.add(set.metadata.maker);
+      }
+    }
+    return Array.from(makers).sort();
+  }
+
+  /**
+   * Get unique systems available in the library
+   */
+  async getAvailableSystems(): Promise<string[]> {
+    const all = await this.getAll();
+    const systems = new Set<string>();
+    for (const set of all) {
+      if (set.metadata.system) {
+        systems.add(set.metadata.system);
+      }
+    }
+    return Array.from(systems).sort();
   }
 
   /**

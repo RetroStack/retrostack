@@ -81,6 +81,8 @@ export function ImportView() {
             name: name.trim(),
             description: description.trim(),
             source: "yourself",
+            maker: "",
+            system: "",
             createdAt: now,
             updatedAt: now,
             isBuiltIn: false,

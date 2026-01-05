@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { KNOWN_MAKERS, getSystemsForMaker } from "@/lib/character-editor";
 
 export interface LibraryFiltersProps {
   /** Current search query */
@@ -15,6 +16,18 @@ export interface LibraryFiltersProps {
   heightFilter: number | null;
   /** Callback when size filter changes */
   onSizeFilterChange: (width: number | null, height: number | null) => void;
+  /** Available makers from library */
+  availableMakers?: string[];
+  /** Available systems from library */
+  availableSystems?: string[];
+  /** Current maker filter */
+  makerFilter?: string | null;
+  /** Current system filter */
+  systemFilter?: string | null;
+  /** Callback when maker filter changes */
+  onMakerFilterChange?: (maker: string | null) => void;
+  /** Callback when system filter changes */
+  onSystemFilterChange?: (system: string | null) => void;
   /** Total count of items */
   totalCount: number;
   /** Filtered count of items */
@@ -31,10 +44,38 @@ export function LibraryFilters({
   widthFilter,
   heightFilter,
   onSizeFilterChange,
+  availableMakers = [],
+  availableSystems = [],
+  makerFilter = null,
+  systemFilter = null,
+  onMakerFilterChange,
+  onSystemFilterChange,
   totalCount,
   filteredCount,
 }: LibraryFiltersProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  // Get all known makers for dropdown
+  const allMakers = useMemo(() => {
+    const known = KNOWN_MAKERS.map((m) => m.maker);
+    // Include any available makers not in the known list
+    const uniqueMakers = new Set([...known, ...availableMakers]);
+    return Array.from(uniqueMakers).sort();
+  }, [availableMakers]);
+
+  // Get systems for the selected maker
+  const systemsForMaker = useMemo(() => {
+    if (!makerFilter) {
+      // If no maker selected, show all available systems
+      return availableSystems.sort();
+    }
+    const knownSystems = getSystemsForMaker(makerFilter);
+    // Include any available systems not in the known list
+    const uniqueSystems = new Set([...knownSystems, ...availableSystems.filter(s =>
+      availableSystems.includes(s)
+    )]);
+    return Array.from(uniqueSystems).sort();
+  }, [makerFilter, availableSystems]);
 
   const handleSearchSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -57,10 +98,27 @@ export function LibraryFilters({
     setLocalSearch("");
     onSearchChange("");
     onSizeFilterChange(null, null);
-  }, [onSearchChange, onSizeFilterChange]);
+    onMakerFilterChange?.(null);
+    onSystemFilterChange?.(null);
+  }, [onSearchChange, onSizeFilterChange, onMakerFilterChange, onSystemFilterChange]);
+
+  const handleMakerChange = useCallback(
+    (maker: string | null) => {
+      onMakerFilterChange?.(maker);
+      // Clear system filter when maker changes
+      if (maker !== makerFilter) {
+        onSystemFilterChange?.(null);
+      }
+    },
+    [makerFilter, onMakerFilterChange, onSystemFilterChange]
+  );
 
   const hasActiveFilters =
-    searchQuery.length > 0 || widthFilter !== null || heightFilter !== null;
+    searchQuery.length > 0 ||
+    widthFilter !== null ||
+    heightFilter !== null ||
+    makerFilter !== null ||
+    systemFilter !== null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -156,6 +214,42 @@ export function LibraryFilters({
               ))}
           </select>
         </div>
+
+        {/* Maker/System filter */}
+        {onMakerFilterChange && onSystemFilterChange && (
+          <div className="flex gap-2">
+            <select
+              value={makerFilter ?? ""}
+              onChange={(e) => handleMakerChange(e.target.value || null)}
+              className="px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50 cursor-pointer"
+              aria-label="Filter by maker"
+            >
+              <option value="">All Makers</option>
+              {allMakers.map((maker) => (
+                <option key={maker} value={maker}>
+                  {maker}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={systemFilter ?? ""}
+              onChange={(e) => onSystemFilterChange(e.target.value || null)}
+              disabled={!makerFilter && systemsForMaker.length === 0}
+              className="px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded-lg text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50 cursor-pointer disabled:opacity-50"
+              aria-label="Filter by system"
+            >
+              <option value="">
+                {makerFilter ? "All Systems" : "Select Maker..."}
+              </option>
+              {systemsForMaker.map((system) => (
+                <option key={system} value={system}>
+                  {system}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Results count and clear button */}

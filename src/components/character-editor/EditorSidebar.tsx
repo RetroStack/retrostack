@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { InteractiveCharacterGrid } from "./CharacterGrid";
+import { CharacterSetOverview } from "./CharacterSetOverview";
 import { Character, CharacterSetConfig } from "@/lib/character-editor";
 
 export interface EditorSidebarProps {
@@ -100,28 +101,22 @@ export function EditorSidebar({
             ({characters.length})
           </span>
         </div>
+      </div>
 
-        {onAddCharacter && (
-          <button
-            onClick={onAddCharacter}
-            className="p-1 text-gray-400 hover:text-retro-cyan transition-colors"
-            title="Add new character"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
-        )}
+      {/* Character set overview - collapsible */}
+      <div className="border-b border-retro-grid/30">
+        <CharacterSetOverview
+          characters={characters}
+          config={config}
+          selectedIndex={selectedIndex}
+          onSelect={(index) => onSelect(index, false)}
+          foregroundColor={foregroundColor}
+          backgroundColor={backgroundColor}
+          maxWidth={200}
+          pixelScale={1}
+          collapsible
+          defaultCollapsed={false}
+        />
       </div>
 
       {/* Selection info */}
@@ -133,7 +128,7 @@ export function EditorSidebar({
         </div>
       )}
 
-      {/* Character grid */}
+      {/* Character grid - larger tiles, no indices */}
       <div className="flex-1 overflow-hidden">
         <InteractiveCharacterGrid
           characters={characters}
@@ -145,10 +140,11 @@ export function EditorSidebar({
           onAdd={onAddCharacter}
           foregroundColor={foregroundColor}
           backgroundColor={backgroundColor}
-          showIndices
-          minColumns={4}
-          maxColumns={16}
-          gap={4}
+          showIndices={false}
+          smallScale={4}
+          minColumns={3}
+          maxColumns={8}
+          gap={6}
           className="h-full"
         />
       </div>

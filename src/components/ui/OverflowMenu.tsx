@@ -80,7 +80,7 @@ export function OverflowMenu({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 z-50 min-w-[180px] glass rounded-md py-1 shadow-lg shadow-retro-purple/20 ${
+          className={`absolute top-full mt-2 z-50 min-w-[180px] bg-retro-navy/95 backdrop-blur-md border border-retro-grid/50 rounded-lg py-1 shadow-xl shadow-black/50 ${
             align === "right" ? "right-0" : "left-0"
           }`}
           role="menu"
@@ -92,10 +92,10 @@ export function OverflowMenu({
               transition-colors touch-target
               ${
                 item.disabled
-                  ? "text-gray-600 cursor-not-allowed"
+                  ? "text-gray-500 cursor-not-allowed"
                   : item.variant === "danger"
-                  ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                  : "text-gray-300 hover:bg-retro-purple/30 hover:text-retro-cyan"
+                  ? "text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                  : "text-gray-200 hover:bg-retro-purple/40 hover:text-retro-cyan"
               }
             `;
 
