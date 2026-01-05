@@ -19,12 +19,16 @@ export interface CharacterDisplayProps {
   batchSelected?: boolean;
   /** Click handler */
   onClick?: () => void;
-  /** Pixel click handler (for editing) */
-  onPixelClick?: (row: number, col: number) => void;
+  /** Pixel click handler (for editing, isRightClick indicates right mouse button) */
+  onPixelClick?: (row: number, col: number, isRightClick?: boolean) => void;
   /** Pixel drag handler (for editing) */
   onPixelDrag?: (row: number, col: number) => void;
   /** Drag end handler */
   onDragEnd?: () => void;
+  /** Pixel hover handler (for coordinate display) */
+  onPixelHover?: (row: number, col: number) => void;
+  /** Pixel leave handler (when mouse leaves canvas) */
+  onPixelLeave?: () => void;
   /** Foreground color */
   foregroundColor?: string;
   /** Background color */
@@ -63,6 +67,8 @@ export function CharacterDisplay({
   onPixelClick,
   onPixelDrag,
   onDragEnd,
+  onPixelHover,
+  onPixelLeave,
   foregroundColor = "#ffffff",
   backgroundColor = "#000000",
   gridColor = "#333333",
@@ -136,6 +142,8 @@ export function CharacterDisplay({
         onPixelClick={isLarge ? onPixelClick : undefined}
         onPixelDrag={isLarge ? onPixelDrag : undefined}
         onDragEnd={isLarge ? onDragEnd : undefined}
+        onPixelHover={isLarge ? onPixelHover : undefined}
+        onPixelLeave={isLarge ? onPixelLeave : undefined}
         interactive={isLarge && interactive}
         mixedPixels={mixedPixels}
       />

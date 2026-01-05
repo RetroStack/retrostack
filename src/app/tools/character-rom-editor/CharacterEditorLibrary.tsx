@@ -15,12 +15,14 @@ import {
   LibraryFilters,
 } from "@/components/character-editor";
 import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useToast } from "@/hooks/useToast";
 
 /**
  * Main library view for the Character ROM Editor
  */
 export function CharacterEditorLibrary() {
   const router = useRouter();
+  const toast = useToast();
   const {
     characterSets,
     loading,
@@ -140,13 +142,15 @@ export function CharacterEditorLibrary() {
     try {
       setIsDeleting(true);
       await deleteSet(deleteId);
+      toast.success("Character set deleted");
     } catch (e) {
       console.error("Failed to delete:", e);
+      toast.error("Failed to delete character set");
     } finally {
       setIsDeleting(false);
       setDeleteId(null);
     }
-  }, [deleteId, deleteSet]);
+  }, [deleteId, deleteSet, toast]);
 
   const handleDuplicate = useCallback(
     async (id: string) => {
@@ -155,13 +159,15 @@ export function CharacterEditorLibrary() {
         if (characterSet) {
           const newName = `${characterSet.metadata.name} (Copy)`;
           const newId = await saveAs(characterSet, newName);
+          toast.success("Character set duplicated");
           router.push(`/tools/character-rom-editor/edit?id=${newId}`);
         }
       } catch (e) {
         console.error("Failed to duplicate:", e);
+        toast.error("Failed to duplicate character set");
       }
     },
-    [getById, saveAs, router]
+    [getById, saveAs, router, toast]
   );
 
   const handleImport = useCallback(() => {
@@ -194,14 +200,16 @@ export function CharacterEditorLibrary() {
     try {
       setIsRenaming(true);
       await rename(renameId, renameName.trim());
+      toast.success("Character set renamed");
     } catch (e) {
       console.error("Failed to rename:", e);
+      toast.error("Failed to rename character set");
     } finally {
       setIsRenaming(false);
       setRenameId(null);
       setRenameName("");
     }
-  }, [renameId, renameName, rename]);
+  }, [renameId, renameName, rename, toast]);
 
   const handleSizeFilterChange = useCallback(
     (widths: number[], heights: number[]) => {

@@ -17,12 +17,16 @@ export interface PixelGridProps {
   foregroundColor?: string;
   /** Background (off) pixel color */
   backgroundColor?: string;
-  /** Callback when a pixel is clicked */
-  onPixelClick?: (row: number, col: number) => void;
+  /** Callback when a pixel is clicked (isRightClick indicates right mouse button) */
+  onPixelClick?: (row: number, col: number, isRightClick?: boolean) => void;
   /** Callback during pixel drag */
   onPixelDrag?: (row: number, col: number) => void;
   /** Callback when drag ends */
   onDragEnd?: () => void;
+  /** Callback when mouse hovers over a pixel (for coordinate display) */
+  onPixelHover?: (row: number, col: number) => void;
+  /** Callback when mouse leaves the canvas */
+  onPixelLeave?: () => void;
   /** Additional CSS classes */
   className?: string;
   /** Whether clicking is enabled */
@@ -50,6 +54,8 @@ export function PixelGrid({
   onPixelClick,
   onPixelDrag,
   onDragEnd,
+  onPixelHover,
+  onPixelLeave,
   className = "",
   interactive = true,
   mixedPixels,
@@ -170,9 +176,15 @@ export function PixelGrid({
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       if (!interactive) return;
 
+      // Prevent context menu for right-click
+      if (e.button === 2) {
+        e.preventDefault();
+      }
+
       const pixel = getPixelFromEvent(e);
       if (pixel && onPixelClick) {
-        onPixelClick(pixel.row, pixel.col);
+        // Pass right-click indicator (button 2 = right click)
+        onPixelClick(pixel.row, pixel.col, e.button === 2);
         lastPixelRef.current = pixel;
         setIsDragging(true);
       }
@@ -180,12 +192,29 @@ export function PixelGrid({
     [interactive, getPixelFromEvent, onPixelClick]
   );
 
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      // Prevent default context menu when interactive
+      if (interactive) {
+        e.preventDefault();
+      }
+    },
+    [interactive]
+  );
+
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!interactive || !isDragging || !onPixelDrag) return;
+      if (!interactive) return;
 
       const pixel = getPixelFromEvent(e);
-      if (pixel) {
+
+      // Always track hover for coordinates display
+      if (pixel && onPixelHover) {
+        onPixelHover(pixel.row, pixel.col);
+      }
+
+      // Handle drag painting
+      if (isDragging && onPixelDrag && pixel) {
         // Only trigger if moved to a different pixel
         if (
           !lastPixelRef.current ||
@@ -197,7 +226,7 @@ export function PixelGrid({
         }
       }
     },
-    [interactive, isDragging, getPixelFromEvent, onPixelDrag]
+    [interactive, isDragging, getPixelFromEvent, onPixelDrag, onPixelHover]
   );
 
   const handleMouseUp = useCallback(() => {
@@ -214,7 +243,9 @@ export function PixelGrid({
       lastPixelRef.current = null;
       onDragEnd?.();
     }
-  }, [isDragging, onDragEnd]);
+    // Notify that mouse left the canvas (clear coordinates display)
+    onPixelLeave?.();
+  }, [isDragging, onDragEnd, onPixelLeave]);
 
   // Touch handlers
   const handleTouchStart = useCallback(
@@ -274,6 +305,7 @@ export function PixelGrid({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
+      onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

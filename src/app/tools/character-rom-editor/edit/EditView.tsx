@@ -34,6 +34,7 @@ import {
   parseCharacterRom,
   AnchorPoint,
 } from "@/lib/character-editor";
+import { useToast } from "@/hooks/useToast";
 
 /**
  * Edit view for the Character ROM Editor
@@ -44,6 +45,7 @@ export function EditView() {
   const id = searchParams.get("id");
 
   const { getById, save, deleteSet } = useCharacterLibrary();
+  const toast = useToast();
 
   // Loading and error states
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,9 @@ export function EditView() {
 
   // Zoom state
   const [zoom, setZoom] = useState(20);
+
+  // Hover coordinates state (for pixel coordinate display)
+  const [hoverCoords, setHoverCoords] = useState<{ x: number; y: number } | null>(null);
 
   // Help modal state
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -151,12 +156,14 @@ export function EditView() {
       editor.markSaved();
       setCharacterSet(updatedSet);
       autoSave.clearAutoSave();
+      toast.success("Saved successfully");
     } catch (e) {
       console.error("Failed to save:", e);
+      toast.error("Failed to save changes");
     } finally {
       setSaving(false);
     }
-  }, [characterSet, editor, save, autoSave]);
+  }, [characterSet, editor, save, autoSave, toast]);
 
   // Handle back navigation with unsaved changes warning
   const handleBack = useCallback(() => {
@@ -187,9 +194,10 @@ export function EditView() {
   const confirmReset = useCallback(() => {
     if (characterSet) {
       editor.reset(characterSet);
+      toast.info("Changes discarded");
     }
     setShowResetConfirm(false);
-  }, [characterSet, editor]);
+  }, [characterSet, editor, toast]);
 
   // Handle resize
   const handleResize = useCallback(
@@ -241,17 +249,19 @@ export function EditView() {
 
       await save(newSet);
       autoSave.clearAutoSave();
+      toast.success(`Saved as "${saveAsName.trim()}"`);
 
       // Navigate to the new character set
       router.push(`/tools/character-rom-editor/edit?id=${newSet.metadata.id}`);
     } catch (e) {
       console.error("Failed to save as:", e);
+      toast.error("Failed to save copy");
     } finally {
       setSavingAs(false);
       setShowSaveAsDialog(false);
       setSaveAsName("");
     }
-  }, [characterSet, saveAsName, editor, save, autoSave, router]);
+  }, [characterSet, saveAsName, editor, save, autoSave, router, toast]);
 
   // Handle delete character set
   const handleDelete = useCallback(async () => {
@@ -260,33 +270,41 @@ export function EditView() {
     try {
       setDeleting(true);
       await deleteSet(id);
+      toast.success("Character set deleted");
       router.push("/tools/character-rom-editor");
     } catch (e) {
       console.error("Failed to delete:", e);
+      toast.error("Failed to delete character set");
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
     }
-  }, [id, deleteSet, router]);
+  }, [id, deleteSet, router, toast]);
 
   // Handle metadata update
   const handleMetadataUpdate = useCallback(
     async (updates: Partial<CharacterSet["metadata"]>) => {
       if (!characterSet) return;
 
-      const updatedSet: CharacterSet = {
-        ...characterSet,
-        metadata: {
-          ...characterSet.metadata,
-          ...updates,
-          updatedAt: Date.now(),
-        },
-      };
+      try {
+        const updatedSet: CharacterSet = {
+          ...characterSet,
+          metadata: {
+            ...characterSet.metadata,
+            ...updates,
+            updatedAt: Date.now(),
+          },
+        };
 
-      await save(updatedSet);
-      setCharacterSet(updatedSet);
+        await save(updatedSet);
+        setCharacterSet(updatedSet);
+        toast.success("Info updated");
+      } catch (e) {
+        console.error("Failed to update metadata:", e);
+        toast.error("Failed to update info");
+      }
     },
-    [characterSet, save]
+    [characterSet, save, toast]
   );
 
   // Open Save As dialog
@@ -455,6 +473,27 @@ export function EditView() {
       ),
       onClick: () => setShowShortcutsHelp(true),
     },
+    { type: "separator", id: "sep-4" },
+    {
+      id: "bug-report",
+      label: "Report Bug",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      onClick: () => window.open("https://github.com/RetroStack/retrostack-web/issues", "_blank"),
+    },
+    {
+      id: "github",
+      label: "GitHub",
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+        </svg>
+      ),
+      onClick: () => window.open("https://github.com/RetroStack/retrostack-web", "_blank"),
+    },
   ];
 
   if (loading) {
@@ -517,6 +556,7 @@ export function EditView() {
         colors={colors}
         onColorsChange={setColors}
         onBack={handleBack}
+        hoverCoords={hoverCoords}
       />
 
       <ToolContent
@@ -538,6 +578,9 @@ export function EditView() {
         leftSidebarWidth="240px"
         rightSidebar={
           <TransformToolbar
+            character={selectedCharacter}
+            characterWidth={editor.config.width}
+            characterHeight={editor.config.height}
             onShift={(direction) => editor.shiftSelected(direction)}
             onRotate={(direction) => editor.rotateSelected(direction)}
             onFlipHorizontal={editor.flipSelectedHorizontal}
@@ -567,6 +610,11 @@ export function EditView() {
           backgroundColor={colors.background}
           gridColor={colors.gridColor}
           zoom={zoom}
+          minZoom={8}
+          maxZoom={40}
+          onZoomChange={setZoom}
+          onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
+          onPixelLeave={() => setHoverCoords(null)}
         />
       </ToolContent>
 

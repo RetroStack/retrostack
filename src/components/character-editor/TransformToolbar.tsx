@@ -1,8 +1,105 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo, ReactNode } from "react";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { Character } from "@/lib/character-editor";
+import {
+  rotateCharacter,
+  shiftCharacter,
+  flipHorizontal,
+  flipVertical,
+  invertCharacter,
+  clearCharacter,
+  fillCharacter,
+  centerCharacter,
+} from "@/lib/character-editor/transforms";
+
+/**
+ * Mini character preview for tooltip display
+ */
+function MiniPreview({
+  pixels,
+  label,
+  foregroundColor = "#ffffff",
+  backgroundColor = "#000000",
+}: {
+  pixels: boolean[][];
+  label: string;
+  foregroundColor?: string;
+  backgroundColor?: string;
+}) {
+  const height = pixels.length;
+  const width = pixels[0]?.length || 0;
+  const scale = 3; // Small scale for tooltip
+
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="text-[9px] text-gray-400 uppercase">{label}</span>
+      <div
+        className="border border-gray-600"
+        style={{
+          width: width * scale,
+          height: height * scale,
+          display: "grid",
+          gridTemplateColumns: `repeat(${width}, ${scale}px)`,
+          gridTemplateRows: `repeat(${height}, ${scale}px)`,
+        }}
+      >
+        {pixels.flat().map((isOn, idx) => (
+          <div
+            key={idx}
+            style={{
+              backgroundColor: isOn ? foregroundColor : backgroundColor,
+              width: scale,
+              height: scale,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Transform preview tooltip content
+ */
+function TransformPreviewContent({
+  before,
+  after,
+  label,
+  shortcut,
+}: {
+  before: boolean[][];
+  after: boolean[][];
+  label: string;
+  shortcut?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 p-1">
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-medium">{label}</span>
+        {shortcut && (
+          <span className="text-gray-400 font-mono text-[10px] bg-gray-700/50 px-1.5 py-0.5 rounded">
+            {shortcut}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <MiniPreview pixels={before} label="Before" />
+        <span className="text-gray-500">→</span>
+        <MiniPreview pixels={after} label="After" />
+      </div>
+    </div>
+  );
+}
 
 export interface TransformToolbarProps {
+  /** Current character being edited (for preview) */
+  character?: Character | null;
+  /** Character dimensions (for clear/fill) */
+  characterWidth?: number;
+  /** Character dimensions (for clear/fill) */
+  characterHeight?: number;
   /** Callback for shift operations */
   onShift: (direction: "up" | "down" | "left" | "right") => void;
   /** Callback for rotate operations */
@@ -163,37 +260,45 @@ function ScaleIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 /**
- * Toolbar button component
+ * Toolbar button component with tooltip (supports preview content)
  */
 function ToolbarButton({
   onClick,
   disabled,
-  title,
+  tooltip,
+  shortcut,
+  previewContent,
   children,
   className = "",
 }: {
   onClick: () => void;
   disabled?: boolean;
-  title: string;
+  tooltip: string;
+  shortcut?: string;
+  previewContent?: ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
+  // Use preview content if available, otherwise simple tooltip
+  const tooltipContent = previewContent || tooltip;
+
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={`
-        p-2 rounded transition-colors
-        ${disabled
-          ? "text-gray-600 cursor-not-allowed"
-          : "text-gray-400 hover:text-retro-cyan hover:bg-retro-purple/30"
-        }
-        ${className}
-      `}
-    >
-      {children}
-    </button>
+    <Tooltip content={tooltipContent} shortcut={previewContent ? undefined : shortcut} position="left">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`
+          p-2 rounded transition-colors
+          ${disabled
+            ? "text-gray-600 cursor-not-allowed"
+            : "text-gray-400 hover:text-retro-cyan hover:bg-retro-purple/30"
+          }
+          ${className}
+        `}
+      >
+        {children}
+      </button>
+    </Tooltip>
   );
 }
 
@@ -220,6 +325,9 @@ function ToolbarLabel({ children }: { children: React.ReactNode }) {
  * Features a cross layout for shift buttons and grouped transform operations
  */
 export function TransformToolbar({
+  character,
+  characterWidth = 8,
+  characterHeight = 8,
   onShift,
   onRotate,
   onFlipHorizontal,
@@ -241,6 +349,109 @@ export function TransformToolbar({
   const handleRotateLeft = useCallback(() => onRotate("left"), [onRotate]);
   const handleRotateRight = useCallback(() => onRotate("right"), [onRotate]);
 
+  // Generate preview content for transform buttons
+  const previews = useMemo(() => {
+    if (!character) return null;
+
+    const before = character.pixels;
+
+    return {
+      shiftUp: (
+        <TransformPreviewContent
+          before={before}
+          after={shiftCharacter(character, "up").pixels}
+          label="Shift Up"
+          shortcut="W"
+        />
+      ),
+      shiftDown: (
+        <TransformPreviewContent
+          before={before}
+          after={shiftCharacter(character, "down").pixels}
+          label="Shift Down"
+          shortcut="S"
+        />
+      ),
+      shiftLeft: (
+        <TransformPreviewContent
+          before={before}
+          after={shiftCharacter(character, "left").pixels}
+          label="Shift Left"
+          shortcut="A"
+        />
+      ),
+      shiftRight: (
+        <TransformPreviewContent
+          before={before}
+          after={shiftCharacter(character, "right").pixels}
+          label="Shift Right"
+          shortcut="D"
+        />
+      ),
+      rotateLeft: (
+        <TransformPreviewContent
+          before={before}
+          after={rotateCharacter(character, "left").pixels}
+          label="Rotate Left"
+          shortcut="Shift+R"
+        />
+      ),
+      rotateRight: (
+        <TransformPreviewContent
+          before={before}
+          after={rotateCharacter(character, "right").pixels}
+          label="Rotate Right"
+          shortcut="R"
+        />
+      ),
+      flipHorizontal: (
+        <TransformPreviewContent
+          before={before}
+          after={flipHorizontal(character).pixels}
+          label="Flip Horizontal"
+          shortcut="H"
+        />
+      ),
+      flipVertical: (
+        <TransformPreviewContent
+          before={before}
+          after={flipVertical(character).pixels}
+          label="Flip Vertical"
+          shortcut="V"
+        />
+      ),
+      invert: (
+        <TransformPreviewContent
+          before={before}
+          after={invertCharacter(character).pixels}
+          label="Invert Colors"
+          shortcut="I"
+        />
+      ),
+      center: (
+        <TransformPreviewContent
+          before={before}
+          after={centerCharacter(character).pixels}
+          label="Center Content"
+        />
+      ),
+      clear: (
+        <TransformPreviewContent
+          before={before}
+          after={clearCharacter(characterWidth, characterHeight).pixels}
+          label="Clear"
+        />
+      ),
+      fill: (
+        <TransformPreviewContent
+          before={before}
+          after={fillCharacter(characterWidth, characterHeight).pixels}
+          label="Fill"
+        />
+      ),
+    };
+  }, [character, characterWidth, characterHeight]);
+
   return (
     <div
       className={`
@@ -255,7 +466,9 @@ export function TransformToolbar({
         <ToolbarButton
           onClick={handleShiftUp}
           disabled={disabled}
-          title="Shift Up (W)"
+          tooltip="Shift Up"
+          shortcut="W"
+          previewContent={previews?.shiftUp}
         >
           <ArrowUpIcon />
         </ToolbarButton>
@@ -265,7 +478,9 @@ export function TransformToolbar({
           <ToolbarButton
             onClick={handleShiftLeft}
             disabled={disabled}
-            title="Shift Left (A)"
+            tooltip="Shift Left"
+            shortcut="A"
+            previewContent={previews?.shiftLeft}
           >
             <ArrowLeftIcon />
           </ToolbarButton>
@@ -274,7 +489,8 @@ export function TransformToolbar({
           <ToolbarButton
             onClick={onCenter || (() => {})}
             disabled={disabled || !onCenter}
-            title="Center Content"
+            tooltip="Center Content"
+            previewContent={previews?.center}
           >
             <CenterIcon />
           </ToolbarButton>
@@ -282,7 +498,9 @@ export function TransformToolbar({
           <ToolbarButton
             onClick={handleShiftRight}
             disabled={disabled}
-            title="Shift Right (D)"
+            tooltip="Shift Right"
+            shortcut="D"
+            previewContent={previews?.shiftRight}
           >
             <ArrowRightIcon />
           </ToolbarButton>
@@ -292,7 +510,9 @@ export function TransformToolbar({
         <ToolbarButton
           onClick={handleShiftDown}
           disabled={disabled}
-          title="Shift Down (S)"
+          tooltip="Shift Down"
+          shortcut="S"
+          previewContent={previews?.shiftDown}
         >
           <ArrowDownIcon />
         </ToolbarButton>
@@ -306,14 +526,18 @@ export function TransformToolbar({
         <ToolbarButton
           onClick={handleRotateLeft}
           disabled={disabled}
-          title="Rotate Left (Shift+R)"
+          tooltip="Rotate Left"
+          shortcut="Shift+R"
+          previewContent={previews?.rotateLeft}
         >
           <RotateLeftIcon />
         </ToolbarButton>
         <ToolbarButton
           onClick={handleRotateRight}
           disabled={disabled}
-          title="Rotate Right (R)"
+          tooltip="Rotate Right"
+          shortcut="R"
+          previewContent={previews?.rotateRight}
         >
           <RotateRightIcon />
         </ToolbarButton>
@@ -327,14 +551,18 @@ export function TransformToolbar({
         <ToolbarButton
           onClick={onFlipHorizontal}
           disabled={disabled}
-          title="Flip Horizontal (H)"
+          tooltip="Flip Horizontal"
+          shortcut="H"
+          previewContent={previews?.flipHorizontal}
         >
           <FlipHorizontalIcon />
         </ToolbarButton>
         <ToolbarButton
           onClick={onFlipVertical}
           disabled={disabled}
-          title="Flip Vertical (V)"
+          tooltip="Flip Vertical"
+          shortcut="V"
+          previewContent={previews?.flipVertical}
         >
           <FlipVerticalIcon />
         </ToolbarButton>
@@ -348,7 +576,9 @@ export function TransformToolbar({
         <ToolbarButton
           onClick={onInvert}
           disabled={disabled}
-          title="Invert Colors (I)"
+          tooltip="Invert Colors"
+          shortcut="I"
+          previewContent={previews?.invert}
         >
           <InvertIcon />
         </ToolbarButton>
@@ -356,14 +586,16 @@ export function TransformToolbar({
           <ToolbarButton
             onClick={onClear}
             disabled={disabled}
-            title="Clear"
+            tooltip="Clear"
+            previewContent={previews?.clear}
           >
             <ClearIcon />
           </ToolbarButton>
           <ToolbarButton
             onClick={onFill}
             disabled={disabled}
-            title="Fill"
+            tooltip="Fill"
+            previewContent={previews?.fill}
           >
             <FillIcon />
           </ToolbarButton>
@@ -378,7 +610,7 @@ export function TransformToolbar({
           <ToolbarButton
             onClick={onScale}
             disabled={disabled}
-            title="Scale Character"
+            tooltip="Scale Character"
           >
             <ScaleIcon />
           </ToolbarButton>
@@ -395,7 +627,8 @@ export function TransformToolbar({
               <ToolbarButton
                 onClick={onCopy}
                 disabled={disabled}
-                title="Copy from character set (C)"
+                tooltip="Copy from character set"
+                shortcut="C"
               >
                 <CopyIcon />
               </ToolbarButton>
@@ -404,7 +637,8 @@ export function TransformToolbar({
               <ToolbarButton
                 onClick={onDelete}
                 disabled={disabled}
-                title="Delete character (Del)"
+                tooltip="Delete character"
+                shortcut="Del"
                 className="hover:text-red-400"
               >
                 <DeleteIcon />

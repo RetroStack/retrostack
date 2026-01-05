@@ -29,6 +29,16 @@ export interface EditorCanvasProps {
   gridThickness?: number;
   /** Zoom level (scale factor) */
   zoom?: number;
+  /** Minimum zoom level */
+  minZoom?: number;
+  /** Maximum zoom level */
+  maxZoom?: number;
+  /** Callback when zoom changes (for scroll wheel zoom) */
+  onZoomChange?: (zoom: number) => void;
+  /** Callback when hovering over a pixel (returns coordinates) */
+  onPixelHover?: (row: number, col: number) => void;
+  /** Callback when mouse leaves the canvas */
+  onPixelLeave?: () => void;
   /** Additional CSS classes */
   className?: string;
 }
@@ -50,6 +60,11 @@ export function EditorCanvas({
   gridColor = "#333333",
   gridThickness = 1,
   zoom = 20,
+  minZoom = 8,
+  maxZoom = 40,
+  onZoomChange,
+  onPixelHover,
+  onPixelLeave,
   className = "",
 }: EditorCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,17 +87,23 @@ export function EditorCanvas({
   }, [batchMode, getPixelState, character, config.height, config.width]);
 
   const handlePixelClick = useCallback(
-    (row: number, col: number) => {
+    (row: number, col: number, isRightClick?: boolean) => {
       if (!isDragging) {
-        onPixelToggle?.(row, col);
-
-        // Set drag value based on the new state (opposite of current)
-        const currentValue = character?.pixels[row]?.[col] ?? false;
-        setDragValue(!currentValue);
+        if (isRightClick) {
+          // Right-click: paint background (turn pixel off)
+          onPixelSet?.(row, col, false);
+          setDragValue(false);
+        } else {
+          // Left-click: toggle pixel
+          onPixelToggle?.(row, col);
+          // Set drag value based on the new state (opposite of current)
+          const currentValue = character?.pixels[row]?.[col] ?? false;
+          setDragValue(!currentValue);
+        }
         setIsDragging(true);
       }
     },
-    [isDragging, onPixelToggle, character]
+    [isDragging, onPixelToggle, onPixelSet, character]
   );
 
   const handlePixelDrag = useCallback(
@@ -101,6 +122,24 @@ export function EditorCanvas({
       onDragEnd?.();
     }
   }, [isDragging, onDragEnd]);
+
+  // Handle scroll wheel zoom
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      // Only zoom if Ctrl/Cmd is held
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (onZoomChange) {
+          const delta = e.deltaY > 0 ? -4 : 4;
+          const newZoom = Math.min(maxZoom, Math.max(minZoom, zoom + delta));
+          if (newZoom !== zoom) {
+            onZoomChange(newZoom);
+          }
+        }
+      }
+    },
+    [zoom, minZoom, maxZoom, onZoomChange]
+  );
 
   if (!character) {
     return (
@@ -130,6 +169,7 @@ export function EditorCanvas({
       ref={containerRef}
       className={`flex items-center justify-center h-full overflow-hidden bg-black/20 ${className}`}
       tabIndex={0}
+      onWheel={handleWheel}
     >
       <div
         className="inline-block"
@@ -147,6 +187,8 @@ export function EditorCanvas({
           onPixelClick={handlePixelClick}
           onPixelDrag={handlePixelDrag}
           onDragEnd={handleDragEnd}
+          onPixelHover={onPixelHover}
+          onPixelLeave={onPixelLeave}
           interactive={true}
           mixedPixels={mixedPixels}
         />
