@@ -1,0 +1,256 @@
+"use client";
+
+import { useEffect, useCallback, useRef } from "react";
+
+export interface KeyboardShortcut {
+  key: string;
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+  action: () => void;
+  description: string;
+  context?: string;
+}
+
+export interface UseKeyboardShortcutsOptions {
+  /** Whether shortcuts are enabled */
+  enabled?: boolean;
+  /** Element to attach listeners to (default: window) */
+  target?: HTMLElement | null;
+}
+
+/**
+ * Hook for managing keyboard shortcuts
+ */
+export function useKeyboardShortcuts(
+  shortcuts: KeyboardShortcut[],
+  options: UseKeyboardShortcutsOptions = {}
+) {
+  const { enabled = true, target = null } = options;
+  const shortcutsRef = useRef(shortcuts);
+  shortcutsRef.current = shortcuts;
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      const tagName = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tagName === "input" || tagName === "textarea" || tagName === "select") {
+        // Allow certain shortcuts even in inputs
+        const isModified = e.ctrlKey || e.metaKey;
+        if (!isModified) return;
+      }
+
+      for (const shortcut of shortcutsRef.current) {
+        const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase();
+        const ctrlMatch = !!shortcut.ctrl === (e.ctrlKey || e.metaKey);
+        const shiftMatch = !!shortcut.shift === e.shiftKey;
+        const altMatch = !!shortcut.alt === e.altKey;
+
+        if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
+          e.preventDefault();
+          shortcut.action();
+          return;
+        }
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const eventTarget = target || window;
+    eventTarget.addEventListener("keydown", handleKeyDown as EventListener);
+
+    return () => {
+      eventTarget.removeEventListener("keydown", handleKeyDown as EventListener);
+    };
+  }, [enabled, target, handleKeyDown]);
+}
+
+/**
+ * Format a shortcut for display
+ */
+export function formatShortcut(shortcut: KeyboardShortcut): string {
+  const parts: string[] = [];
+  const isMac = typeof navigator !== "undefined" && /Mac/.test(navigator.platform);
+
+  if (shortcut.ctrl) {
+    parts.push(isMac ? "⌘" : "Ctrl");
+  }
+  if (shortcut.alt) {
+    parts.push(isMac ? "⌥" : "Alt");
+  }
+  if (shortcut.shift) {
+    parts.push(isMac ? "⇧" : "Shift");
+  }
+
+  // Format the key
+  let key = shortcut.key;
+  if (key === " ") key = "Space";
+  else if (key === "ArrowUp") key = "↑";
+  else if (key === "ArrowDown") key = "↓";
+  else if (key === "ArrowLeft") key = "←";
+  else if (key === "ArrowRight") key = "→";
+  else if (key === "Escape") key = "Esc";
+  else if (key === "Delete") key = "Del";
+  else if (key === "Backspace") key = "⌫";
+  else key = key.toUpperCase();
+
+  parts.push(key);
+
+  return parts.join(isMac ? "" : "+");
+}
+
+/**
+ * Create editor shortcuts
+ */
+export function createEditorShortcuts(actions: {
+  undo: () => void;
+  redo: () => void;
+  save: () => void;
+  rotateLeft: () => void;
+  rotateRight: () => void;
+  shiftUp: () => void;
+  shiftDown: () => void;
+  shiftLeft: () => void;
+  shiftRight: () => void;
+  invert: () => void;
+  flipHorizontal: () => void;
+  flipVertical: () => void;
+  selectAll: () => void;
+  deleteSelected: () => void;
+  addCharacter: () => void;
+  showHelp: () => void;
+}): KeyboardShortcut[] {
+  return [
+    // Undo/Redo
+    {
+      key: "z",
+      ctrl: true,
+      action: actions.undo,
+      description: "Undo",
+      context: "Editor",
+    },
+    {
+      key: "z",
+      ctrl: true,
+      shift: true,
+      action: actions.redo,
+      description: "Redo",
+      context: "Editor",
+    },
+    {
+      key: "y",
+      ctrl: true,
+      action: actions.redo,
+      description: "Redo",
+      context: "Editor",
+    },
+
+    // Save
+    {
+      key: "s",
+      ctrl: true,
+      action: actions.save,
+      description: "Save",
+      context: "Editor",
+    },
+
+    // Transforms
+    {
+      key: "r",
+      action: actions.rotateRight,
+      description: "Rotate right",
+      context: "Editor",
+    },
+    {
+      key: "r",
+      shift: true,
+      action: actions.rotateLeft,
+      description: "Rotate left",
+      context: "Editor",
+    },
+    {
+      key: "w",
+      action: actions.shiftUp,
+      description: "Shift up",
+      context: "Editor",
+    },
+    {
+      key: "s",
+      action: actions.shiftDown,
+      description: "Shift down",
+      context: "Editor",
+    },
+    {
+      key: "a",
+      action: actions.shiftLeft,
+      description: "Shift left",
+      context: "Editor",
+    },
+    {
+      key: "d",
+      action: actions.shiftRight,
+      description: "Shift right",
+      context: "Editor",
+    },
+    {
+      key: "i",
+      action: actions.invert,
+      description: "Invert colors",
+      context: "Editor",
+    },
+    {
+      key: "h",
+      action: actions.flipHorizontal,
+      description: "Flip horizontal",
+      context: "Editor",
+    },
+    {
+      key: "v",
+      action: actions.flipVertical,
+      description: "Flip vertical",
+      context: "Editor",
+    },
+
+    // Selection
+    {
+      key: "a",
+      ctrl: true,
+      action: actions.selectAll,
+      description: "Select all",
+      context: "Sidebar",
+    },
+    {
+      key: "Delete",
+      action: actions.deleteSelected,
+      description: "Delete selected",
+      context: "Sidebar",
+    },
+    {
+      key: "Backspace",
+      action: actions.deleteSelected,
+      description: "Delete selected",
+      context: "Sidebar",
+    },
+
+    // Add
+    {
+      key: "n",
+      ctrl: true,
+      action: actions.addCharacter,
+      description: "Add new character",
+      context: "Editor",
+    },
+
+    // Help
+    {
+      key: "?",
+      action: actions.showHelp,
+      description: "Show keyboard shortcuts",
+      context: "Global",
+    },
+  ];
+}
