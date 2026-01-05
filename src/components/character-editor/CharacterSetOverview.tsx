@@ -10,6 +10,8 @@ export interface CharacterSetOverviewProps {
   config: CharacterSetConfig;
   /** Currently selected character index */
   selectedIndex: number;
+  /** Batch selected character indices */
+  batchSelection?: Set<number>;
   /** Callback when a character is clicked */
   onSelect?: (index: number) => void;
   /** Foreground color for pixels */
@@ -18,6 +20,8 @@ export interface CharacterSetOverviewProps {
   backgroundColor?: string;
   /** Selection highlight color */
   selectionColor?: string;
+  /** Batch selection highlight color */
+  batchSelectionColor?: string;
   /** Maximum width of the overview */
   maxWidth?: number;
   /** Scale factor for each pixel (1-3) */
@@ -40,10 +44,12 @@ export function CharacterSetOverview({
   characters,
   config,
   selectedIndex,
+  batchSelection,
   onSelect,
   foregroundColor = "#ffffff",
   backgroundColor = "#000000",
   selectionColor = "#00ffff",
+  batchSelectionColor = "#ff69b4",
   maxWidth = 200,
   pixelScale = 1,
   gap = 1,
@@ -110,16 +116,25 @@ export function CharacterSetOverview({
         });
       });
 
-      // Draw selection highlight
+      // Draw batch selection highlight (pink border)
+      if (batchSelection?.has(index) && index !== selectedIndex) {
+        ctx.strokeStyle = batchSelectionColor;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.7;
+        ctx.strokeRect(x + 0.5, y + 0.5, charWidth - 1, charHeight - 1);
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw primary selection highlight (cyan border)
       if (index === selectedIndex) {
         ctx.strokeStyle = selectionColor;
         ctx.lineWidth = 2;
-        ctx.strokeRect(x - 1, y - 1, charWidth + 2, charHeight + 2);
-      } else if (index === hoveredIndex) {
+        ctx.strokeRect(x + 1, y + 1, charWidth - 2, charHeight - 2);
+      } else if (index === hoveredIndex && !batchSelection?.has(index)) {
         ctx.strokeStyle = selectionColor;
         ctx.lineWidth = 1;
         ctx.globalAlpha = 0.5;
-        ctx.strokeRect(x, y, charWidth, charHeight);
+        ctx.strokeRect(x + 0.5, y + 0.5, charWidth - 1, charHeight - 1);
         ctx.globalAlpha = 1;
       }
     });
@@ -127,10 +142,12 @@ export function CharacterSetOverview({
     characters,
     config,
     selectedIndex,
+    batchSelection,
     hoveredIndex,
     foregroundColor,
     backgroundColor,
     selectionColor,
+    batchSelectionColor,
     pixelScale,
     gap,
     columns,
@@ -217,12 +234,7 @@ export function CharacterSetOverview({
           onClick={toggleCollapsed}
           className="w-full flex items-center justify-between p-2 text-sm text-gray-300 hover:text-retro-cyan transition-colors"
         >
-          <span className="font-medium">
-            Overview
-            <span className="ml-2 text-xs text-gray-500">
-              ({characters.length})
-            </span>
-          </span>
+          <span className="font-medium">Overview</span>
           <svg
             className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-180"}`}
             fill="none"

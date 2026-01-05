@@ -440,6 +440,8 @@ export function EditView() {
             onSelect={editor.toggleBatchSelection}
             onAddCharacter={editor.addCharacter}
             onDeleteSelected={editor.deleteSelected}
+            onSelectAll={editor.selectAll}
+            onSelectNone={() => editor.toggleBatchSelection(editor.selectedIndex, false)}
             foregroundColor={colors.foreground}
             backgroundColor={colors.background}
           />

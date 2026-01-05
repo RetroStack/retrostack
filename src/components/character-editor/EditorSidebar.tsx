@@ -20,6 +20,10 @@ export interface EditorSidebarProps {
   onAddCharacter?: () => void;
   /** Callback to delete selected character(s) */
   onDeleteSelected?: () => void;
+  /** Callback to select all characters */
+  onSelectAll?: () => void;
+  /** Callback to clear batch selection */
+  onSelectNone?: () => void;
   /** Whether to show add button */
   showAddButton?: boolean;
   /** Foreground color */
@@ -41,6 +45,8 @@ export function EditorSidebar({
   onSelect,
   onAddCharacter,
   onDeleteSelected,
+  onSelectAll,
+  onSelectNone,
   showAddButton = true,
   foregroundColor = "#ffffff",
   backgroundColor = "#000000",
@@ -49,6 +55,9 @@ export function EditorSidebar({
   const totalSelected = batchSelection.size + 1;
   const hasMultipleSelected = totalSelected > 1;
   const [gridCollapsed, setGridCollapsed] = useState(false);
+
+  // Check if selected character is printable ASCII (32-126)
+  const isPrintableAscii = selectedIndex >= 32 && selectedIndex <= 126;
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -86,19 +95,27 @@ export function EditorSidebar({
         }
       }
     },
-    [characters.length, selectedIndex, onSelect, onDeleteSelected]
+    [characters.length, selectedIndex, onSelect, onDeleteSelected],
   );
 
   return (
-    <div
-      className={`flex flex-col h-full overflow-hidden ${className}`}
-      onKeyDown={handleKeyDown}
-    >
+    <div className={`flex flex-col h-full overflow-hidden ${className}`} onKeyDown={handleKeyDown}>
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between p-3 border-b border-retro-grid/30">
-        <div className="text-sm font-medium text-gray-300">
-          Characters
+      <div className="flex-shrink-0 p-3 border-b border-retro-grid/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-300">Characters</span>
+            <span className="text-xs text-gray-500">({characters.length})</span>
+            {isPrintableAscii && (
+              <span className="px-1.5 py-0.5 bg-retro-purple/30 text-retro-cyan rounded text-xs font-mono">
+                &apos;{String.fromCharCode(selectedIndex)}&apos;
+              </span>
+            )}
+          </div>
         </div>
+        {hasMultipleSelected && (
+          <div className="mt-1 text-xs text-retro-pink">{totalSelected} characters selected</div>
+        )}
       </div>
 
       {/* Scrollable content area */}
@@ -109,6 +126,7 @@ export function EditorSidebar({
             characters={characters}
             config={config}
             selectedIndex={selectedIndex}
+            batchSelection={batchSelection}
             onSelect={(index) => onSelect(index, false)}
             foregroundColor={foregroundColor}
             backgroundColor={backgroundColor}
@@ -119,41 +137,48 @@ export function EditorSidebar({
           />
         </div>
 
-        {/* Selection info */}
-        {hasMultipleSelected && (
-          <div className="px-3 py-2 bg-retro-pink/10 border-b border-retro-grid/30">
-            <span className="text-xs text-retro-pink">
-              {totalSelected} characters selected
-            </span>
-          </div>
-        )}
-
         {/* Character grid - collapsible, improved density */}
         <div className="border-b border-retro-grid/30">
-          <button
-            onClick={() => setGridCollapsed(!gridCollapsed)}
-            className="w-full flex items-center justify-between p-2 text-sm text-gray-300 hover:text-retro-cyan transition-colors"
-          >
-            <span className="font-medium">
-              Characters
-              <span className="ml-2 text-xs text-gray-500">
-                ({characters.length})
-              </span>
-            </span>
-            <svg
-              className={`w-4 h-4 transition-transform ${gridCollapsed ? "" : "rotate-180"}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center justify-between p-2">
+            <button
+              onClick={() => setGridCollapsed(!gridCollapsed)}
+              className="flex items-center gap-1 text-sm text-gray-300 hover:text-retro-cyan transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+              <span className="font-medium">Characters</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${gridCollapsed ? "" : "rotate-180"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="flex items-center gap-2">
+              {onSelectAll && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAll();
+                  }}
+                  className="text-[10px] text-gray-500 hover:text-retro-cyan transition-colors"
+                >
+                  All
+                </button>
+              )}
+              {onSelectNone && hasMultipleSelected && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectNone();
+                  }}
+                  className="text-[10px] text-gray-500 hover:text-retro-pink transition-colors"
+                >
+                  None
+                </button>
+              )}
+            </div>
+          </div>
 
           {!gridCollapsed && (
             <div className="p-2">
@@ -169,7 +194,7 @@ export function EditorSidebar({
                 backgroundColor={backgroundColor}
                 showIndices={false}
                 smallScale={2}
-                minColumns={4}
+                minColumns={8}
                 maxColumns={10}
                 gap={4}
                 className="max-h-[400px] overflow-y-auto"

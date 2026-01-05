@@ -107,6 +107,11 @@ export function LibraryCard({
           <h3 className="text-sm font-semibold text-retro-cyan truncate">
             {metadata.name}
           </h3>
+          {(metadata.maker || metadata.system) && (
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              {metadata.maker}{metadata.maker && metadata.system ? " " : ""}{metadata.system}
+            </p>
+          )}
           {metadata.description && (
             <p className="text-xs text-gray-400 line-clamp-2 mt-0.5">
               {metadata.description}
@@ -130,9 +135,9 @@ export function LibraryCard({
         />
       </div>
 
-      {/* Metadata */}
-      <div className="flex items-center justify-between gap-2 text-[10px]">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Footer with size, count, date, and actions */}
+      <div className="flex items-center justify-between pt-2 border-t border-retro-grid/30 text-[10px]">
+        <div className="flex items-center gap-2">
           {/* Size badge */}
           <span className="px-1.5 py-0.5 bg-retro-purple/30 text-retro-pink rounded">
             {formatSize(config)}
@@ -149,21 +154,12 @@ export function LibraryCard({
               Built-in
             </span>
           )}
-        </div>
 
-        {/* Source - right aligned */}
-        {!metadata.isBuiltIn && metadata.source && (
-          <span className="text-gray-500 truncate max-w-[100px] text-right" title={metadata.source}>
-            by {metadata.source}
+          {/* Date */}
+          <span className="text-gray-500">
+            {formatTimestamp(metadata.updatedAt)}
           </span>
-        )}
-      </div>
-
-      {/* Footer with date and actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-retro-grid/30">
-        <span className="text-[10px] text-gray-500">
-          {formatTimestamp(metadata.updatedAt)}
-        </span>
+        </div>
 
         {/* Quick action buttons */}
         <div className="flex gap-1">
