@@ -23,6 +23,8 @@ export interface CharacterPreviewProps {
   backgroundColor?: string;
   /** Additional CSS classes */
   className?: string;
+  /** Additional CSS classes for the canvas element */
+  canvasClassName?: string;
   /** Force a specific number of columns (overrides auto-calculation) */
   forceColumns?: number;
 }
@@ -45,10 +47,13 @@ export function CharacterPreview({
   className = "",
   forceColumns,
 }: CharacterPreviewProps) {
+  // Preferred column counts for nice grid layouts
+  const PREFERRED_COLUMNS = [64, 32, 16, 8, 4];
+
   // Calculate how many characters we can display
   const { displayChars, columns, rows } = useMemo(() => {
-    const charWidth = config.width;
-    const charHeight = config.height;
+    const charWidth = config.width * scale;
+    const charHeight = config.height * scale;
 
     // If forceColumns is set, use that instead of calculating
     if (forceColumns) {
@@ -64,32 +69,41 @@ export function CharacterPreview({
       };
     }
 
-    // Calculate max chars per row based on width
+    // Calculate max chars per row based on width (accounting for scale)
     const maxCols = Math.floor(maxWidth / charWidth);
     // Calculate max rows based on height
     const maxRows = Math.floor(maxHeight / charHeight);
 
+    // Find the largest preferred column count that fits
+    let cols = PREFERRED_COLUMNS.find(c => c <= maxCols) || Math.min(maxCols, 4);
+
+    // Ensure we have at least 1 column
+    cols = Math.max(cols, 1);
+
     // Calculate total displayable characters
-    const maxDisplay = Math.min(maxCharacters, maxCols * maxRows, characters.length);
+    const maxDisplay = Math.min(maxCharacters, characters.length);
+    const rowCount = Math.ceil(maxDisplay / cols);
 
-    // Try to make a reasonable grid
-    let cols = maxCols;
-    let rowCount = Math.ceil(maxDisplay / cols);
+    // If too many rows for maxRows, try smaller column counts
+    if (rowCount > maxRows) {
+      // Fall back to maxCols to fit within height constraint
+      cols = maxCols;
+      const adjustedRowCount = Math.ceil(maxDisplay / cols);
+      const displayCount = Math.min(cols * Math.min(adjustedRowCount, maxRows), maxDisplay);
 
-    // Adjust if too many rows
-    while (rowCount > maxRows && cols > 1) {
-      cols--;
-      rowCount = Math.ceil(maxDisplay / cols);
+      return {
+        displayChars: characters.slice(0, displayCount),
+        columns: cols,
+        rows: Math.min(adjustedRowCount, maxRows),
+      };
     }
 
-    const displayCount = Math.min(cols * rowCount, maxDisplay);
-
     return {
-      displayChars: characters.slice(0, displayCount),
+      displayChars: characters.slice(0, maxDisplay),
       columns: cols,
       rows: rowCount,
     };
-  }, [characters, config, maxCharacters, maxWidth, maxHeight, forceColumns]);
+  }, [characters, config, maxCharacters, maxWidth, maxHeight, forceColumns, scale]);
 
   // Combine all characters into a single pixel grid
   const combinedPixels = useMemo(() => {
