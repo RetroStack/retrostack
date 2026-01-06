@@ -120,12 +120,22 @@ export interface ReferenceSheetOptions {
   showBinary: boolean;
   showAscii: boolean;
   showNonPrintableAscii: boolean;
+  showGroupLabel: boolean;
   foregroundColor: string;
   backgroundColor: string;
   sheetBackgroundColor: string;
   labelColor: string;
   title: string;
   showTitle: boolean;
+  // Individual label colors
+  titleColor: string;
+  groupLabelColor: string;
+  hexColor: string;
+  decimalColor: string;
+  octalColor: string;
+  binaryColor: string;
+  asciiColor: string;
+  nonPrintableAsciiColor: string;
 }
 
 /**
@@ -193,12 +203,22 @@ export function getDefaultReferenceSheetOptions(name: string): ReferenceSheetOpt
     showBinary: false,
     showAscii: true,
     showNonPrintableAscii: false,
+    showGroupLabel: true,
     foregroundColor: "#ffffff",
     backgroundColor: "#000000",
     sheetBackgroundColor: "#1a1a2e",
     labelColor: "#888888",
     title: name || "Character Set",
     showTitle: true,
+    // Individual label colors
+    titleColor: "#ffffff",
+    groupLabelColor: "#ffffff",
+    hexColor: "#888888",
+    decimalColor: "#888888",
+    octalColor: "#888888",
+    binaryColor: "#888888",
+    asciiColor: "#ffffff",
+    nonPrintableAsciiColor: "#666666",
   };
 }
 
@@ -472,12 +492,21 @@ export async function exportToReferenceSheet(
     showBinary,
     showAscii,
     showNonPrintableAscii,
+    showGroupLabel,
     foregroundColor,
     backgroundColor,
     sheetBackgroundColor,
     labelColor,
     title,
     showTitle,
+    titleColor,
+    groupLabelColor,
+    hexColor,
+    decimalColor,
+    octalColor,
+    binaryColor,
+    asciiColor,
+    nonPrintableAsciiColor,
   } = options;
 
   const charWidth = config.width;
@@ -520,7 +549,7 @@ export async function exportToReferenceSheet(
 
     const sectionWidth = visibleCols.reduce((sum, c) => sum + c.width, 0) + 20 * resMult;
     const headerHeight = showTitle ? 80 * resMult : 0;
-    const groupLabelHeight = 24 * resMult;
+    const groupLabelHeight = showGroupLabel ? 24 * resMult : 0;
     const tableHeaderHeight = 40 * resMult + groupLabelHeight;
     const sectionGap = 30 * resMult;
 
@@ -536,7 +565,7 @@ export async function exportToReferenceSheet(
 
     // Draw title
     if (showTitle && title) {
-      ctx.fillStyle = foregroundColor;
+      ctx.fillStyle = titleColor;
       ctx.font = `bold ${32 * resMult}px monospace`;
       ctx.textAlign = "center";
       ctx.fillText(title, canvasWidth / 2, 52 * resMult);
@@ -569,11 +598,13 @@ export async function exportToReferenceSheet(
       const startIdx = section * rowsPerSection;
 
       // Draw group label
-      ctx.fillStyle = foregroundColor;
-      ctx.font = `bold ${16 * resMult}px monospace`;
-      ctx.textAlign = "center";
-      const groupLabel = getGroupLabel(startIdx);
-      ctx.fillText(groupLabel, sectionX + sectionWidth / 2 - 10 * resMult, headerHeight + 16 * resMult);
+      if (showGroupLabel) {
+        ctx.fillStyle = groupLabelColor;
+        ctx.font = `bold ${16 * resMult}px monospace`;
+        ctx.textAlign = "center";
+        const groupLabel = getGroupLabel(startIdx);
+        ctx.fillText(groupLabel, sectionX + sectionWidth / 2 - 10 * resMult, headerHeight + 16 * resMult);
+      }
 
       // Draw table header
       ctx.fillStyle = labelColor;
@@ -626,14 +657,14 @@ export async function exportToReferenceSheet(
 
         // Decimal
         if (showDecimal) {
-          ctx.fillStyle = labelColor;
+          ctx.fillStyle = decimalColor;
           ctx.fillText(charIdx.toString(), colX + decColWidth / 2, rowY + 6 * resMult);
           colX += decColWidth;
         }
 
         // Binary
         if (showBinary) {
-          ctx.fillStyle = labelColor;
+          ctx.fillStyle = binaryColor;
           ctx.font = `${14 * resMult}px monospace`;
           ctx.fillText(charIdx.toString(2).padStart(8, "0"), colX + binColWidth / 2, rowY + 6 * resMult);
           ctx.font = `${18 * resMult}px monospace`;
@@ -642,14 +673,14 @@ export async function exportToReferenceSheet(
 
         // Octal
         if (showOctal) {
-          ctx.fillStyle = labelColor;
+          ctx.fillStyle = octalColor;
           ctx.fillText(charIdx.toString(8).padStart(3, "0"), colX + octColWidth / 2, rowY + 6 * resMult);
           colX += octColWidth;
         }
 
         // Hex
         if (showHex) {
-          ctx.fillStyle = labelColor;
+          ctx.fillStyle = hexColor;
           ctx.fillText(charIdx.toString(16).toUpperCase().padStart(2, "0"), colX + hexColWidth / 2, rowY + 6 * resMult);
           colX += hexColWidth;
         }
@@ -662,7 +693,7 @@ export async function exportToReferenceSheet(
           if (shouldShow) {
             const asciiLabel = getAsciiLabel(charIdx);
             if (asciiLabel) {
-              ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
+              ctx.fillStyle = isPrintable ? asciiColor : nonPrintableAsciiColor;
               ctx.fillText(asciiLabel, colX + asciiColWidth / 2, rowY + 6 * resMult);
             }
           }
@@ -704,7 +735,7 @@ export async function exportToReferenceSheet(
 
     // Draw title
     if (showTitle && title) {
-      ctx.fillStyle = foregroundColor;
+      ctx.fillStyle = titleColor;
       ctx.font = `bold ${32 * resMult}px monospace`;
       ctx.textAlign = "center";
       ctx.fillText(title, canvasWidth / 2, 52 * resMult);
@@ -770,7 +801,6 @@ export async function exportToReferenceSheet(
       }
 
       // Draw labels
-      ctx.fillStyle = labelColor;
       ctx.font = `${18 * resMult}px monospace`;
       ctx.textAlign = "center";
 
@@ -778,6 +808,7 @@ export async function exportToReferenceSheet(
       const labelX = cellX + cellWidth / 2;
 
       if (showHex) {
+        ctx.fillStyle = hexColor;
         ctx.fillText(
           "$" + i.toString(16).toUpperCase().padStart(2, "0"),
           labelX,
@@ -787,16 +818,19 @@ export async function exportToReferenceSheet(
       }
 
       if (showDecimal) {
+        ctx.fillStyle = decimalColor;
         ctx.fillText(i.toString(), labelX, labelY);
         labelY += 20 * resMult;
       }
 
       if (showOctal) {
+        ctx.fillStyle = octalColor;
         ctx.fillText(i.toString(8).padStart(3, "0"), labelX, labelY);
         labelY += 20 * resMult;
       }
 
       if (showBinary) {
+        ctx.fillStyle = binaryColor;
         ctx.font = `${14 * resMult}px monospace`;
         ctx.fillText(i.toString(2).padStart(8, "0"), labelX, labelY);
         ctx.font = `${18 * resMult}px monospace`;
@@ -810,7 +844,7 @@ export async function exportToReferenceSheet(
         if (shouldShow) {
           const asciiLabel = getAsciiLabel(i);
           if (asciiLabel) {
-            ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
+            ctx.fillStyle = isPrintable ? asciiColor : nonPrintableAsciiColor;
             ctx.fillText(asciiLabel, labelX, labelY);
           }
         }

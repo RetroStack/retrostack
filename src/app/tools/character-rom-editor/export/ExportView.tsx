@@ -156,7 +156,7 @@ export function ExportView() {
     if (filename) {
       // Remove existing extension and add new one
       const baseName = filename.replace(/\.(bin|h|asm|inc|png)$/i, "");
-      let newExtension = EXPORT_FORMATS.find((f) => f.id === format)?.extension || ".bin";
+      const newExtension = EXPORT_FORMATS.find((f) => f.id === format)?.extension || ".bin";
       // For reference sheet, add -reference suffix
       if (format === "reference-sheet") {
         const cleanBase = baseName.replace(/-reference$/, "");
@@ -817,83 +817,184 @@ export function ExportView() {
                         Show Labels
                       </label>
                       <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showTitle}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showTitle: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            Title header
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showTitle}
+                            type="color"
+                            value={referenceSheetOptions.titleColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showTitle: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, titleColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Title color"
                           />
-                          Show title header
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        {referenceSheetOptions.layout === "table" && (
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={referenceSheetOptions.showGroupLabel}
+                                onChange={(e) =>
+                                  setReferenceSheetOptions({ ...referenceSheetOptions, showGroupLabel: e.target.checked })
+                                }
+                                className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                              />
+                              Group labels
+                            </label>
+                            <input
+                              type="color"
+                              value={referenceSheetOptions.groupLabelColor}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, groupLabelColor: e.target.value })
+                              }
+                              className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                              title="Group label color"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showHex}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showHex: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            Hex codes ($00)
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showHex}
+                            type="color"
+                            value={referenceSheetOptions.hexColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showHex: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, hexColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Hex color"
                           />
-                          Hex codes ($00)
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showDecimal}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showDecimal: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            Decimal codes
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showDecimal}
+                            type="color"
+                            value={referenceSheetOptions.decimalColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showDecimal: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, decimalColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Decimal color"
                           />
-                          Decimal codes
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showOctal}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showOctal: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            Octal codes (000)
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showOctal}
+                            type="color"
+                            value={referenceSheetOptions.octalColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showOctal: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, octalColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Octal color"
                           />
-                          Octal codes (000)
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showBinary}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showBinary: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            Binary codes (00000000)
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showBinary}
+                            type="color"
+                            value={referenceSheetOptions.binaryColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showBinary: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, binaryColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Binary color"
                           />
-                          Binary codes (00000000)
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showAscii}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showAscii: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            ASCII printable
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showAscii}
+                            type="color"
+                            value={referenceSheetOptions.asciiColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showAscii: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, asciiColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="ASCII printable color"
                           />
-                          ASCII printable
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={referenceSheetOptions.showNonPrintableAscii}
+                              onChange={(e) =>
+                                setReferenceSheetOptions({ ...referenceSheetOptions, showNonPrintableAscii: e.target.checked })
+                              }
+                              className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            />
+                            ASCII non-printable
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={referenceSheetOptions.showNonPrintableAscii}
+                            type="color"
+                            value={referenceSheetOptions.nonPrintableAsciiColor}
                             onChange={(e) =>
-                              setReferenceSheetOptions({ ...referenceSheetOptions, showNonPrintableAscii: e.target.checked })
+                              setReferenceSheetOptions({ ...referenceSheetOptions, nonPrintableAsciiColor: e.target.value })
                             }
-                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                            className="w-6 h-6 rounded border border-retro-grid/50 cursor-pointer"
+                            title="Non-printable ASCII color"
                           />
-                          ASCII non-printable (NUL, SOH, etc.)
-                        </label>
+                        </div>
                       </div>
                     </div>
                   </>
@@ -1044,7 +1145,7 @@ export function ExportView() {
                         <div className="text-center mb-2">
                           <div
                             className="text-xs font-bold font-mono"
-                            style={{ color: referenceSheetOptions.foregroundColor }}
+                            style={{ color: referenceSheetOptions.titleColor }}
                           >
                             {referenceSheetOptions.title || "Character Set"}
                           </div>
@@ -1129,29 +1230,29 @@ export function ExportView() {
                                     {/* Labels */}
                                     <div className="text-center leading-tight mt-0.5">
                                       {referenceSheetOptions.showHex && (
-                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                        <div className="text-[6px] font-mono" style={{ color: referenceSheetOptions.hexColor }}>
                                           ${charIdx.toString(16).toUpperCase().padStart(2, "0")}
                                         </div>
                                       )}
                                       {referenceSheetOptions.showDecimal && (
-                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                        <div className="text-[6px] font-mono" style={{ color: referenceSheetOptions.decimalColor }}>
                                           {charIdx}
                                         </div>
                                       )}
                                       {referenceSheetOptions.showOctal && (
-                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                        <div className="text-[6px] font-mono" style={{ color: referenceSheetOptions.octalColor }}>
                                           {charIdx.toString(8).padStart(3, "0")}
                                         </div>
                                       )}
                                       {referenceSheetOptions.showBinary && (
-                                        <div className="text-[5px] font-mono" style={{ color: "#888888" }}>
+                                        <div className="text-[5px] font-mono" style={{ color: referenceSheetOptions.binaryColor }}>
                                           {charIdx.toString(2).padStart(8, "0")}
                                         </div>
                                       )}
                                       {referenceSheetOptions.showAscii && charIdx >= 32 && charIdx <= 126 && (
                                         <div
                                           className="text-[7px] font-mono"
-                                          style={{ color: referenceSheetOptions.foregroundColor }}
+                                          style={{ color: referenceSheetOptions.asciiColor }}
                                         >
                                           {String.fromCharCode(charIdx)}
                                         </div>
@@ -1159,7 +1260,7 @@ export function ExportView() {
                                       {referenceSheetOptions.showNonPrintableAscii && (charIdx < 32 || charIdx === 127) && (
                                         <div
                                           className="text-[5px] font-mono"
-                                          style={{ color: "#666666" }}
+                                          style={{ color: referenceSheetOptions.nonPrintableAsciiColor }}
                                         >
                                           {["NUL","SOH","STX","ETX","EOT","ENQ","ACK","BEL","BS","TAB","LF","VT","FF","CR","SO","SI","DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB","CAN","EM","SUB","ESC","FS","GS","RS","US"][charIdx] || (charIdx === 127 ? "DEL" : "")}
                                         </div>
@@ -1178,12 +1279,14 @@ export function ExportView() {
                         /* Table layout preview */
                         <div className="overflow-hidden">
                           {/* Group label */}
-                          <div
-                            className="text-[8px] font-mono font-bold text-center mb-1"
-                            style={{ color: referenceSheetOptions.foregroundColor }}
-                          >
-                            Control
-                          </div>
+                          {referenceSheetOptions.showGroupLabel && (
+                            <div
+                              className="text-[8px] font-mono font-bold text-center mb-1"
+                              style={{ color: referenceSheetOptions.groupLabelColor }}
+                            >
+                              Control
+                            </div>
+                          )}
 
                           {/* Table header */}
                           <div className="flex gap-3 text-[7px] font-mono font-bold border-b border-gray-600 pb-1 mb-1" style={{ color: "#888888" }}>
@@ -1202,7 +1305,7 @@ export function ExportView() {
                             const isPrintable = charIdx >= 32 && charIdx <= 126;
 
                             return (
-                              <div key={charIdx} className="flex gap-3 items-center text-[6px] font-mono py-0.5" style={{ color: "#888888" }}>
+                              <div key={charIdx} className="flex gap-3 items-center text-[6px] font-mono py-0.5">
                                 {/* Character graphic */}
                                 <div className="w-5 flex justify-center">
                                   <div
@@ -1230,12 +1333,12 @@ export function ExportView() {
                                     ))}
                                   </div>
                                 </div>
-                                {referenceSheetOptions.showDecimal && <div className="w-7 text-center">{charIdx}</div>}
-                                {referenceSheetOptions.showBinary && <div className="w-14 text-center text-[5px]">{charIdx.toString(2).padStart(8, "0")}</div>}
-                                {referenceSheetOptions.showOctal && <div className="w-7 text-center">{charIdx.toString(8).padStart(3, "0")}</div>}
-                                {referenceSheetOptions.showHex && <div className="w-6 text-center">{charIdx.toString(16).toUpperCase().padStart(2, "0")}</div>}
+                                {referenceSheetOptions.showDecimal && <div className="w-7 text-center" style={{ color: referenceSheetOptions.decimalColor }}>{charIdx}</div>}
+                                {referenceSheetOptions.showBinary && <div className="w-14 text-center text-[5px]" style={{ color: referenceSheetOptions.binaryColor }}>{charIdx.toString(2).padStart(8, "0")}</div>}
+                                {referenceSheetOptions.showOctal && <div className="w-7 text-center" style={{ color: referenceSheetOptions.octalColor }}>{charIdx.toString(8).padStart(3, "0")}</div>}
+                                {referenceSheetOptions.showHex && <div className="w-6 text-center" style={{ color: referenceSheetOptions.hexColor }}>{charIdx.toString(16).toUpperCase().padStart(2, "0")}</div>}
                                 {(referenceSheetOptions.showAscii || referenceSheetOptions.showNonPrintableAscii) && (
-                                  <div className="w-8 text-center" style={{ color: isPrintable ? referenceSheetOptions.foregroundColor : "#666666" }}>
+                                  <div className="w-8 text-center" style={{ color: isPrintable ? referenceSheetOptions.asciiColor : referenceSheetOptions.nonPrintableAsciiColor }}>
                                     {isPrintable && referenceSheetOptions.showAscii
                                       ? String.fromCharCode(charIdx)
                                       : (!isPrintable && referenceSheetOptions.showNonPrintableAscii
