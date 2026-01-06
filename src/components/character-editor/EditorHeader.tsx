@@ -31,8 +31,6 @@ export interface EditorHeaderProps {
   onColorsChange: (colors: CustomColors) => void;
   /** Callback when back button is clicked */
   onBack: () => void;
-  /** Current hover coordinates (null when not hovering) */
-  hoverCoords?: { x: number; y: number } | null;
   /** Additional CSS classes */
   className?: string;
 }
@@ -55,7 +53,6 @@ export function EditorHeader({
   colors,
   onColorsChange,
   onBack,
-  hoverCoords,
   className = "",
 }: EditorHeaderProps) {
   const handleZoomIn = () => {
@@ -138,17 +135,6 @@ export function EditorHeader({
         )}
         {batchMode && <span className="px-1.5 py-0.5 text-xs bg-retro-pink/20 text-retro-pink rounded">Batch</span>}
       </div>
-
-      {/* Pixel coordinates display */}
-      {hoverCoords && (
-        <>
-          <div className="w-px h-4 bg-retro-grid/50 hidden sm:block" />
-          <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500 font-mono">
-            <span className="text-gray-400">Pixel:</span>
-            <span className="text-retro-cyan">({hoverCoords.x}, {hoverCoords.y})</span>
-          </div>
-        </>
-      )}
 
       {/* Flexible spacer */}
       <div className="flex-1" />

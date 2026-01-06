@@ -711,7 +711,6 @@ export function EditView() {
         colors={colors}
         onColorsChange={setColors}
         onBack={handleBack}
-        hoverCoords={hoverCoords}
       />
 
       <ToolContent
@@ -775,7 +774,7 @@ export function EditView() {
       </ToolContent>
 
       {/* Keyboard shortcuts footer */}
-      <EditorFooter />
+      <EditorFooter hoverCoords={hoverCoords} />
 
       {/* Recovery dialog */}
       {autoSave.hasRecoveryData && (
