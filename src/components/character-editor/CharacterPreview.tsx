@@ -27,6 +27,10 @@ export interface CharacterPreviewProps {
   canvasClassName?: string;
   /** Force a specific number of columns (overrides auto-calculation) */
   forceColumns?: number;
+  /** Show borders between individual characters */
+  showCharacterBorders?: boolean;
+  /** Color of character borders */
+  characterBorderColor?: string;
 }
 
 /**
@@ -46,6 +50,8 @@ export function CharacterPreview({
   backgroundColor = "#000000",
   className = "",
   forceColumns,
+  showCharacterBorders = false,
+  characterBorderColor = "rgba(100, 100, 100, 0.5)",
 }: CharacterPreviewProps) {
   // Calculate how many characters we can display
   const { displayChars, columns, rows } = useMemo(() => {
@@ -135,6 +141,10 @@ export function CharacterPreview({
 
   const remainingCount = characters.length - displayChars.length;
 
+  // Calculate character cell dimensions in pixels for border overlay
+  const charCellWidth = config.width * scale;
+  const charCellHeight = config.height * scale;
+
   return (
     <div className={`relative inline-block ${className}`}>
       <PixelGrid
@@ -145,6 +155,28 @@ export function CharacterPreview({
         backgroundColor={backgroundColor}
         interactive={false}
       />
+
+      {/* Character borders overlay */}
+      {showCharacterBorders && columns > 0 && rows > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${columns}, ${charCellWidth}px)`,
+            gridTemplateRows: `repeat(${rows}, ${charCellHeight}px)`,
+          }}
+        >
+          {displayChars.map((_, index) => (
+            <div
+              key={index}
+              style={{
+                border: `1px solid ${characterBorderColor}`,
+                boxSizing: "border-box",
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Show remaining count badge */}
       {remainingCount > 0 && (

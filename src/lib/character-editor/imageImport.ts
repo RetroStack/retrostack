@@ -18,6 +18,14 @@ export interface ImageImportOptions {
   offsetX: number;
   /** Grid offset Y (starting position) */
   offsetY: number;
+  /** Horizontal gap between characters in pixels */
+  gapX: number;
+  /** Vertical gap between characters in pixels */
+  gapY: number;
+  /** Force a specific number of columns (0 = auto-detect) */
+  forceColumns: number;
+  /** Force a specific number of rows (0 = auto-detect) */
+  forceRows: number;
   /** Threshold for black/white conversion (0-255) */
   threshold: number;
   /** Whether to invert colors (treat dark as on) */
@@ -35,6 +43,10 @@ export function getDefaultImageImportOptions(): ImageImportOptions {
     charHeight: 8,
     offsetX: 0,
     offsetY: 0,
+    gapX: 0,
+    gapY: 0,
+    forceColumns: 0,
+    forceRows: 0,
     threshold: 128,
     invert: false,
     maxCharacters: 256,
@@ -173,6 +185,10 @@ export function parseImageToCharacters(
     charHeight,
     offsetX,
     offsetY,
+    gapX,
+    gapY,
+    forceColumns,
+    forceRows,
     threshold,
     invert,
     maxCharacters = 256,
@@ -182,8 +198,15 @@ export function parseImageToCharacters(
   const availableWidth = imageData.width - offsetX;
   const availableHeight = imageData.height - offsetY;
 
-  const columns = Math.floor(availableWidth / charWidth);
-  const rows = Math.floor(availableHeight / charHeight);
+  // Cell size includes character + gap
+  const cellWidth = charWidth + gapX;
+  const cellHeight = charHeight + gapY;
+
+  // Use forced dimensions if provided, otherwise auto-detect
+  const columns =
+    forceColumns > 0 ? forceColumns : Math.floor(availableWidth / cellWidth);
+  const rows =
+    forceRows > 0 ? forceRows : Math.floor(availableHeight / cellHeight);
 
   const characters: Character[] = [];
 
@@ -194,8 +217,8 @@ export function parseImageToCharacters(
       col < columns && characters.length < maxCharacters;
       col++
     ) {
-      const startX = offsetX + col * charWidth;
-      const startY = offsetY + row * charHeight;
+      const startX = offsetX + col * cellWidth;
+      const startY = offsetY + row * cellHeight;
 
       const char = extractCharacter(
         imageData,

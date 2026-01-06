@@ -387,6 +387,66 @@ export function ImportFromImageModal({
                     </div>
                   </div>
 
+                  {/* Gap between characters */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Gap X
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={32}
+                        value={options.gapX}
+                        onChange={(e) => updateOption("gapX", parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-1.5 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Gap Y
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={32}
+                        value={options.gapY}
+                        onChange={(e) => updateOption("gapY", parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-1.5 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Force columns/rows */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Columns (0 = auto)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={256}
+                        value={options.forceColumns}
+                        onChange={(e) => updateOption("forceColumns", parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-1.5 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Rows (0 = auto)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={256}
+                        value={options.forceRows}
+                        onChange={(e) => updateOption("forceRows", parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-1.5 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                      />
+                    </div>
+                  </div>
+
                   {/* Threshold slider */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -453,6 +513,8 @@ export function ImportFromImageModal({
                         maxWidth={400}
                         maxHeight={2000}
                         scale={2}
+                        showCharacterBorders
+                        characterBorderColor="rgba(80, 200, 220, 0.4)"
                       />
                     </div>
                   ) : (
