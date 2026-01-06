@@ -13,6 +13,7 @@ import {
   getSupportedImageExtensions,
 } from "@/lib/character-editor/imageImport";
 import { CharacterSetConfig, Character } from "@/lib/character-editor";
+import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 export interface ImportFromImageModalProps {
   /** Whether the modal is open */
@@ -32,6 +33,7 @@ export function ImportFromImageModal({
   onImport,
 }: ImportFromImageModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { ref: previewContainerRef, size: previewSize } = useResizeObserver<HTMLDivElement>();
 
   // File state
   const [file, setFile] = useState<File | null>(null);
@@ -55,6 +57,36 @@ export function ImportFromImageModal({
     if (!imageData) return null;
     return parseImageToCharacters(imageData, options);
   }, [imageData, options]);
+
+  // Calculate responsive preview dimensions
+  const previewDimensions = useMemo(() => {
+    const containerWidth = previewSize.width || 400;
+    const containerHeight = previewSize.height || 500;
+
+    // Calculate the grid dimensions if we have a parse result
+    if (!parseResult || parseResult.characters.length === 0) {
+      return { scale: 2, maxWidth: containerWidth - 16, maxHeight: containerHeight - 16 };
+    }
+
+    const gridWidth = parseResult.columns * options.charWidth;
+    const gridHeight = parseResult.rows * options.charHeight;
+
+    // Calculate the maximum scale that fits in the container (with padding)
+    const availableWidth = containerWidth - 16;
+    const availableHeight = containerHeight - 16;
+
+    const scaleX = availableWidth / gridWidth;
+    const scaleY = availableHeight / gridHeight;
+
+    // Use the smaller scale to ensure it fits, clamped between 1 and 4
+    const optimalScale = Math.max(1, Math.min(4, Math.floor(Math.min(scaleX, scaleY))));
+
+    return {
+      scale: optimalScale,
+      maxWidth: availableWidth,
+      maxHeight: availableHeight,
+    };
+  }, [previewSize, parseResult, options.charWidth, options.charHeight]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -194,7 +226,7 @@ export function ImportFromImageModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col min-h-0">
           {!imageData ? (
             /* File upload */
             <div className="space-y-4">
@@ -259,9 +291,9 @@ export function ImportFromImageModal({
             </div>
           ) : (
             /* Configuration and preview */
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col lg:flex-row gap-6 min-h-0 flex-1">
               {/* Left: Image preview and settings */}
-              <div className="space-y-4">
+              <div className="space-y-4 lg:w-80 lg:flex-shrink-0">
                 {/* Original image preview */}
                 <div className="card-retro p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -486,21 +518,25 @@ export function ImportFromImageModal({
               </div>
 
               {/* Right: Character preview */}
-              <div className="space-y-4">
-                <div className="card-retro p-3">
-                  <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col min-h-0 flex-1">
+                <div className="card-retro p-3 flex flex-col flex-1 min-h-[300px] lg:min-h-[400px]">
+                  <div className="flex items-center justify-between mb-2 flex-shrink-0">
                     <span className="text-xs font-medium text-gray-400">
                       Preview ({parseResult?.characters.length || 0} characters)
                     </span>
                     {parseResult && (
                       <span className="text-xs text-gray-500">
                         {parseResult.columns} x {parseResult.rows} grid
+                        {previewDimensions.scale > 1 && ` • ${previewDimensions.scale}x`}
                       </span>
                     )}
                   </div>
 
                   {parseResult && parseResult.characters.length > 0 ? (
-                    <div className="bg-black/50 rounded p-2 max-h-96 overflow-y-auto">
+                    <div
+                      ref={previewContainerRef}
+                      className="bg-black/50 rounded p-2 flex-1 overflow-auto flex items-start justify-center"
+                    >
                       <CharacterPreview
                         characters={parseResult.characters}
                         config={{
@@ -509,23 +545,26 @@ export function ImportFromImageModal({
                           padding: "right",
                           bitDirection: "ltr",
                         }}
-                        maxCharacters={256}
-                        maxWidth={400}
-                        maxHeight={2000}
-                        scale={2}
+                        maxCharacters={512}
+                        maxWidth={previewDimensions.maxWidth}
+                        maxHeight={previewDimensions.maxHeight}
+                        scale={previewDimensions.scale}
                         showCharacterBorders
                         characterBorderColor="rgba(80, 200, 220, 0.4)"
                       />
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center py-12 text-center text-gray-500">
+                    <div
+                      ref={previewContainerRef}
+                      className="flex-1 flex items-center justify-center text-center text-gray-500"
+                    >
                       <p className="text-sm">No characters detected</p>
                     </div>
                   )}
                 </div>
 
                 {parseResult && parseResult.characters.length > 0 && (
-                  <div className="text-xs text-gray-500 space-y-1">
+                  <div className="text-xs text-gray-500 space-y-1 mt-4 flex-shrink-0">
                     <p>
                       Characters will be imported at {options.charWidth}x{options.charHeight} pixels.
                     </p>
