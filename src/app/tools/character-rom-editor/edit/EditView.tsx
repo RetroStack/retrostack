@@ -434,8 +434,17 @@ export function EditView() {
         showAsciiMap: () => setShowAsciiMap(true),
         showTextPreview: () => setShowTextPreview(true),
         showSnapshots: () => setShowSnapshots(true),
+        // Toolbar actions
+        exportSet: handleExport,
+        importSet: () => setShowImportModal(true),
+        shareSet: () => setShowShare(true),
+        saveAs: openSaveAsDialog,
+        editMetadata: () => setShowMetadataModal(true),
+        resetChanges: handleReset,
+        showChangeLog: () => setShowChangeLog(true),
+        reorderCharacters: () => setShowReorderModal(true),
       }),
-    [editor, handleSave, navigatePrev, navigateNext, navigatePageUp, navigatePageDown, navigateFirst, navigateLast],
+    [editor, handleSave, handleExport, handleReset, openSaveAsDialog, navigatePrev, navigateNext, navigatePageUp, navigatePageDown, navigateFirst, navigateLast],
   );
 
   useKeyboardShortcuts(shortcuts, { enabled: !showShortcutsHelp });
@@ -485,13 +494,124 @@ export function EditView() {
     ];
   }, [contextMenu, editor, toast]);
 
-  // Toolbar actions - simplified (transforms moved to right sidebar)
-  // Order: Undo, Redo, [sep], Save, Save As, Delete, [sep], Edit Info, Resize, Export, Reset, [sep], Shortcuts
+  // Toolbar actions - reorganized into logical groups
+  // Priority: 3 = essential (always visible), 2 = important, 1 = normal, 0 = low (first to hide)
   const toolbarActions: ToolbarItem[] = [
-    // Undo/Redo group
+    // Group 1: Character set file operations
+    {
+      id: "add-char",
+      label: "Add Char",
+      tooltip: "Add a new character to the set",
+      shortcut: "Ctrl+N",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Letter A */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 17l3.5-10h3L17 17M8.5 13h7"
+          />
+          {/* Plus sign */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2.5}
+            d="M19 4v4m-2-2h4"
+          />
+        </svg>
+      ),
+      onClick: editor.addCharacter,
+      priority: 2,
+    },
+    {
+      id: "save",
+      label: saving ? "Saving..." : "Save Set",
+      tooltip: "Save character set to browser storage",
+      shortcut: "Ctrl+S",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Floppy disk outline */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5a2 2 0 012-2h10l4 4v12a2 2 0 01-2 2H7a2 2 0 01-2-2V5z"
+          />
+          {/* Label area */}
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3v5h8V3" />
+          {/* Metal slider */}
+          <rect x="14" y="3" width="2" height="5" rx="0.5" fill="currentColor" stroke="none" />
+          {/* Center label */}
+          <rect x="8" y="12" width="8" height="6" rx="1" strokeWidth={2} />
+        </svg>
+      ),
+      onClick: handleSave,
+      disabled: saving || !editor.isDirty,
+      active: editor.isDirty,
+      priority: 3,
+    },
+    {
+      id: "save-as",
+      label: "Save Set As",
+      tooltip: "Save as a new character set with a different name",
+      shortcut: "Ctrl+Alt+S",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Floppy disk outline */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5a2 2 0 012-2h10l4 4v12a2 2 0 01-2 2H7a2 2 0 01-2-2V5z"
+          />
+          {/* Label area */}
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3v5h6V3" />
+          {/* Plus sign for "save as" */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2.5}
+            d="M18 8v4m-2-2h4"
+          />
+          {/* Center label */}
+          <rect x="8" y="12" width="8" height="6" rx="1" strokeWidth={2} />
+        </svg>
+      ),
+      onClick: openSaveAsDialog,
+      priority: 1,
+    },
+    {
+      id: "delete",
+      label: "Delete Set",
+      tooltip: "Delete this character set from browser storage",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Trash can lid */}
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 3h4" />
+          {/* Trash can body */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 6v14a2 2 0 002 2h8a2 2 0 002-2V6"
+          />
+          {/* Lines inside */}
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 10v8M14 10v8" />
+        </svg>
+      ),
+      onClick: () => setShowDeleteConfirm(true),
+      disabled: characterSet?.metadata.isBuiltIn,
+      priority: 1,
+    },
+    { type: "separator", id: "sep-1" },
+    // Group 2: Edit history
     {
       id: "undo",
       label: "Undo",
+      tooltip: "Undo last change",
+      shortcut: "Ctrl+Z",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -504,10 +624,13 @@ export function EditView() {
       ),
       onClick: editor.undo,
       disabled: !editor.canUndo,
+      priority: 3,
     },
     {
       id: "redo",
       label: "Redo",
+      tooltip: "Redo last undone change",
+      shortcut: "Ctrl+Y",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -520,146 +643,13 @@ export function EditView() {
       ),
       onClick: editor.redo,
       disabled: !editor.canRedo,
-    },
-    { type: "separator", id: "sep-1" },
-    // File operations group
-    {
-      id: "save",
-      label: saving ? "Saving..." : "Save",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-          />
-        </svg>
-      ),
-      onClick: handleSave,
-      disabled: saving || !editor.isDirty,
-      active: editor.isDirty,
-    },
-    {
-      id: "save-as",
-      label: "Save As",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m0 0V4m0 0H9m3 0v3"
-          />
-        </svg>
-      ),
-      onClick: openSaveAsDialog,
-    },
-    {
-      id: "delete",
-      label: "Delete",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-          />
-        </svg>
-      ),
-      onClick: () => setShowDeleteConfirm(true),
-      disabled: characterSet?.metadata.isBuiltIn,
-    },
-    { type: "separator", id: "sep-2" },
-    {
-      id: "edit-metadata",
-      label: "Edit Info",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-          />
-        </svg>
-      ),
-      onClick: () => setShowMetadataModal(true),
-    },
-    {
-      id: "resize",
-      label: "Resize",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-          />
-        </svg>
-      ),
-      onClick: () => setShowResizeModal(true),
-    },
-    {
-      id: "import",
-      label: "Import",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-          />
-        </svg>
-      ),
-      onClick: () => setShowImportModal(true),
-    },
-    {
-      id: "reorder",
-      label: "Reorder",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-        </svg>
-      ),
-      onClick: () => setShowReorderModal(true),
-    },
-    {
-      id: "export",
-      label: "Export",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      ),
-      onClick: handleExport,
-    },
-    {
-      id: "share",
-      label: "Share",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-          />
-        </svg>
-      ),
-      onClick: () => setShowShare(true),
+      priority: 3,
     },
     {
       id: "reset",
-      label: "Reset",
+      label: "Reset Set",
+      tooltip: "Discard all unsaved changes",
+      shortcut: "Ctrl+Shift+R",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -672,10 +662,134 @@ export function EditView() {
       ),
       onClick: handleReset,
       disabled: !editor.isDirty,
+      priority: 2,
     },
+    { type: "separator", id: "sep-2" },
+    // Group 3: Editing tools
+    {
+      id: "edit-metadata",
+      label: "Edit Info",
+      tooltip: "Edit character set name and description",
+      shortcut: "F2",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+      ),
+      onClick: () => setShowMetadataModal(true),
+      priority: 3,
+    },
+    {
+      id: "resize",
+      label: "Resize Set",
+      tooltip: "Change character dimensions (width × height)",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+          />
+        </svg>
+      ),
+      onClick: () => setShowResizeModal(true),
+      priority: 0,
+    },
+    {
+      id: "import",
+      label: "Import Chars",
+      tooltip: "Import characters from ROM file or image",
+      shortcut: "Ctrl+I",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Letter A representing character */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 20l2.5-7h3L16 20M9.25 16h5.5"
+          />
+          {/* Arrow pointing down */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 3v8m0 0l-3-3m3 3l3-3"
+          />
+        </svg>
+      ),
+      onClick: () => setShowImportModal(true),
+      priority: 1,
+    },
+    {
+      id: "reorder",
+      label: "Reorder",
+      tooltip: "Drag and drop to reorder characters",
+      shortcut: "O",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+          />
+        </svg>
+      ),
+      onClick: () => setShowReorderModal(true),
+      priority: 0,
+    },
+    { type: "separator", id: "sep-3" },
+    // Group 4: Export/Share
+    {
+      id: "export",
+      label: "Export Set",
+      tooltip: "Export character set as ROM binary file",
+      shortcut: "E",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5v14a2 2 0 002 2h10a2 2 0 002-2V5M12 21V9m0 0l4 4m-4-4l-4 4"
+          />
+        </svg>
+      ),
+      onClick: handleExport,
+      priority: 1,
+    },
+    {
+      id: "share",
+      label: "Share",
+      tooltip: "Generate a shareable link to this character set",
+      shortcut: "Ctrl+Shift+E",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+          />
+        </svg>
+      ),
+      onClick: () => setShowShare(true),
+      priority: 0,
+    },
+    { type: "separator", id: "sep-4" },
+    // Group 5: History/Snapshots
     {
       id: "snapshots",
       label: `Snapshots (${snapshots.snapshots.length})`,
+      tooltip: "Save and restore named versions of your work",
+      shortcut: "Ctrl+Shift+S",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -687,26 +801,89 @@ export function EditView() {
         </svg>
       ),
       onClick: () => setShowSnapshots(true),
+      priority: 1,
     },
     {
       id: "changelog",
       label: `Log (${changeLog.count})`,
+      tooltip: "View history of changes made this session",
+      shortcut: "L",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
       ),
       onClick: () => setShowChangeLog(true),
+      priority: 0,
     },
-    { type: "separator", id: "sep-3" },
+    { type: "separator", id: "sep-5" },
+    // Group 6: Navigation/View
+    {
+      id: "goto",
+      label: "Go to",
+      tooltip: "Jump to a specific character by index",
+      shortcut: "G",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      ),
+      onClick: () => setShowGoToModal(true),
+      priority: 0,
+    },
+    {
+      id: "ascii-map",
+      label: "ASCII Map",
+      tooltip: "View all characters in a grid with ASCII codes",
+      shortcut: "M",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+          />
+        </svg>
+      ),
+      onClick: () => setShowAsciiMap(true),
+      priority: 0,
+    },
+    {
+      id: "text-preview",
+      label: "Preview",
+      tooltip: "Preview text rendered with this character set",
+      shortcut: "T",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16m-7 6h7"
+          />
+        </svg>
+      ),
+      onClick: () => setShowTextPreview(true),
+      priority: 0,
+    },
+    { type: "separator", id: "sep-6" },
+    // Group 7: Help
     {
       id: "help",
-      label: "Shortcuts (?)",
+      label: "Help",
+      tooltip: "View all keyboard shortcuts and help",
+      shortcut: "?",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -718,6 +895,7 @@ export function EditView() {
         </svg>
       ),
       onClick: () => setShowShortcutsHelp(true),
+      priority: 3,
     },
   ];
 

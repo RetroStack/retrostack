@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { OverflowMenu, OverflowMenuItem } from "./OverflowMenu";
+import { Tooltip } from "./Tooltip";
 
 export interface ToolbarAction {
   id: string;
@@ -10,7 +11,13 @@ export interface ToolbarAction {
   onClick?: () => void;
   active?: boolean;
   disabled?: boolean;
-  hideLabel?: boolean;
+  /** Priority level (higher = stays visible longer). Default is 1.
+   * Suggested values: 3 = essential, 2 = important, 1 = normal, 0 = low priority */
+  priority?: number;
+  /** Tooltip description shown on hover */
+  tooltip?: string;
+  /** Keyboard shortcut displayed in tooltip */
+  shortcut?: string;
 }
 
 export interface ToolbarSeparator {
@@ -31,10 +38,10 @@ interface ResponsiveToolbarProps {
   sticky?: boolean;
 }
 
-const ITEM_WIDTH = 80; // Approximate width of each action button in pixels
+const ITEM_WIDTH = 48; // Width of icon-only button (touch target with larger icon)
 const SEPARATOR_WIDTH = 16; // Width of separator element
 const OVERFLOW_BUTTON_WIDTH = 48;
-const TOOLBAR_PADDING = 16;
+const TOOLBAR_PADDING = 32; // Padding for collapse calculation
 
 export function ResponsiveToolbar({
   actions,
@@ -43,7 +50,7 @@ export function ResponsiveToolbar({
   sticky = false,
 }: ResponsiveToolbarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [visibleCount, setVisibleCount] = useState(actions.length);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   const calculateVisibleItems = useCallback(() => {
     if (!containerRef.current) return;
@@ -51,24 +58,42 @@ export function ResponsiveToolbar({
     const containerWidth = containerRef.current.offsetWidth;
     const availableWidth = containerWidth - TOOLBAR_PADDING - OVERFLOW_BUTTON_WIDTH;
 
-    // Calculate total width needed for items, accounting for separators
-    let totalWidth = 0;
-    let itemCount = 0;
+    // Get all action items with their priorities (exclude separators for priority sorting)
+    const actionItems = actions
+      .filter((item): item is ToolbarAction => !isSeparator(item))
+      .map((item, originalIndex) => ({
+        item,
+        priority: item.priority ?? 1,
+        originalIndex: actions.indexOf(item),
+      }));
 
+    // Sort by priority (lowest first - these get hidden first)
+    const sortedByPriority = [...actionItems].sort((a, b) => a.priority - b.priority);
+
+    // Calculate total width needed for all items
+    let totalWidth = 0;
     for (const item of actions) {
-      const itemWidth = isSeparator(item) ? SEPARATOR_WIDTH : ITEM_WIDTH;
-      if (totalWidth + itemWidth > availableWidth && itemCount >= minVisibleItems) {
-        break;
-      }
-      totalWidth += itemWidth;
-      itemCount++;
+      totalWidth += isSeparator(item) ? SEPARATOR_WIDTH : ITEM_WIDTH;
     }
 
-    setVisibleCount(Math.max(minVisibleItems, itemCount));
+    // Progressively hide items starting from lowest priority until we fit
+    const newHiddenIds = new Set<string>();
+    let currentWidth = totalWidth;
+    let visibleActionCount = actionItems.length;
+
+    for (const { item } of sortedByPriority) {
+      if (currentWidth <= availableWidth) break;
+      if (visibleActionCount <= minVisibleItems) break;
+
+      newHiddenIds.add(item.id);
+      currentWidth -= ITEM_WIDTH;
+      visibleActionCount--;
+    }
+
+    setHiddenIds(newHiddenIds);
   }, [actions, minVisibleItems]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional calculation on mount/resize
     calculateVisibleItems();
 
     const observer = new ResizeObserver(() => {
@@ -82,19 +107,40 @@ export function ResponsiveToolbar({
     return () => observer.disconnect();
   }, [calculateVisibleItems]);
 
-  const visibleActions = actions.slice(0, visibleCount);
-  const overflowActions = actions.slice(visibleCount);
+  // Filter visible and overflow items while maintaining original order
+  const visibleActions: ToolbarItem[] = [];
+  const overflowActions: ToolbarAction[] = [];
 
-  // Filter out separators from overflow menu
-  const overflowItems: OverflowMenuItem[] = overflowActions
-    .filter((action): action is ToolbarAction => !isSeparator(action))
-    .map((action) => ({
-      id: action.id,
-      label: action.label,
-      icon: action.icon,
-      onClick: action.onClick,
-      disabled: action.disabled,
-    }));
+  for (const item of actions) {
+    if (isSeparator(item)) {
+      // Include separator only if there are visible items after it
+      const remainingItems = actions.slice(actions.indexOf(item) + 1);
+      const hasVisibleAfter = remainingItems.some(
+        (i) => !isSeparator(i) && !hiddenIds.has(i.id)
+      );
+      // Also check if there are visible items before it
+      const previousItems = actions.slice(0, actions.indexOf(item));
+      const hasVisibleBefore = previousItems.some(
+        (i) => !isSeparator(i) && !hiddenIds.has(i.id)
+      );
+      if (hasVisibleAfter && hasVisibleBefore) {
+        visibleActions.push(item);
+      }
+    } else if (hiddenIds.has(item.id)) {
+      overflowActions.push(item);
+    } else {
+      visibleActions.push(item);
+    }
+  }
+
+  // Sort overflow items by their original order for consistent menu
+  const overflowItems: OverflowMenuItem[] = overflowActions.map((action) => ({
+    id: action.id,
+    label: action.label,
+    icon: action.icon,
+    onClick: action.onClick,
+    disabled: action.disabled,
+  }));
 
   return (
     <div
@@ -110,7 +156,7 @@ export function ResponsiveToolbar({
       style={{ minHeight: "var(--toolbar-height)" }}
     >
       {/* Visible Actions */}
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-nowrap overflow-hidden">
         {visibleActions.map((item) =>
           isSeparator(item) ? (
             <div
@@ -119,28 +165,31 @@ export function ResponsiveToolbar({
               aria-hidden="true"
             />
           ) : (
-            <button
+            <Tooltip
               key={item.id}
-              onClick={item.onClick}
-              disabled={item.disabled}
-              className={`
-                touch-target flex items-center gap-2 px-2 sm:px-3 py-2 rounded-md
-                text-sm font-ui transition-colors
-                ${
-                  item.disabled
-                    ? "text-gray-600 cursor-not-allowed"
-                    : item.active
-                    ? "text-retro-cyan bg-retro-purple/40"
-                    : "text-gray-300 hover:text-retro-cyan hover:bg-retro-purple/30"
-                }
-              `}
-              title={item.label}
+              content={item.tooltip || item.label}
+              shortcut={item.shortcut}
+              position="bottom"
             >
-              <span className="w-5 h-5 flex-shrink-0">{item.icon}</span>
-              {!item.hideLabel && (
-                <span className="hidden sm:inline">{item.label}</span>
-              )}
-            </button>
+              <button
+                onClick={item.onClick}
+                disabled={item.disabled}
+                aria-label={item.label}
+                className={`
+                  touch-target flex items-center justify-center p-2 rounded-md
+                  text-sm font-ui transition-colors flex-shrink-0
+                  ${
+                    item.disabled
+                      ? "text-gray-600 cursor-not-allowed"
+                      : item.active
+                      ? "text-retro-cyan bg-retro-purple/40"
+                      : "text-gray-300 hover:text-retro-cyan hover:bg-retro-purple/30"
+                  }
+                `}
+              >
+                <span className="w-6 h-6 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full">{item.icon}</span>
+              </button>
+            </Tooltip>
           )
         )}
       </div>

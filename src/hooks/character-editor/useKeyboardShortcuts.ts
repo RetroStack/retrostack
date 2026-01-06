@@ -138,6 +138,15 @@ export function createEditorShortcuts(actions: {
   showAsciiMap?: () => void;
   showTextPreview?: () => void;
   showSnapshots?: () => void;
+  // Toolbar actions
+  exportSet?: () => void;
+  importSet?: () => void;
+  shareSet?: () => void;
+  saveAs?: () => void;
+  editMetadata?: () => void;
+  resetChanges?: () => void;
+  showChangeLog?: () => void;
+  reorderCharacters?: () => void;
 }): KeyboardShortcut[] {
   return [
     // Undo/Redo
@@ -367,6 +376,95 @@ export function createEditorShortcuts(actions: {
             shift: true,
             action: actions.showSnapshots,
             description: "Snapshots",
+            context: "Editor",
+          },
+        ]
+      : []),
+
+    // Toolbar actions (optional)
+    ...(actions.exportSet
+      ? [
+          {
+            key: "e",
+            action: actions.exportSet,
+            description: "Export character set",
+            context: "File",
+          },
+        ]
+      : []),
+    ...(actions.importSet
+      ? [
+          {
+            key: "i",
+            ctrl: true,
+            action: actions.importSet,
+            description: "Import characters",
+            context: "File",
+          },
+        ]
+      : []),
+    ...(actions.shareSet
+      ? [
+          {
+            key: "e",
+            ctrl: true,
+            shift: true,
+            action: actions.shareSet,
+            description: "Share character set",
+            context: "File",
+          },
+        ]
+      : []),
+    ...(actions.saveAs
+      ? [
+          {
+            key: "s",
+            ctrl: true,
+            alt: true,
+            action: actions.saveAs,
+            description: "Save as new",
+            context: "File",
+          },
+        ]
+      : []),
+    ...(actions.editMetadata
+      ? [
+          {
+            key: "F2",
+            action: actions.editMetadata,
+            description: "Edit info",
+            context: "File",
+          },
+        ]
+      : []),
+    ...(actions.resetChanges
+      ? [
+          {
+            key: "r",
+            ctrl: true,
+            shift: true,
+            action: actions.resetChanges,
+            description: "Reset changes",
+            context: "Editor",
+          },
+        ]
+      : []),
+    ...(actions.showChangeLog
+      ? [
+          {
+            key: "l",
+            action: actions.showChangeLog,
+            description: "Show change log",
+            context: "View",
+          },
+        ]
+      : []),
+    ...(actions.reorderCharacters
+      ? [
+          {
+            key: "o",
+            action: actions.reorderCharacters,
+            description: "Reorder characters",
             context: "Editor",
           },
         ]
