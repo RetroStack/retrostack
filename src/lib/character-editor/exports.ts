@@ -113,13 +113,16 @@ export interface PngOptions {
 export interface ReferenceSheetOptions {
   columns: number;
   scale: number;
+  layout: "grid" | "table";
   showHex: boolean;
   showDecimal: boolean;
+  showOctal: boolean;
   showBinary: boolean;
   showAscii: boolean;
   showNonPrintableAscii: boolean;
   foregroundColor: string;
   backgroundColor: string;
+  sheetBackgroundColor: string;
   labelColor: string;
   title: string;
   showTitle: boolean;
@@ -182,14 +185,17 @@ export function getDefaultPngOptions(): PngOptions {
 export function getDefaultReferenceSheetOptions(name: string): ReferenceSheetOptions {
   return {
     columns: 16,
-    scale: 3,
+    scale: 4,
+    layout: "grid",
     showHex: true,
     showDecimal: false,
+    showOctal: false,
     showBinary: false,
     showAscii: true,
     showNonPrintableAscii: false,
     foregroundColor: "#ffffff",
     backgroundColor: "#000000",
+    sheetBackgroundColor: "#1a1a2e",
     labelColor: "#888888",
     title: name || "Character Set",
     showTitle: true,
@@ -459,178 +465,372 @@ export async function exportToReferenceSheet(
   const {
     columns,
     scale,
+    layout,
     showHex,
     showDecimal,
+    showOctal,
     showBinary,
     showAscii,
     showNonPrintableAscii,
     foregroundColor,
     backgroundColor,
+    sheetBackgroundColor,
     labelColor,
     title,
     showTitle,
   } = options;
 
-  const rows = Math.ceil(characters.length / columns);
   const charWidth = config.width;
   const charHeight = config.height;
 
-  // Calculate dimensions
-  const cellPadding = 4;
-  const labelHeight = 14; // Height for labels below character
-  const hasAsciiLabels = showAscii || showNonPrintableAscii;
-  const labelLines = (showHex ? 1 : 0) + (showDecimal ? 1 : 0) + (showBinary ? 1 : 0) + (hasAsciiLabels ? 1 : 0);
-  const totalLabelHeight = labelHeight * Math.max(1, labelLines);
-
-  const cellWidth = charWidth * scale + cellPadding * 2;
-  const cellHeight = charHeight * scale + cellPadding * 2 + totalLabelHeight;
-
-  // Header dimensions
-  const headerHeight = showTitle ? 40 : 0;
-  const rowHeaderWidth = 40; // For row numbers (hex)
-  const colHeaderHeight = 20; // For column numbers (hex)
-
-  const canvasWidth = rowHeaderWidth + columns * cellWidth + cellPadding;
-  const canvasHeight = headerHeight + colHeaderHeight + rows * cellHeight + cellPadding;
+  // Resolution multiplier for high-quality output
+  const resMult = 2;
 
   // Create canvas
   const canvas = document.createElement("canvas");
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
     throw new Error("Could not create canvas context");
   }
 
-  // Fill background
-  ctx.fillStyle = "#1a1a2e"; // Dark retro background
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  if (layout === "table") {
+    // Table layout - like ASCII conversion chart
+    const rowsPerSection = 32;
+    const numSections = Math.ceil(characters.length / rowsPerSection);
+    const rowHeight = Math.max(charHeight * scale + 8, 24) * resMult;
 
-  // Draw title
-  if (showTitle && title) {
-    ctx.fillStyle = foregroundColor;
-    ctx.font = "bold 16px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText(title, canvasWidth / 2, 26);
+    // Calculate column widths (scaled for resolution)
+    const charColWidth = (charWidth * scale + 16) * resMult;
+    const decColWidth = 48 * resMult;
+    const binColWidth = 90 * resMult;
+    const octColWidth = 52 * resMult;
+    const hexColWidth = 44 * resMult;
+    const asciiColWidth = 52 * resMult;
 
-    // Subtitle with dimensions
-    ctx.fillStyle = labelColor;
-    ctx.font = "10px monospace";
-    ctx.fillText(
-      `${characters.length} characters, ${charWidth}x${charHeight} pixels`,
-      canvasWidth / 2,
-      38
-    );
-  }
+    // Calculate which columns to show
+    const visibleCols = [
+      { show: true, width: charColWidth, header: "Char" },
+      { show: showDecimal, width: decColWidth, header: "Dec" },
+      { show: showBinary, width: binColWidth, header: "Binary" },
+      { show: showOctal, width: octColWidth, header: "Oct" },
+      { show: showHex, width: hexColWidth, header: "Hex" },
+      { show: showAscii || showNonPrintableAscii, width: asciiColWidth, header: "ASCII" },
+    ].filter(c => c.show);
 
-  // Draw column headers
-  ctx.fillStyle = labelColor;
-  ctx.font = "10px monospace";
-  ctx.textAlign = "center";
-  for (let col = 0; col < columns; col++) {
-    const x = rowHeaderWidth + col * cellWidth + cellWidth / 2;
-    const y = headerHeight + colHeaderHeight - 6;
-    ctx.fillText(col.toString(16).toUpperCase(), x, y);
-  }
+    const sectionWidth = visibleCols.reduce((sum, c) => sum + c.width, 0) + 20 * resMult;
+    const headerHeight = showTitle ? 80 * resMult : 0;
+    const groupLabelHeight = 24 * resMult;
+    const tableHeaderHeight = 40 * resMult + groupLabelHeight;
+    const sectionGap = 30 * resMult;
 
-  // Draw row headers
-  ctx.textAlign = "right";
-  for (let row = 0; row < rows; row++) {
-    const x = rowHeaderWidth - 8;
-    const y = headerHeight + colHeaderHeight + row * cellHeight + cellHeight / 2;
-    const rowValue = row * columns;
-    ctx.fillText(rowValue.toString(16).toUpperCase().padStart(2, "0") + "_", x, y);
-  }
+    const canvasWidth = numSections * sectionWidth + (numSections - 1) * sectionGap + 40 * resMult;
+    const canvasHeight = headerHeight + tableHeaderHeight + rowsPerSection * rowHeight + 60 * resMult;
 
-  // Draw characters
-  for (let i = 0; i < characters.length; i++) {
-    const character = characters[i];
-    const col = i % columns;
-    const row = Math.floor(i / columns);
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
-    const cellX = rowHeaderWidth + col * cellWidth;
-    const cellY = headerHeight + colHeaderHeight + row * cellHeight;
+    // Fill background
+    ctx.fillStyle = sheetBackgroundColor;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw cell background
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(
-      cellX + 1,
-      cellY + 1,
-      cellWidth - 2,
-      charHeight * scale + cellPadding * 2 - 2
-    );
+    // Draw title
+    if (showTitle && title) {
+      ctx.fillStyle = foregroundColor;
+      ctx.font = `bold ${32 * resMult}px monospace`;
+      ctx.textAlign = "center";
+      ctx.fillText(title, canvasWidth / 2, 52 * resMult);
 
-    // Draw character pixels
-    const charX = cellX + cellPadding;
-    const charY = cellY + cellPadding;
-
-    for (let py = 0; py < charHeight; py++) {
-      for (let px = 0; px < charWidth; px++) {
-        const isOn = character.pixels[py]?.[px] || false;
-        if (isOn) {
-          ctx.fillStyle = foregroundColor;
-          ctx.fillRect(charX + px * scale, charY + py * scale, scale, scale);
-        }
-      }
-    }
-
-    // Draw labels
-    ctx.fillStyle = labelColor;
-    ctx.font = "9px monospace";
-    ctx.textAlign = "center";
-
-    let labelY = cellY + cellPadding + charHeight * scale + 12;
-    const labelX = cellX + cellWidth / 2;
-
-    if (showHex) {
+      ctx.fillStyle = labelColor;
+      ctx.font = `${20 * resMult}px monospace`;
       ctx.fillText(
-        "$" + i.toString(16).toUpperCase().padStart(2, "0"),
-        labelX,
-        labelY
+        `${characters.length} characters, ${charWidth}x${charHeight} pixels`,
+        canvasWidth / 2,
+        76 * resMult
       );
-      labelY += 10;
     }
 
-    if (showDecimal) {
-      ctx.fillText(i.toString(), labelX, labelY);
-      labelY += 10;
-    }
+    // ASCII group labels
+    const getGroupLabel = (startIndex: number): string => {
+      if (startIndex >= 0 && startIndex < 32) return "Control";
+      if (startIndex >= 32 && startIndex < 64) return "Numbers & Special";
+      if (startIndex >= 64 && startIndex < 96) return "Uppercase";
+      if (startIndex >= 96 && startIndex < 128) return "Lowercase";
+      if (startIndex >= 128 && startIndex < 160) return "Extended Control";
+      if (startIndex >= 160 && startIndex < 192) return "Extended Special";
+      if (startIndex >= 192 && startIndex < 224) return "Extended Upper";
+      if (startIndex >= 224 && startIndex < 256) return "Extended Lower";
+      return `${startIndex}-${startIndex + 31}`;
+    };
 
-    if (showBinary) {
-      ctx.font = "7px monospace";
-      ctx.fillText(i.toString(2).padStart(8, "0"), labelX, labelY);
-      ctx.font = "9px monospace";
-      labelY += 10;
-    }
+    // Draw sections
+    for (let section = 0; section < numSections; section++) {
+      const sectionX = 20 * resMult + section * (sectionWidth + sectionGap);
+      const startIdx = section * rowsPerSection;
 
-    if (showAscii || showNonPrintableAscii) {
-      const isPrintable = i >= 32 && i <= 126;
-      const shouldShow = (isPrintable && showAscii) || (!isPrintable && showNonPrintableAscii);
+      // Draw group label
+      ctx.fillStyle = foregroundColor;
+      ctx.font = `bold ${16 * resMult}px monospace`;
+      ctx.textAlign = "center";
+      const groupLabel = getGroupLabel(startIdx);
+      ctx.fillText(groupLabel, sectionX + sectionWidth / 2 - 10 * resMult, headerHeight + 16 * resMult);
 
-      if (shouldShow) {
-        const asciiLabel = getAsciiLabel(i);
-        if (asciiLabel) {
-          ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
-          ctx.fillText(asciiLabel, labelX, labelY);
+      // Draw table header
+      ctx.fillStyle = labelColor;
+      ctx.font = `bold ${18 * resMult}px monospace`;
+      ctx.textAlign = "center";
+
+      let colX = sectionX;
+      for (const col of visibleCols) {
+        ctx.fillText(col.header, colX + col.width / 2, headerHeight + tableHeaderHeight - 12 * resMult);
+        colX += col.width;
+      }
+
+      // Draw header line
+      ctx.strokeStyle = labelColor;
+      ctx.lineWidth = 2 * resMult;
+      ctx.beginPath();
+      ctx.moveTo(sectionX, headerHeight + tableHeaderHeight);
+      ctx.lineTo(sectionX + sectionWidth - 20 * resMult, headerHeight + tableHeaderHeight);
+      ctx.stroke();
+
+      // Draw rows
+      for (let row = 0; row < rowsPerSection; row++) {
+        const charIdx = startIdx + row;
+        if (charIdx >= characters.length) break;
+
+        const character = characters[charIdx];
+        const rowY = headerHeight + tableHeaderHeight + row * rowHeight + rowHeight / 2;
+
+        colX = sectionX;
+        ctx.font = `${18 * resMult}px monospace`;
+        ctx.textAlign = "center";
+
+        // Character graphic
+        const charDrawX = colX + (charColWidth - charWidth * scale * resMult) / 2;
+        const charDrawY = rowY - (charHeight * scale * resMult) / 2;
+
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(charDrawX - 2 * resMult, charDrawY - 2 * resMult, charWidth * scale * resMult + 4 * resMult, charHeight * scale * resMult + 4 * resMult);
+
+        for (let py = 0; py < charHeight; py++) {
+          for (let px = 0; px < charWidth; px++) {
+            const isOn = character.pixels[py]?.[px] || false;
+            if (isOn) {
+              ctx.fillStyle = foregroundColor;
+              ctx.fillRect(charDrawX + px * scale * resMult, charDrawY + py * scale * resMult, scale * resMult, scale * resMult);
+            }
+          }
+        }
+        colX += charColWidth;
+
+        // Decimal
+        if (showDecimal) {
+          ctx.fillStyle = labelColor;
+          ctx.fillText(charIdx.toString(), colX + decColWidth / 2, rowY + 6 * resMult);
+          colX += decColWidth;
+        }
+
+        // Binary
+        if (showBinary) {
+          ctx.fillStyle = labelColor;
+          ctx.font = `${14 * resMult}px monospace`;
+          ctx.fillText(charIdx.toString(2).padStart(8, "0"), colX + binColWidth / 2, rowY + 6 * resMult);
+          ctx.font = `${18 * resMult}px monospace`;
+          colX += binColWidth;
+        }
+
+        // Octal
+        if (showOctal) {
+          ctx.fillStyle = labelColor;
+          ctx.fillText(charIdx.toString(8).padStart(3, "0"), colX + octColWidth / 2, rowY + 6 * resMult);
+          colX += octColWidth;
+        }
+
+        // Hex
+        if (showHex) {
+          ctx.fillStyle = labelColor;
+          ctx.fillText(charIdx.toString(16).toUpperCase().padStart(2, "0"), colX + hexColWidth / 2, rowY + 6 * resMult);
+          colX += hexColWidth;
+        }
+
+        // ASCII
+        if (showAscii || showNonPrintableAscii) {
+          const isPrintable = charIdx >= 32 && charIdx <= 126;
+          const shouldShow = (isPrintable && showAscii) || (!isPrintable && showNonPrintableAscii);
+
+          if (shouldShow) {
+            const asciiLabel = getAsciiLabel(charIdx);
+            if (asciiLabel) {
+              ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
+              ctx.fillText(asciiLabel, colX + asciiColWidth / 2, rowY + 6 * resMult);
+            }
+          }
         }
       }
     }
-  }
 
-  // Draw border
-  ctx.strokeStyle = labelColor;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(0.5, 0.5, canvasWidth - 1, canvasHeight - 1);
+    // Draw border
+    ctx.strokeStyle = labelColor;
+    ctx.lineWidth = 2 * resMult;
+    ctx.strokeRect(resMult, resMult, canvasWidth - 2 * resMult, canvasHeight - 2 * resMult);
+  } else {
+    // Grid layout (original)
+    const rows = Math.ceil(characters.length / columns);
+
+    // Calculate dimensions (with resolution multiplier)
+    const cellPadding = 8 * resMult;
+    const labelHeight = 28 * resMult;
+    const hasAsciiLabels = showAscii || showNonPrintableAscii;
+    const labelLines = (showHex ? 1 : 0) + (showDecimal ? 1 : 0) + (showOctal ? 1 : 0) + (showBinary ? 1 : 0) + (hasAsciiLabels ? 1 : 0);
+    const totalLabelHeight = labelHeight * Math.max(1, labelLines);
+
+    const cellWidth = charWidth * scale * resMult + cellPadding * 2;
+    const cellHeight = charHeight * scale * resMult + cellPadding * 2 + totalLabelHeight;
+
+    const headerHeight = showTitle ? 80 * resMult : 0;
+    const rowHeaderWidth = 80 * resMult;
+    const colHeaderHeight = 40 * resMult;
+
+    const canvasWidth = rowHeaderWidth + columns * cellWidth + cellPadding;
+    const canvasHeight = headerHeight + colHeaderHeight + rows * cellHeight + cellPadding;
+
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // Fill background
+    ctx.fillStyle = sheetBackgroundColor;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw title
+    if (showTitle && title) {
+      ctx.fillStyle = foregroundColor;
+      ctx.font = `bold ${32 * resMult}px monospace`;
+      ctx.textAlign = "center";
+      ctx.fillText(title, canvasWidth / 2, 52 * resMult);
+
+      ctx.fillStyle = labelColor;
+      ctx.font = `${20 * resMult}px monospace`;
+      ctx.fillText(
+        `${characters.length} characters, ${charWidth}x${charHeight} pixels`,
+        canvasWidth / 2,
+        76 * resMult
+      );
+    }
+
+    // Draw column headers
+    ctx.fillStyle = labelColor;
+    ctx.font = `${20 * resMult}px monospace`;
+    ctx.textAlign = "center";
+    for (let col = 0; col < columns; col++) {
+      const x = rowHeaderWidth + col * cellWidth + cellWidth / 2;
+      const y = headerHeight + colHeaderHeight - 12 * resMult;
+      ctx.fillText(col.toString(16).toUpperCase(), x, y);
+    }
+
+    // Draw row headers
+    ctx.textAlign = "right";
+    for (let row = 0; row < rows; row++) {
+      const x = rowHeaderWidth - 16 * resMult;
+      const y = headerHeight + colHeaderHeight + row * cellHeight + cellHeight / 2;
+      const rowValue = row * columns;
+      ctx.fillText(rowValue.toString(16).toUpperCase().padStart(2, "0") + "_", x, y);
+    }
+
+    // Draw characters
+    for (let i = 0; i < characters.length; i++) {
+      const character = characters[i];
+      const col = i % columns;
+      const row = Math.floor(i / columns);
+
+      const cellX = rowHeaderWidth + col * cellWidth;
+      const cellY = headerHeight + colHeaderHeight + row * cellHeight;
+
+      // Draw cell background
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(
+        cellX + 2 * resMult,
+        cellY + 2 * resMult,
+        cellWidth - 4 * resMult,
+        charHeight * scale * resMult + cellPadding * 2 - 4 * resMult
+      );
+
+      // Draw character pixels
+      const charX = cellX + cellPadding;
+      const charY = cellY + cellPadding;
+
+      for (let py = 0; py < charHeight; py++) {
+        for (let px = 0; px < charWidth; px++) {
+          const isOn = character.pixels[py]?.[px] || false;
+          if (isOn) {
+            ctx.fillStyle = foregroundColor;
+            ctx.fillRect(charX + px * scale * resMult, charY + py * scale * resMult, scale * resMult, scale * resMult);
+          }
+        }
+      }
+
+      // Draw labels
+      ctx.fillStyle = labelColor;
+      ctx.font = `${18 * resMult}px monospace`;
+      ctx.textAlign = "center";
+
+      let labelY = cellY + cellPadding + charHeight * scale * resMult + 24 * resMult;
+      const labelX = cellX + cellWidth / 2;
+
+      if (showHex) {
+        ctx.fillText(
+          "$" + i.toString(16).toUpperCase().padStart(2, "0"),
+          labelX,
+          labelY
+        );
+        labelY += 20 * resMult;
+      }
+
+      if (showDecimal) {
+        ctx.fillText(i.toString(), labelX, labelY);
+        labelY += 20 * resMult;
+      }
+
+      if (showOctal) {
+        ctx.fillText(i.toString(8).padStart(3, "0"), labelX, labelY);
+        labelY += 20 * resMult;
+      }
+
+      if (showBinary) {
+        ctx.font = `${14 * resMult}px monospace`;
+        ctx.fillText(i.toString(2).padStart(8, "0"), labelX, labelY);
+        ctx.font = `${18 * resMult}px monospace`;
+        labelY += 20 * resMult;
+      }
+
+      if (showAscii || showNonPrintableAscii) {
+        const isPrintable = i >= 32 && i <= 126;
+        const shouldShow = (isPrintable && showAscii) || (!isPrintable && showNonPrintableAscii);
+
+        if (shouldShow) {
+          const asciiLabel = getAsciiLabel(i);
+          if (asciiLabel) {
+            ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
+            ctx.fillText(asciiLabel, labelX, labelY);
+          }
+        }
+      }
+    }
+
+    // Draw border
+    ctx.strokeStyle = labelColor;
+    ctx.lineWidth = 2 * resMult;
+    ctx.strokeRect(resMult, resMult, canvasWidth - 2 * resMult, canvasHeight - 2 * resMult);
+  }
 
   // Add footer with generator info
   ctx.fillStyle = "#444444";
-  ctx.font = "8px monospace";
+  ctx.font = `${16 * resMult}px monospace`;
   ctx.textAlign = "right";
   ctx.fillText(
     "Generated by RetroStack Character ROM Editor",
-    canvasWidth - 8,
-    canvasHeight - 4
+    canvas.width - 16 * resMult,
+    canvas.height - 8 * resMult
   );
 
   // Convert to blob

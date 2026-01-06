@@ -680,23 +680,53 @@ export function ExportView() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">
-                          Columns
-                        </label>
-                        <select
-                          value={referenceSheetOptions.columns}
-                          onChange={(e) =>
-                            setReferenceSheetOptions({ ...referenceSheetOptions, columns: parseInt(e.target.value) })
-                          }
-                          className="w-full px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Layout
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setReferenceSheetOptions({ ...referenceSheetOptions, layout: "grid" })}
+                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
+                            referenceSheetOptions.layout === "grid"
+                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
+                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
+                          }`}
                         >
-                          <option value={8}>8</option>
-                          <option value={16}>16</option>
-                          <option value={32}>32</option>
-                        </select>
+                          Grid
+                        </button>
+                        <button
+                          onClick={() => setReferenceSheetOptions({ ...referenceSheetOptions, layout: "table" })}
+                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
+                            referenceSheetOptions.layout === "table"
+                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
+                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
+                          }`}
+                        >
+                          Table
+                        </button>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {referenceSheetOptions.layout === "grid" && (
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">
+                            Columns
+                          </label>
+                          <select
+                            value={referenceSheetOptions.columns}
+                            onChange={(e) =>
+                              setReferenceSheetOptions({ ...referenceSheetOptions, columns: parseInt(e.target.value) })
+                            }
+                            className="w-full px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
+                          >
+                            <option value={8}>8</option>
+                            <option value={16}>16</option>
+                            <option value={32}>32</option>
+                          </select>
+                        </div>
+                      )}
                       <div>
                         <label className="block text-xs font-medium text-gray-400 mb-1">
                           Scale
@@ -708,17 +738,18 @@ export function ExportView() {
                           }
                           className="w-full px-3 py-2 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan/50"
                         >
-                          <option value={2}>2x</option>
                           <option value={3}>3x</option>
                           <option value={4}>4x</option>
                           <option value={5}>5x</option>
+                          <option value={6}>6x</option>
+                          <option value={8}>8x</option>
                         </select>
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">
-                        Colors
+                        Character Colors
                       </label>
                       <ColorPresetSelector
                         colors={{
@@ -734,6 +765,51 @@ export function ExportView() {
                           })
                         }
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Sheet Background
+                      </label>
+                      <div className="flex gap-2">
+                        {[
+                          { color: "#1a1a2e", label: "Dark" },
+                          { color: "#0d1117", label: "GitHub" },
+                          { color: "#1e1e1e", label: "VS Code" },
+                          { color: "#282c34", label: "One Dark" },
+                          { color: "#ffffff", label: "White" },
+                          { color: "#f5f5f5", label: "Light" },
+                        ].map((preset) => (
+                          <button
+                            key={preset.color}
+                            onClick={() =>
+                              setReferenceSheetOptions({
+                                ...referenceSheetOptions,
+                                sheetBackgroundColor: preset.color,
+                              })
+                            }
+                            className={`w-8 h-8 rounded border-2 transition-all ${
+                              referenceSheetOptions.sheetBackgroundColor === preset.color
+                                ? "border-retro-cyan scale-110"
+                                : "border-retro-grid/50 hover:border-retro-grid"
+                            }`}
+                            style={{ backgroundColor: preset.color }}
+                            title={preset.label}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={referenceSheetOptions.sheetBackgroundColor}
+                          onChange={(e) =>
+                            setReferenceSheetOptions({
+                              ...referenceSheetOptions,
+                              sheetBackgroundColor: e.target.value,
+                            })
+                          }
+                          className="w-8 h-8 rounded border border-retro-grid/50 cursor-pointer"
+                          title="Custom color"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -773,6 +849,17 @@ export function ExportView() {
                             className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
                           />
                           Decimal codes
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={referenceSheetOptions.showOctal}
+                            onChange={(e) =>
+                              setReferenceSheetOptions({ ...referenceSheetOptions, showOctal: e.target.checked })
+                            }
+                            className="rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan/50"
+                          />
+                          Octal codes (000)
                         </label>
                         <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
                           <input
@@ -950,7 +1037,7 @@ export function ExportView() {
                   <div className="relative">
                     <div
                       className="rounded-lg p-3 max-h-[320px] overflow-hidden"
-                      style={{ backgroundColor: "#1a1a2e" }}
+                      style={{ backgroundColor: referenceSheetOptions.sheetBackgroundColor }}
                     >
                       {/* Title */}
                       {referenceSheetOptions.showTitle && (
@@ -967,53 +1054,158 @@ export function ExportView() {
                         </div>
                       )}
 
-                      {/* Grid with headers */}
-                      <div className="overflow-hidden">
-                        {/* Column headers */}
-                        <div className="flex ml-5">
-                          {Array.from({ length: Math.min(referenceSheetOptions.columns, 8) }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="text-[8px] font-mono text-center"
-                              style={{
-                                color: "#888888",
-                                width: `${characterSet.config.width * 2 + 8}px`
-                              }}
-                            >
-                              {i.toString(16).toUpperCase()}
+                      {referenceSheetOptions.layout === "grid" ? (
+                        /* Grid layout preview */
+                        <div className="overflow-hidden">
+                          {/* Column headers */}
+                          <div className="flex ml-5">
+                            {Array.from({ length: Math.min(referenceSheetOptions.columns, 8) }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="text-[8px] font-mono text-center"
+                                style={{
+                                  color: "#888888",
+                                  width: `${characterSet.config.width * 2 + 8}px`
+                                }}
+                              >
+                                {i.toString(16).toUpperCase()}
+                              </div>
+                            ))}
+                            {referenceSheetOptions.columns > 8 && (
+                              <div className="text-[8px] font-mono text-gray-600">...</div>
+                            )}
+                          </div>
+
+                          {/* Character rows */}
+                          {Array.from({ length: Math.min(Math.ceil(characterSet.characters.length / referenceSheetOptions.columns), 4) }).map((_, rowIdx) => (
+                            <div key={rowIdx} className="flex items-start">
+                              {/* Row header */}
+                              <div
+                                className="text-[8px] font-mono w-5 text-right pr-1 pt-1 shrink-0"
+                                style={{ color: "#888888" }}
+                              >
+                                {(rowIdx * referenceSheetOptions.columns).toString(16).toUpperCase().padStart(2, "0")}_
+                              </div>
+
+                              {/* Character cells */}
+                              {Array.from({ length: Math.min(referenceSheetOptions.columns, 8) }).map((_, colIdx) => {
+                                const charIdx = rowIdx * referenceSheetOptions.columns + colIdx;
+                                const char = characterSet.characters[charIdx];
+                                if (!char) return null;
+
+                                return (
+                                  <div
+                                    key={colIdx}
+                                    className="flex flex-col items-center p-0.5"
+                                    style={{ width: `${characterSet.config.width * 2 + 8}px` }}
+                                  >
+                                    {/* Character pixels */}
+                                    <div
+                                      className="border border-gray-700"
+                                      style={{
+                                        width: `${characterSet.config.width * 2}px`,
+                                        height: `${characterSet.config.height * 2}px`,
+                                        backgroundColor: referenceSheetOptions.backgroundColor,
+                                      }}
+                                    >
+                                      {char.pixels.map((row, y) => (
+                                        <div key={y} className="flex">
+                                          {row.map((pixel, x) => (
+                                            <div
+                                              key={x}
+                                              style={{
+                                                width: "2px",
+                                                height: "2px",
+                                                backgroundColor: pixel
+                                                  ? referenceSheetOptions.foregroundColor
+                                                  : referenceSheetOptions.backgroundColor,
+                                              }}
+                                            />
+                                          ))}
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Labels */}
+                                    <div className="text-center leading-tight mt-0.5">
+                                      {referenceSheetOptions.showHex && (
+                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                          ${charIdx.toString(16).toUpperCase().padStart(2, "0")}
+                                        </div>
+                                      )}
+                                      {referenceSheetOptions.showDecimal && (
+                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                          {charIdx}
+                                        </div>
+                                      )}
+                                      {referenceSheetOptions.showOctal && (
+                                        <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
+                                          {charIdx.toString(8).padStart(3, "0")}
+                                        </div>
+                                      )}
+                                      {referenceSheetOptions.showBinary && (
+                                        <div className="text-[5px] font-mono" style={{ color: "#888888" }}>
+                                          {charIdx.toString(2).padStart(8, "0")}
+                                        </div>
+                                      )}
+                                      {referenceSheetOptions.showAscii && charIdx >= 32 && charIdx <= 126 && (
+                                        <div
+                                          className="text-[7px] font-mono"
+                                          style={{ color: referenceSheetOptions.foregroundColor }}
+                                        >
+                                          {String.fromCharCode(charIdx)}
+                                        </div>
+                                      )}
+                                      {referenceSheetOptions.showNonPrintableAscii && (charIdx < 32 || charIdx === 127) && (
+                                        <div
+                                          className="text-[5px] font-mono"
+                                          style={{ color: "#666666" }}
+                                        >
+                                          {["NUL","SOH","STX","ETX","EOT","ENQ","ACK","BEL","BS","TAB","LF","VT","FF","CR","SO","SI","DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB","CAN","EM","SUB","ESC","FS","GS","RS","US"][charIdx] || (charIdx === 127 ? "DEL" : "")}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {referenceSheetOptions.columns > 8 && (
+                                <div className="text-[8px] font-mono text-gray-600 pt-2">...</div>
+                              )}
                             </div>
                           ))}
-                          {referenceSheetOptions.columns > 8 && (
-                            <div className="text-[8px] font-mono text-gray-600">...</div>
-                          )}
                         </div>
+                      ) : (
+                        /* Table layout preview */
+                        <div className="overflow-hidden">
+                          {/* Group label */}
+                          <div
+                            className="text-[8px] font-mono font-bold text-center mb-1"
+                            style={{ color: referenceSheetOptions.foregroundColor }}
+                          >
+                            Control
+                          </div>
 
-                        {/* Character rows */}
-                        {Array.from({ length: Math.min(Math.ceil(characterSet.characters.length / referenceSheetOptions.columns), 4) }).map((_, rowIdx) => (
-                          <div key={rowIdx} className="flex items-start">
-                            {/* Row header */}
-                            <div
-                              className="text-[8px] font-mono w-5 text-right pr-1 pt-1 shrink-0"
-                              style={{ color: "#888888" }}
-                            >
-                              {(rowIdx * referenceSheetOptions.columns).toString(16).toUpperCase().padStart(2, "0")}_
-                            </div>
+                          {/* Table header */}
+                          <div className="flex gap-3 text-[7px] font-mono font-bold border-b border-gray-600 pb-1 mb-1" style={{ color: "#888888" }}>
+                            <div className="w-5 text-center">Char</div>
+                            {referenceSheetOptions.showDecimal && <div className="w-7 text-center">Dec</div>}
+                            {referenceSheetOptions.showBinary && <div className="w-14 text-center">Binary</div>}
+                            {referenceSheetOptions.showOctal && <div className="w-7 text-center">Oct</div>}
+                            {referenceSheetOptions.showHex && <div className="w-6 text-center">Hex</div>}
+                            {(referenceSheetOptions.showAscii || referenceSheetOptions.showNonPrintableAscii) && <div className="w-8 text-center">ASCII</div>}
+                          </div>
 
-                            {/* Character cells */}
-                            {Array.from({ length: Math.min(referenceSheetOptions.columns, 8) }).map((_, colIdx) => {
-                              const charIdx = rowIdx * referenceSheetOptions.columns + colIdx;
-                              const char = characterSet.characters[charIdx];
-                              if (!char) return null;
+                          {/* Table rows */}
+                          {Array.from({ length: Math.min(characterSet.characters.length, 8) }).map((_, charIdx) => {
+                            const char = characterSet.characters[charIdx];
+                            if (!char) return null;
+                            const isPrintable = charIdx >= 32 && charIdx <= 126;
 
-                              return (
-                                <div
-                                  key={colIdx}
-                                  className="flex flex-col items-center p-0.5"
-                                  style={{ width: `${characterSet.config.width * 2 + 8}px` }}
-                                >
-                                  {/* Character pixels (simplified) */}
+                            return (
+                              <div key={charIdx} className="flex gap-3 items-center text-[6px] font-mono py-0.5" style={{ color: "#888888" }}>
+                                {/* Character graphic */}
+                                <div className="w-5 flex justify-center">
                                   <div
-                                    className="border border-gray-700"
                                     style={{
                                       width: `${characterSet.config.width * 2}px`,
                                       height: `${characterSet.config.height * 2}px`,
@@ -1037,57 +1229,42 @@ export function ExportView() {
                                       </div>
                                     ))}
                                   </div>
-
-                                  {/* Labels */}
-                                  <div className="text-center leading-tight mt-0.5">
-                                    {referenceSheetOptions.showHex && (
-                                      <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
-                                        ${charIdx.toString(16).toUpperCase().padStart(2, "0")}
-                                      </div>
-                                    )}
-                                    {referenceSheetOptions.showDecimal && (
-                                      <div className="text-[6px] font-mono" style={{ color: "#888888" }}>
-                                        {charIdx}
-                                      </div>
-                                    )}
-                                    {referenceSheetOptions.showBinary && (
-                                      <div className="text-[5px] font-mono" style={{ color: "#888888" }}>
-                                        {charIdx.toString(2).padStart(8, "0")}
-                                      </div>
-                                    )}
-                                    {referenceSheetOptions.showAscii && charIdx >= 32 && charIdx <= 126 && (
-                                      <div
-                                        className="text-[7px] font-mono"
-                                        style={{ color: referenceSheetOptions.foregroundColor }}
-                                      >
-                                        {String.fromCharCode(charIdx)}
-                                      </div>
-                                    )}
-                                    {referenceSheetOptions.showNonPrintableAscii && (charIdx < 32 || charIdx === 127) && (
-                                      <div
-                                        className="text-[5px] font-mono"
-                                        style={{ color: "#666666" }}
-                                      >
-                                        {["NUL","SOH","STX","ETX","EOT","ENQ","ACK","BEL","BS","TAB","LF","VT","FF","CR","SO","SI","DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB","CAN","EM","SUB","ESC","FS","GS","RS","US"][charIdx] || (charIdx === 127 ? "DEL" : "")}
-                                      </div>
-                                    )}
-                                  </div>
                                 </div>
-                              );
-                            })}
-                            {referenceSheetOptions.columns > 8 && (
-                              <div className="text-[8px] font-mono text-gray-600 pt-2">...</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                                {referenceSheetOptions.showDecimal && <div className="w-7 text-center">{charIdx}</div>}
+                                {referenceSheetOptions.showBinary && <div className="w-14 text-center text-[5px]">{charIdx.toString(2).padStart(8, "0")}</div>}
+                                {referenceSheetOptions.showOctal && <div className="w-7 text-center">{charIdx.toString(8).padStart(3, "0")}</div>}
+                                {referenceSheetOptions.showHex && <div className="w-6 text-center">{charIdx.toString(16).toUpperCase().padStart(2, "0")}</div>}
+                                {(referenceSheetOptions.showAscii || referenceSheetOptions.showNonPrintableAscii) && (
+                                  <div className="w-8 text-center" style={{ color: isPrintable ? referenceSheetOptions.foregroundColor : "#666666" }}>
+                                    {isPrintable && referenceSheetOptions.showAscii
+                                      ? String.fromCharCode(charIdx)
+                                      : (!isPrintable && referenceSheetOptions.showNonPrintableAscii
+                                        ? (["NUL","SOH","STX","ETX","EOT","ENQ","ACK","BEL","BS","TAB","LF","VT","FF","CR","SO","SI","DLE","DC1","DC2","DC3","DC4","NAK","SYN","ETB","CAN","EM","SUB","ESC","FS","GS","RS","US"][charIdx] || (charIdx === 127 ? "DEL" : ""))
+                                        : "")}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Clipping indicator */}
-                    {(characterSet.characters.length > referenceSheetOptions.columns * 4 || referenceSheetOptions.columns > 8) && (
-                      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#1a1a2e] to-transparent rounded-b pointer-events-none flex items-end justify-center pb-2">
+                    {(referenceSheetOptions.layout === "grid"
+                      ? (characterSet.characters.length > referenceSheetOptions.columns * 4 || referenceSheetOptions.columns > 8)
+                      : characterSet.characters.length > 8
+                    ) && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 h-10 rounded-b pointer-events-none flex items-end justify-center pb-2"
+                        style={{
+                          background: `linear-gradient(to top, ${referenceSheetOptions.sheetBackgroundColor}, transparent)`
+                        }}
+                      >
                         <span className="text-[10px] text-gray-500 bg-black/60 px-2 py-0.5 rounded">
-                          {Math.ceil(characterSet.characters.length / referenceSheetOptions.columns)} rows × {referenceSheetOptions.columns} columns
+                          {referenceSheetOptions.layout === "grid"
+                            ? `${Math.ceil(characterSet.characters.length / referenceSheetOptions.columns)} rows × ${referenceSheetOptions.columns} columns`
+                            : `${characterSet.characters.length} rows total`}
                         </span>
                       </div>
                     )}
