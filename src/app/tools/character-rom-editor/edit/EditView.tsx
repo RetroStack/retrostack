@@ -991,7 +991,7 @@ export function EditView() {
             className="h-full"
           />
         }
-        rightSidebarWidth="80px"
+        rightSidebarWidth="120px"
         rightSidebarCollapsible={false}
       >
         <EditorCanvas

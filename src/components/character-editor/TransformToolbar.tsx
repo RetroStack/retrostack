@@ -131,7 +131,7 @@ export interface TransformToolbarProps {
 /**
  * Icon components for the toolbar
  */
-function ArrowUpIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ArrowUpIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -139,7 +139,7 @@ function ArrowUpIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function ArrowDownIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ArrowDownIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -147,7 +147,7 @@ function ArrowDownIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function ArrowLeftIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ArrowLeftIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -155,7 +155,7 @@ function ArrowLeftIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function ArrowRightIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ArrowRightIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -163,7 +163,7 @@ function ArrowRightIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function RotateLeftIcon({ className = "w-4 h-4" }: { className?: string }) {
+function RotateLeftIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -171,7 +171,7 @@ function RotateLeftIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function RotateRightIcon({ className = "w-4 h-4" }: { className?: string }) {
+function RotateRightIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ transform: "scaleX(-1)" }}>
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -179,7 +179,7 @@ function RotateRightIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function FlipHorizontalIcon({ className = "w-4 h-4" }: { className?: string }) {
+function FlipHorizontalIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 12h8m-8 5h8M4 3v18m16-18v18" />
@@ -187,7 +187,7 @@ function FlipHorizontalIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function FlipVerticalIcon({ className = "w-4 h-4" }: { className?: string }) {
+function FlipVerticalIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8v8M12 8v8m5-8v8M3 4h18M3 20h18" />
@@ -195,7 +195,7 @@ function FlipVerticalIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function InvertIcon({ className = "w-4 h-4" }: { className?: string }) {
+function InvertIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -203,7 +203,7 @@ function InvertIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function ClearIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ClearIcon({ className = "w-5 h-5" }: { className?: string }) {
   // Hollow/empty square - represents clearing to empty
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ function ClearIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function FillIcon({ className = "w-4 h-4" }: { className?: string }) {
+function FillIcon({ className = "w-5 h-5" }: { className?: string }) {
   // Solid filled square - represents filling with pixels
   return (
     <svg className={className} viewBox="0 0 24 24">
@@ -221,7 +221,7 @@ function FillIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function DeleteIcon({ className = "w-4 h-4" }: { className?: string }) {
+function DeleteIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -229,7 +229,7 @@ function DeleteIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function CopyIcon({ className = "w-4 h-4" }: { className?: string }) {
+function CopyIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -237,7 +237,7 @@ function CopyIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function CenterIcon({ className = "w-4 h-4" }: { className?: string }) {
+function CenterIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" strokeWidth={2} />
@@ -246,7 +246,7 @@ function CenterIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-function ScaleIcon({ className = "w-4 h-4" }: { className?: string }) {
+function ScaleIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path
@@ -288,7 +288,7 @@ function ToolbarButton({
         onClick={onClick}
         disabled={disabled}
         className={`
-          p-2 rounded transition-colors
+          p-2.5 rounded transition-colors touch-target
           ${disabled
             ? "text-gray-600 cursor-not-allowed"
             : "text-gray-400 hover:text-retro-cyan hover:bg-retro-purple/30"
