@@ -115,7 +115,9 @@ export interface ReferenceSheetOptions {
   scale: number;
   showHex: boolean;
   showDecimal: boolean;
+  showBinary: boolean;
   showAscii: boolean;
+  showNonPrintableAscii: boolean;
   foregroundColor: string;
   backgroundColor: string;
   labelColor: string;
@@ -183,7 +185,9 @@ export function getDefaultReferenceSheetOptions(name: string): ReferenceSheetOpt
     scale: 3,
     showHex: true,
     showDecimal: false,
+    showBinary: false,
     showAscii: true,
+    showNonPrintableAscii: false,
     foregroundColor: "#ffffff",
     backgroundColor: "#000000",
     labelColor: "#888888",
@@ -457,7 +461,9 @@ export async function exportToReferenceSheet(
     scale,
     showHex,
     showDecimal,
+    showBinary,
     showAscii,
+    showNonPrintableAscii,
     foregroundColor,
     backgroundColor,
     labelColor,
@@ -472,7 +478,8 @@ export async function exportToReferenceSheet(
   // Calculate dimensions
   const cellPadding = 4;
   const labelHeight = 14; // Height for labels below character
-  const labelLines = (showHex ? 1 : 0) + (showDecimal ? 1 : 0) + (showAscii ? 1 : 0);
+  const hasAsciiLabels = showAscii || showNonPrintableAscii;
+  const labelLines = (showHex ? 1 : 0) + (showDecimal ? 1 : 0) + (showBinary ? 1 : 0) + (hasAsciiLabels ? 1 : 0);
   const totalLabelHeight = labelHeight * Math.max(1, labelLines);
 
   const cellWidth = charWidth * scale + cellPadding * 2;
@@ -590,11 +597,23 @@ export async function exportToReferenceSheet(
       labelY += 10;
     }
 
-    if (showAscii) {
-      const asciiLabel = getAsciiLabel(i);
-      if (asciiLabel) {
-        ctx.fillStyle = i >= 32 && i <= 126 ? foregroundColor : "#666666";
-        ctx.fillText(asciiLabel, labelX, labelY);
+    if (showBinary) {
+      ctx.font = "7px monospace";
+      ctx.fillText(i.toString(2).padStart(8, "0"), labelX, labelY);
+      ctx.font = "9px monospace";
+      labelY += 10;
+    }
+
+    if (showAscii || showNonPrintableAscii) {
+      const isPrintable = i >= 32 && i <= 126;
+      const shouldShow = (isPrintable && showAscii) || (!isPrintable && showNonPrintableAscii);
+
+      if (shouldShow) {
+        const asciiLabel = getAsciiLabel(i);
+        if (asciiLabel) {
+          ctx.fillStyle = isPrintable ? foregroundColor : "#666666";
+          ctx.fillText(asciiLabel, labelX, labelY);
+        }
       }
     }
   }
