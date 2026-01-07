@@ -14,6 +14,8 @@ import {
   ImportStepIndicator,
   SizePresetDropdown,
   MetadataStep,
+  PaddingDirectionSelector,
+  BitDirectionSelector,
 } from "@/components/character-editor";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
@@ -501,36 +503,10 @@ export function BinaryImportView() {
                       <h3 className="text-sm font-medium text-gray-300 mb-2">
                         Bit Padding
                       </h3>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handlePaddingChange("right")}
-                          className={`
-                            flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                            ${
-                              config.padding === "right"
-                                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                                : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                            }
-                          `}
-                        >
-                          Right
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handlePaddingChange("left")}
-                          className={`
-                            flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                            ${
-                              config.padding === "left"
-                                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                                : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                            }
-                          `}
-                        >
-                          Left
-                        </button>
-                      </div>
+                      <PaddingDirectionSelector
+                        value={config.padding}
+                        onChange={handlePaddingChange}
+                      />
                     </div>
 
                     {/* Bit direction */}
@@ -538,36 +514,10 @@ export function BinaryImportView() {
                       <h3 className="text-sm font-medium text-gray-300 mb-2">
                         Bit Direction
                       </h3>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleBitDirectionChange("ltr")}
-                          className={`
-                            flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                            ${
-                              config.bitDirection === "ltr"
-                                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                                : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                            }
-                          `}
-                        >
-                          Left to Right
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBitDirectionChange("rtl")}
-                          className={`
-                            flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                            ${
-                              config.bitDirection === "rtl"
-                                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                                : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                            }
-                          `}
-                        >
-                          Right to Left
-                        </button>
-                      </div>
+                      <BitDirectionSelector
+                        value={config.bitDirection}
+                        onChange={handleBitDirectionChange}
+                      />
                     </div>
                   </div>
 

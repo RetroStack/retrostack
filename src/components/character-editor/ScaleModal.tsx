@@ -26,6 +26,7 @@ export interface ScaleModalProps {
 
 // Scale factor presets
 const SCALE_PRESETS = [
+  { label: "0.25x", value: 0.25 },
   { label: "0.5x", value: 0.5 },
   { label: "0.75x", value: 0.75 },
   { label: "1.5x", value: 1.5 },
@@ -35,11 +36,7 @@ const SCALE_PRESETS = [
 ];
 
 // 3x3 grid of anchor positions (row by row)
-const ANCHOR_POSITIONS: AnchorPoint[] = [
-  "tl", "tc", "tr",
-  "ml", "mc", "mr",
-  "bl", "bc", "br",
-];
+const ANCHOR_POSITIONS: AnchorPoint[] = ["tl", "tc", "tr", "ml", "mc", "mr", "bl", "bc", "br"];
 
 // Human-readable labels for anchor positions
 function getAnchorLabel(anchor: AnchorPoint): string {
@@ -90,9 +87,7 @@ export function ScaleModal({
 
   // Compute scaled preview characters
   const scaledCharacters = useMemo(() => {
-    return selectedCharacters.map((char) =>
-      scaleCharacter(char, scale, anchor, algorithm)
-    );
+    return selectedCharacters.map((char) => scaleCharacter(char, scale, anchor, algorithm));
   }, [selectedCharacters, scale, anchor, algorithm]);
 
   const remainingCount = Math.max(0, selectedIndices.size - 16);
@@ -112,7 +107,7 @@ export function ScaleModal({
         handleApply();
       }
     },
-    [onClose, handleApply]
+    [onClose, handleApply],
   );
 
   if (!isOpen) return null;
@@ -122,15 +117,9 @@ export function ScaleModal({
   const previewScale = 2; // Scale for preview thumbnails
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onKeyDown={handleKeyDown}>
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
@@ -142,9 +131,7 @@ export function ScaleModal({
             {/* Before preview */}
             <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-2">Before</label>
-              <div
-                className="bg-retro-dark rounded border border-retro-grid/30 p-2 min-h-[80px] flex items-center justify-center"
-              >
+              <div className="bg-retro-dark rounded border border-retro-grid/30 p-2 min-h-[80px] flex items-center justify-center">
                 <div
                   className="grid gap-1"
                   style={{
@@ -165,18 +152,14 @@ export function ScaleModal({
                 </div>
               </div>
               {remainingCount > 0 && (
-                <p className="text-[10px] text-gray-500 mt-1 text-center">
-                  +{remainingCount} more
-                </p>
+                <p className="text-[10px] text-gray-500 mt-1 text-center">+{remainingCount} more</p>
               )}
             </div>
 
             {/* After preview */}
             <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-2">After</label>
-              <div
-                className="bg-retro-dark rounded border border-retro-grid/30 p-2 min-h-[80px] flex items-center justify-center"
-              >
+              <div className="bg-retro-dark rounded border border-retro-grid/30 p-2 min-h-[80px] flex items-center justify-center">
                 <div
                   className="grid gap-1"
                   style={{
@@ -197,9 +180,7 @@ export function ScaleModal({
                 </div>
               </div>
               {remainingCount > 0 && (
-                <p className="text-[10px] text-gray-500 mt-1 text-center">
-                  +{remainingCount} more
-                </p>
+                <p className="text-[10px] text-gray-500 mt-1 text-center">+{remainingCount} more</p>
               )}
             </div>
           </div>
@@ -216,9 +197,10 @@ export function ScaleModal({
                 onClick={() => setScale(preset.value)}
                 className={`
                   px-3 py-1.5 text-sm rounded border transition-all
-                  ${scale === preset.value
-                    ? "border-retro-cyan bg-retro-cyan/20 text-retro-cyan"
-                    : "border-retro-grid/50 bg-retro-dark text-gray-400 hover:border-retro-grid hover:text-white"
+                  ${
+                    scale === preset.value
+                      ? "border-retro-cyan bg-retro-cyan/20 text-retro-cyan"
+                      : "border-retro-grid/50 bg-retro-dark text-gray-400 hover:border-retro-grid hover:text-white"
                   }
                 `}
               >
@@ -248,12 +230,8 @@ export function ScaleModal({
 
         {/* Anchor position grid */}
         <div className="mb-4">
-          <label className="block text-sm text-gray-300 mb-2">
-            Anchor Position
-          </label>
-          <p className="text-xs text-gray-500 mb-3">
-            Select where to anchor content when scaling
-          </p>
+          <label className="block text-sm text-gray-300 mb-2">Anchor Position</label>
+          <p className="text-xs text-gray-500 mb-3">Select where to anchor content when scaling</p>
           <div className="grid grid-cols-3 gap-1 w-32 mx-auto">
             {ANCHOR_POSITIONS.map((pos) => {
               const isSelected = anchor === pos;
@@ -265,9 +243,10 @@ export function ScaleModal({
                   className={`
                     w-10 h-10 rounded border-2 transition-all
                     flex items-center justify-center
-                    ${isSelected
-                      ? "border-retro-cyan bg-retro-cyan/20"
-                      : "border-retro-grid/50 bg-retro-dark hover:border-retro-grid"
+                    ${
+                      isSelected
+                        ? "border-retro-cyan bg-retro-cyan/20"
+                        : "border-retro-grid/50 bg-retro-dark hover:border-retro-grid"
                     }
                   `}
                   title={getAnchorLabel(pos)}
@@ -295,9 +274,10 @@ export function ScaleModal({
                 onClick={() => setAlgorithm(option.id)}
                 className={`
                   flex-1 px-3 py-2 text-sm rounded border transition-all text-left
-                  ${algorithm === option.id
-                    ? "border-retro-cyan bg-retro-cyan/20 text-retro-cyan"
-                    : "border-retro-grid/50 bg-retro-dark text-gray-400 hover:border-retro-grid hover:text-white"
+                  ${
+                    algorithm === option.id
+                      ? "border-retro-cyan bg-retro-cyan/20 text-retro-cyan"
+                      : "border-retro-grid/50 bg-retro-dark text-gray-400 hover:border-retro-grid hover:text-white"
                   }
                 `}
               >
