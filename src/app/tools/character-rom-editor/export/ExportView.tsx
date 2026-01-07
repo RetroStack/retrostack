@@ -8,7 +8,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import { CharacterPreview, ColorPresetSelector } from "@/components/character-editor";
+import {
+  CharacterPreview,
+  ColorPresetSelector,
+  PaddingDirectionSelector,
+  BitDirectionSelector,
+} from "@/components/character-editor";
 import { CustomColors } from "@/lib/character-editor/colorPresets";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
@@ -417,56 +422,20 @@ export function ExportView() {
                       <h3 className="text-xs font-medium text-gray-400 mb-2">
                         Bit Padding
                       </h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setPadding("right")}
-                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                            padding === "right"
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }`}
-                        >
-                          Right
-                        </button>
-                        <button
-                          onClick={() => setPadding("left")}
-                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                            padding === "left"
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }`}
-                        >
-                          Left
-                        </button>
-                      </div>
+                      <PaddingDirectionSelector
+                        value={padding}
+                        onChange={setPadding}
+                      />
                     </div>
 
                     <div>
                       <h3 className="text-xs font-medium text-gray-400 mb-2">
                         Bit Direction
                       </h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setBitDirection("ltr")}
-                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                            bitDirection === "ltr"
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }`}
-                        >
-                          MSB First
-                        </button>
-                        <button
-                          onClick={() => setBitDirection("rtl")}
-                          className={`flex-1 px-3 py-2 text-xs rounded border transition-colors ${
-                            bitDirection === "rtl"
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }`}
-                        >
-                          LSB First
-                        </button>
-                      </div>
+                      <BitDirectionSelector
+                        value={bitDirection}
+                        onChange={setBitDirection}
+                      />
                     </div>
                   </>
                 )}

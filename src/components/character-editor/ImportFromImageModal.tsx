@@ -14,6 +14,7 @@ import {
 } from "@/lib/character-editor/imageImport";
 import { CharacterSetConfig, Character } from "@/lib/character-editor";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
+import { DimensionPresetSelector } from "./DimensionPresetSelector";
 
 export interface ImportFromImageModalProps {
   /** Whether the modal is open */
@@ -329,11 +330,26 @@ export function ImportFromImageModal({
                 <div className="card-retro p-4 space-y-4">
                   <h3 className="text-sm font-medium text-gray-300">Grid Settings</h3>
 
-                  {/* Dimension suggestions */}
+                  {/* Standard dimension presets */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-2">
+                      Character Size
+                    </label>
+                    <DimensionPresetSelector
+                      currentWidth={options.charWidth}
+                      currentHeight={options.charHeight}
+                      onSelect={(width, height) => {
+                        updateOption("charWidth", width);
+                        updateOption("charHeight", height);
+                      }}
+                    />
+                  </div>
+
+                  {/* Dimension suggestions from image */}
                   {suggestions.length > 0 && (
                     <div>
                       <label className="block text-xs text-gray-500 mb-2">
-                        Detected sizes
+                        Detected from image
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {suggestions.slice(0, 4).map((s, i) => (
@@ -344,10 +360,10 @@ export function ImportFromImageModal({
                               updateOption("charHeight", s.height);
                             }}
                             className={`
-                              px-2 py-1 text-xs rounded border transition-colors
+                              px-3 py-1 text-xs rounded border transition-colors
                               ${
                                 options.charWidth === s.width && options.charHeight === s.height
-                                  ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
+                                  ? "border-retro-pink bg-retro-pink/10 text-retro-pink"
                                   : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
                               }
                             `}

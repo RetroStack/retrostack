@@ -8,12 +8,16 @@ import {
   getDefaultFontImportOptions,
   isValidFontFile,
   getSupportedFontExtensions,
-  CHARACTER_RANGES,
   getCharacterRangePreview,
   FontParseResult,
   FontParseController,
 } from "@/lib/character-editor/fontImport";
-import { CharacterSetConfig, Character } from "@/lib/character-editor";
+import {
+  CharacterSetConfig,
+  Character,
+  CHARACTER_RANGE_PRESETS,
+} from "@/lib/character-editor";
+import { DimensionPresetSelector } from "./DimensionPresetSelector";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 export interface ImportFromFontModalProps {
@@ -383,6 +387,24 @@ export function ImportFromFontModal({
                 <div className="card-retro p-4 space-y-4">
                   <h3 className="text-sm font-medium text-gray-300">Character Size</h3>
 
+                  {/* Size presets */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-2">Character Size</label>
+                    <DimensionPresetSelector
+                      currentWidth={options.charWidth}
+                      currentHeight={options.charHeight}
+                      onSelect={(width, height, fontSize) => {
+                        updateOption("charWidth", width);
+                        updateOption("charHeight", height);
+                        if (fontSize) {
+                          updateOption("fontSize", fontSize);
+                        }
+                      }}
+                      includeFontSize
+                    />
+                  </div>
+
+                  {/* Manual dimensions */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">
@@ -424,35 +446,6 @@ export function ImportFromFontModal({
                       />
                     </div>
                   </div>
-
-                  {/* Size presets */}
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { w: 8, h: 8, f: 8, label: "8x8" },
-                      { w: 8, h: 16, f: 14, label: "8x16" },
-                      { w: 6, h: 8, f: 7, label: "6x8" },
-                      { w: 16, h: 16, f: 14, label: "16x16" },
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        onClick={() => {
-                          updateOption("charWidth", preset.w);
-                          updateOption("charHeight", preset.h);
-                          updateOption("fontSize", preset.f);
-                        }}
-                        className={`
-                          px-2 py-1 text-xs rounded border transition-colors
-                          ${
-                            options.charWidth === preset.w && options.charHeight === preset.h
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }
-                        `}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Character range */}
@@ -461,15 +454,16 @@ export function ImportFromFontModal({
 
                   {/* Range presets */}
                   <div className="flex flex-wrap gap-2">
-                    {CHARACTER_RANGES.slice(0, 4).map((range) => (
+                    {CHARACTER_RANGE_PRESETS.slice(0, 4).map((range) => (
                       <button
                         key={range.name}
                         onClick={() => applyRangePreset(range.startCode, range.endCode)}
+                        title={range.description}
                         className={`
-                          px-2 py-1 text-xs rounded border transition-colors
+                          px-3 py-1 text-xs rounded border transition-colors
                           ${
                             options.startCode === range.startCode && options.endCode === range.endCode
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
+                              ? "border-retro-pink bg-retro-pink/10 text-retro-pink"
                               : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
                           }
                         `}

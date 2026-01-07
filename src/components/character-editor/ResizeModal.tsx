@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { AnchorPoint } from "@/lib/character-editor";
+import {
+  AnchorPoint,
+  getAnchorPositions,
+  getAnchorPositionLabel,
+} from "@/lib/character-editor";
 
 export interface ResizeModalProps {
   /** Whether the modal is open */
@@ -16,28 +20,8 @@ export interface ResizeModalProps {
   onResize: (width: number, height: number, anchor: AnchorPoint) => void;
 }
 
-// 3x3 grid of anchor positions (row by row)
-const ANCHOR_POSITIONS: AnchorPoint[] = [
-  "tl", "tc", "tr",
-  "ml", "mc", "mr",
-  "bl", "bc", "br",
-];
-
-// Human-readable labels for anchor positions
-function getAnchorLabel(anchor: AnchorPoint): string {
-  const labels: Record<AnchorPoint, string> = {
-    tl: "Top Left",
-    tc: "Top Center",
-    tr: "Top Right",
-    ml: "Middle Left",
-    mc: "Middle Center",
-    mr: "Middle Right",
-    bl: "Bottom Left",
-    bc: "Bottom Center",
-    br: "Bottom Right",
-  };
-  return labels[anchor];
-}
+// Get anchor positions from centralized presets
+const ANCHOR_POSITIONS = getAnchorPositions();
 
 /**
  * Modal for resizing character dimensions with anchor point selection
@@ -143,7 +127,7 @@ export function ResizeModal({
                       : "border-retro-grid/50 bg-retro-dark hover:border-retro-grid"
                     }
                   `}
-                  title={getAnchorLabel(pos)}
+                  title={getAnchorPositionLabel(pos)}
                 >
                   <div
                     className={`

@@ -3,11 +3,12 @@
 import { useMemo } from "react";
 import {
   CharacterSetConfig,
-  PaddingDirection,
-  BitDirection,
   calculateCharacterCount,
   formatFileSize,
 } from "@/lib/character-editor";
+import { DimensionPresetSelector } from "./DimensionPresetSelector";
+import { PaddingDirectionSelector } from "./PaddingDirectionSelector";
+import { BitDirectionSelector } from "./BitDirectionSelector";
 
 export interface ImportConfigFormProps {
   /** Current configuration */
@@ -66,13 +67,6 @@ export function ImportConfigForm({
     }
   };
 
-  const handlePaddingChange = (padding: PaddingDirection) => {
-    onConfigChange({ ...config, padding });
-  };
-
-  const handleBitDirectionChange = (bitDirection: BitDirection) => {
-    onConfigChange({ ...config, bitDirection });
-  };
 
   return (
     <div className="space-y-6">
@@ -173,40 +167,11 @@ export function ImportConfigForm({
         <h3 className="text-sm font-medium text-gray-300 mb-3">
           Bit Padding
         </h3>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => handlePaddingChange("right")}
-            disabled={disabled}
-            className={`
-              flex-1 px-3 py-2 text-sm rounded border transition-colors
-              ${
-                config.padding === "right"
-                  ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                  : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-              }
-              disabled:opacity-50
-            `}
-          >
-            Right (default)
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePaddingChange("left")}
-            disabled={disabled}
-            className={`
-              flex-1 px-3 py-2 text-sm rounded border transition-colors
-              ${
-                config.padding === "left"
-                  ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                  : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-              }
-              disabled:opacity-50
-            `}
-          >
-            Left
-          </button>
-        </div>
+        <PaddingDirectionSelector
+          value={config.padding}
+          onChange={(padding) => onConfigChange({ ...config, padding })}
+          disabled={disabled}
+        />
         <p className="mt-2 text-xs text-gray-500">
           Determines which side unused bits are padded in each byte
         </p>
@@ -217,40 +182,11 @@ export function ImportConfigForm({
         <h3 className="text-sm font-medium text-gray-300 mb-3">
           Bit Direction
         </h3>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => handleBitDirectionChange("ltr")}
-            disabled={disabled}
-            className={`
-              flex-1 px-3 py-2 text-sm rounded border transition-colors
-              ${
-                config.bitDirection === "ltr"
-                  ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                  : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-              }
-              disabled:opacity-50
-            `}
-          >
-            Left to Right (default)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleBitDirectionChange("rtl")}
-            disabled={disabled}
-            className={`
-              flex-1 px-3 py-2 text-sm rounded border transition-colors
-              ${
-                config.bitDirection === "rtl"
-                  ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                  : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-              }
-              disabled:opacity-50
-            `}
-          >
-            Right to Left
-          </button>
-        </div>
+        <BitDirectionSelector
+          value={config.bitDirection}
+          onChange={(bitDirection) => onConfigChange({ ...config, bitDirection })}
+          disabled={disabled}
+        />
         <p className="mt-2 text-xs text-gray-500">
           The order bits are read within each byte (MSB vs LSB first)
         </p>
@@ -261,41 +197,14 @@ export function ImportConfigForm({
         <h3 className="text-sm font-medium text-gray-300 mb-3">
           Quick Presets
         </h3>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: "8x8", width: 8, height: 8 },
-            { label: "8x16", width: 8, height: 16 },
-            { label: "5x7", width: 5, height: 7 },
-            { label: "5x8", width: 5, height: 8 },
-            { label: "6x8", width: 6, height: 8 },
-            { label: "6x10", width: 6, height: 10 },
-          ].map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() =>
-                onConfigChange({
-                  ...config,
-                  width: preset.width,
-                  height: preset.height,
-                })
-              }
-              disabled={disabled}
-              className={`
-                px-3 py-1 text-xs rounded border transition-colors
-                ${
-                  config.width === preset.width &&
-                  config.height === preset.height
-                    ? "border-retro-pink bg-retro-pink/10 text-retro-pink"
-                    : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                }
-                disabled:opacity-50
-              `}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
+        <DimensionPresetSelector
+          currentWidth={config.width}
+          currentHeight={config.height}
+          onSelect={(width, height) =>
+            onConfigChange({ ...config, width, height })
+          }
+          disabled={disabled}
+        />
       </div>
     </div>
   );

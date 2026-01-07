@@ -24,32 +24,15 @@ import {
   SerializedCharacterSet,
   deserializeCharacterSet,
   resizeCharacter,
+  getAnchorPositions,
+  getAnchorPositionLabel,
 } from "@/lib/character-editor";
 
 type SourceMode = "copy" | "new";
 type WizardStep = 1 | 2 | 3 | 4;
 
-// 3x3 anchor grid
-const ANCHOR_POSITIONS: AnchorPoint[] = [
-  "tl", "tc", "tr",
-  "ml", "mc", "mr",
-  "bl", "bc", "br",
-];
-
-function getAnchorLabel(anchor: AnchorPoint): string {
-  const labels: Record<AnchorPoint, string> = {
-    tl: "Top Left",
-    tc: "Top Center",
-    tr: "Top Right",
-    ml: "Middle Left",
-    mc: "Middle Center",
-    mr: "Middle Right",
-    bl: "Bottom Left",
-    bc: "Bottom Center",
-    br: "Bottom Right",
-  };
-  return labels[anchor];
-}
+// Get anchor positions from centralized presets
+const ANCHOR_POSITIONS = getAnchorPositions();
 
 /**
  * Add view for the Character ROM Editor - Multi-step wizard to create new character set
@@ -673,7 +656,7 @@ export function AddView() {
                                   : "border-retro-grid/50 bg-retro-dark hover:border-retro-grid"
                                 }
                               `}
-                              title={getAnchorLabel(pos)}
+                              title={getAnchorPositionLabel(pos)}
                             >
                               <div
                                 className={`

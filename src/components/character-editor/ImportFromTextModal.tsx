@@ -11,6 +11,9 @@ import {
 } from "@/lib/character-editor/textImport";
 import { CharacterSetConfig, Character } from "@/lib/character-editor";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
+import { DimensionPresetSelector } from "./DimensionPresetSelector";
+import { PaddingDirectionSelector } from "./PaddingDirectionSelector";
+import { BitDirectionSelector } from "./BitDirectionSelector";
 
 export interface ImportFromTextModalProps {
   /** Whether the modal is open */
@@ -20,21 +23,6 @@ export interface ImportFromTextModalProps {
   /** Callback when import is complete */
   onImport: (characters: Character[], config: CharacterSetConfig) => void;
 }
-
-/** Preset dimension options */
-const DIMENSION_PRESETS = [
-  { width: 5, height: 8, label: "5x8" },
-  { width: 8, height: 8, label: "8x8" },
-  { width: 5, height: 10, label: "5x10" },
-  { width: 6, height: 10, label: "6x10" },
-  { width: 5, height: 12, label: "5x12" },
-  { width: 7, height: 12, label: "7x12" },
-  { width: 8, height: 12, label: "8x12" },
-  { width: 5, height: 16, label: "5x16" },
-  { width: 8, height: 16, label: "8x16" },
-  { width: 16, height: 16, label: "16x16" },
-  { width: 32, height: 32, label: "32x32" },
-];
 
 /**
  * Modal for importing characters from pasted text/code
@@ -163,44 +151,14 @@ Examples:
                 {/* Dimension presets */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-2">Character Size</label>
-                  <div className="flex flex-wrap gap-2">
-                    {DIMENSION_PRESETS.map((preset) => (
-                      <button
-                        key={preset.label}
-                        onClick={() => {
-                          updateOption("charWidth", preset.width);
-                          updateOption("charHeight", preset.height);
-                        }}
-                        className={`
-                          px-3 py-1.5 text-xs rounded border transition-colors
-                          ${
-                            options.charWidth === preset.width && options.charHeight === preset.height
-                              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                              : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                          }
-                        `}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => {
-                        // Custom - just deselect presets
-                      }}
-                      className={`
-                        px-3 py-1.5 text-xs rounded border transition-colors
-                        ${
-                          !DIMENSION_PRESETS.some(
-                            (p) => p.width === options.charWidth && p.height === options.charHeight,
-                          )
-                            ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                            : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                        }
-                      `}
-                    >
-                      Custom
-                    </button>
-                  </div>
+                  <DimensionPresetSelector
+                    currentWidth={options.charWidth}
+                    currentHeight={options.charHeight}
+                    onSelect={(width, height) => {
+                      updateOption("charWidth", width);
+                      updateOption("charHeight", height);
+                    }}
+                  />
                 </div>
 
                 {/* Manual dimensions */}
@@ -232,67 +190,19 @@ Examples:
                 {/* Padding direction */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-2">Padding Direction</label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateOption("padding", "right")}
-                      className={`
-                        flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                        ${
-                          options.padding === "right"
-                            ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                            : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                        }
-                      `}
-                    >
-                      Right (most common)
-                    </button>
-                    <button
-                      onClick={() => updateOption("padding", "left")}
-                      className={`
-                        flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                        ${
-                          options.padding === "left"
-                            ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                            : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                        }
-                      `}
-                    >
-                      Left
-                    </button>
-                  </div>
+                  <PaddingDirectionSelector
+                    value={options.padding}
+                    onChange={(padding) => updateOption("padding", padding)}
+                  />
                 </div>
 
                 {/* Bit direction */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-2">Bit Direction</label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateOption("bitDirection", "ltr")}
-                      className={`
-                        flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                        ${
-                          options.bitDirection === "ltr"
-                            ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                            : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                        }
-                      `}
-                    >
-                      MSB First (most common)
-                    </button>
-                    <button
-                      onClick={() => updateOption("bitDirection", "rtl")}
-                      className={`
-                        flex-1 px-3 py-1.5 text-xs rounded border transition-colors
-                        ${
-                          options.bitDirection === "rtl"
-                            ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
-                            : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
-                        }
-                      `}
-                    >
-                      LSB First
-                    </button>
-                  </div>
+                  <BitDirectionSelector
+                    value={options.bitDirection}
+                    onChange={(bitDirection) => updateOption("bitDirection", bitDirection)}
+                  />
                 </div>
               </div>
 
