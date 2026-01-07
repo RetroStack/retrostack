@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { KNOWN_MANUFACTURERS, getSystemsForManufacturer } from "@/lib/character-editor/manufacturers";
 import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 
 export interface LibraryFiltersProps {
@@ -73,30 +72,15 @@ export function LibraryFilters({
   filteredCount,
 }: LibraryFiltersProps) {
 
-  // Get all known manufacturers for dropdown
+  // Get all manufacturers from the library
   const allManufacturers = useMemo(() => {
-    const known = KNOWN_MANUFACTURERS.map((m) => m.manufacturer);
-    // Include any available manufacturers not in the known list
-    const uniqueManufacturers = new Set([...known, ...availableManufacturers]);
-    return Array.from(uniqueManufacturers).sort();
+    return [...availableManufacturers].sort();
   }, [availableManufacturers]);
 
-  // Get systems - show all if no manufacturer selected, or filtered by selected manufacturers
+  // Get systems from the library - show all if no manufacturer selected
   const systemsForManufacturers = useMemo(() => {
-    if (manufacturerFilters.length === 0) {
-      // If no manufacturer selected, show all available systems
-      return availableSystems.sort();
-    }
-    // Get systems for all selected manufacturers
-    const systems = new Set<string>();
-    manufacturerFilters.forEach((manufacturer) => {
-      const knownSystems = getSystemsForManufacturer(manufacturer);
-      knownSystems.forEach((s) => systems.add(s));
-    });
-    // Also include any available systems
-    availableSystems.forEach((s) => systems.add(s));
-    return Array.from(systems).sort();
-  }, [manufacturerFilters, availableSystems]);
+    return [...availableSystems].sort();
+  }, [availableSystems]);
 
   // Get unique widths and heights
   const availableWidths = useMemo(() => {

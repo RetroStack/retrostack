@@ -66,11 +66,15 @@ export function CharacterEditorLibrary() {
 
   const availableSystems = useMemo(() => {
     const systems = new Set<string>();
-    characterSets.forEach((set) => {
+    // If manufacturer filters are selected, only show systems for those manufacturers
+    const setsToCheck = manufacturerFilters.length > 0
+      ? characterSets.filter((set) => set.metadata.manufacturer && manufacturerFilters.includes(set.metadata.manufacturer))
+      : characterSets;
+    setsToCheck.forEach((set) => {
       if (set.metadata.system) systems.add(set.metadata.system);
     });
     return Array.from(systems).sort();
-  }, [characterSets]);
+  }, [characterSets, manufacturerFilters]);
 
   const availableLocales = useMemo(() => {
     const locales = new Set<string>();
@@ -263,7 +267,17 @@ export function CharacterEditorLibrary() {
 
   const handleManufacturerFilterChange = useCallback((manufacturers: string[]) => {
     setManufacturerFilters(manufacturers);
-  }, []);
+    // Clear system filters that are no longer valid for the selected manufacturers
+    if (manufacturers.length > 0) {
+      const validSystems = new Set<string>();
+      characterSets
+        .filter((set) => set.metadata.manufacturer && manufacturers.includes(set.metadata.manufacturer))
+        .forEach((set) => {
+          if (set.metadata.system) validSystems.add(set.metadata.system);
+        });
+      setSystemFilters((prev) => prev.filter((s) => validSystems.has(s)));
+    }
+  }, [characterSets]);
 
   const handleSystemFilterChange = useCallback((systems: string[]) => {
     setSystemFilters(systems);
