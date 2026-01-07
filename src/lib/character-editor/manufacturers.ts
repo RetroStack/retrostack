@@ -2,18 +2,21 @@
  * Character ROM Editor - Manufacturers and Systems Constants
  *
  * Central data source for all hardware manufacturers, systems, and their specifications.
- * All other data structures are derived from the unified SYSTEMS array.
+ * Based on historical character generator ROM data from early 8-bit computers.
+ *
+ * All other data structures are derived from the unified SYSTEMS and ROM_CHIPS arrays.
  */
 
 /**
  * Character ROM specifications for a system
+ * Uses glyph dimensions (actual drawn pixels), not cell dimensions
  */
 export interface CharacterRomSpec {
-  /** Character width in pixels */
+  /** Character width in pixels (glyph size) */
   width: number;
-  /** Character height in pixels */
+  /** Character height in pixels (glyph size) */
   height: number;
-  /** Default number of characters in the ROM */
+  /** Default number of characters in the ROM (per bank if multi-bank) */
   characterCount: number;
 }
 
@@ -26,48 +29,86 @@ export interface SystemInfo {
   system: string;
   /** Hardware manufacturer (e.g., "Commodore", "Sinclair") */
   manufacturer: string;
+  /** Year the system was released */
+  year?: number;
   /** Character ROM specifications (if the system has a character ROM) */
   characterRom?: CharacterRomSpec;
-  // Future extensions can be added here:
-  // graphics?: GraphicsSpec;
-  // audio?: AudioSpec;
-  // cpu?: CpuSpec;
+  /** ROM chip IDs used by this system (references ROM_CHIPS) */
+  romChipIds?: string[];
+  /** Notes about this system's character ROM implementation */
+  notes?: string;
+}
+
+/**
+ * Character ROM IC specifications
+ */
+export interface RomChipInfo {
+  /** Unique identifier */
+  id: string;
+  /** Part number (e.g., "2513", "901225-01") */
+  partNumber: string;
+  /** Chip manufacturer */
+  manufacturer: string;
+  /** ROM type (e.g., "Mask ROM", "EPROM") */
+  type: string;
+  /** Glyph dimensions */
+  glyph: {
+    width: number;
+    height: number;
+  };
+  /** Number of glyphs stored */
+  glyphCount: number;
+  /** Systems that use this ROM chip (references SYSTEMS) */
+  usedIn: string[];
+  /** Additional notes about this chip */
+  notes?: string;
 }
 
 /**
  * Central data source for all systems and their specifications.
+ * Based on historical character generator ROM data from late 1970s through mid-1980s.
  *
  * Systems with `characterRom` defined are shown in ROM preset dropdowns.
- * Systems without `characterRom` are only shown in manufacturer/system selection dropdowns.
+ * Character dimensions use glyph size (actual drawn pixels), not cell size.
+ * Character counts use per-bank values for multi-bank systems.
  *
  * To add a new system:
  * 1. Add an entry to this array with the system name and manufacturer
- * 2. If it has a character ROM, add the `characterRom` spec
- * 3. All derived constants and dropdowns will update automatically
+ * 2. If it has a character ROM, add the `characterRom` spec with glyph dimensions
+ * 3. Reference the ROM chip ID(s) used by the system
+ * 4. All derived constants and dropdowns will update automatically
  */
 export const SYSTEMS: SystemInfo[] = [
   // =========================================================================
-  // Commodore
+  // Acorn
   // =========================================================================
   {
-    system: "C64",
-    manufacturer: "Commodore",
-    characterRom: { width: 8, height: 8, characterCount: 256 },
+    system: "Acorn Atom",
+    manufacturer: "Acorn",
+    year: 1980,
+    characterRom: { width: 5, height: 7, characterCount: 64 },
+    romChipIds: ["mc6847"],
+    notes: "64 ASCII characters from MC6847 internal ROM.",
   },
   {
-    system: "VIC-20",
-    manufacturer: "Commodore",
+    system: "BBC Micro",
+    manufacturer: "Acorn",
+    year: 1981,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["saa5050"],
+    notes: "Modes 0-6 from OS ROM; Mode 7 Teletext uses SAA5050.",
   },
+
+  // =========================================================================
+  // Amstrad
+  // =========================================================================
   {
-    system: "PET",
-    manufacturer: "Commodore",
+    system: "Amstrad CPC 464",
+    manufacturer: "Amstrad",
+    year: 1984,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    notes: "Font stored in firmware ROM, software-rendered to screen RAM.",
   },
-  { system: "C128", manufacturer: "Commodore" },
-  { system: "Plus/4", manufacturer: "Commodore" },
-  { system: "C16", manufacturer: "Commodore" },
-  { system: "Amiga", manufacturer: "Commodore" },
 
   // =========================================================================
   // Apple
@@ -75,111 +116,162 @@ export const SYSTEMS: SystemInfo[] = [
   {
     system: "Apple II",
     manufacturer: "Apple",
-    characterRom: { width: 8, height: 8, characterCount: 256 },
+    year: 1977,
+    characterRom: { width: 5, height: 7, characterCount: 64 },
+    romChipIds: ["signetics-2513", "gi-ro-3-2513"],
+    notes: "Uppercase letters, numbers, and symbols only.",
   },
-  { system: "Apple IIe", manufacturer: "Apple" },
-  { system: "Apple IIc", manufacturer: "Apple" },
-  { system: "Apple IIgs", manufacturer: "Apple" },
-  { system: "Apple III", manufacturer: "Apple" },
 
   // =========================================================================
-  // Sinclair
+  // ASCII/Microsoft (MSX)
   // =========================================================================
   {
-    system: "ZX80",
-    manufacturer: "Sinclair",
-    characterRom: { width: 8, height: 8, characterCount: 64 },
+    system: "MSX",
+    manufacturer: "ASCII/Microsoft",
+    year: 1983,
+    characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["tms9918"],
+    notes: "Font in Main-ROM copied to VRAM. Regional variants available.",
   },
-  {
-    system: "ZX81",
-    manufacturer: "Sinclair",
-    characterRom: { width: 8, height: 8, characterCount: 64 },
-  },
-  {
-    system: "ZX Spectrum",
-    manufacturer: "Sinclair",
-    characterRom: { width: 8, height: 8, characterCount: 96 },
-  },
-  { system: "QL", manufacturer: "Sinclair" },
 
   // =========================================================================
   // Atari
   // =========================================================================
   {
-    system: "Atari 400/800",
+    system: "Atari 400",
     manufacturer: "Atari",
+    year: 1979,
     characterRom: { width: 8, height: 8, characterCount: 128 },
+    romChipIds: ["atari-os-rom"],
+    notes: "Font stored within OS ROM. Allows redirection to RAM.",
   },
-  { system: "Atari ST", manufacturer: "Atari" },
-  { system: "Atari 2600", manufacturer: "Atari" },
-  { system: "Atari 7800", manufacturer: "Atari" },
-  { system: "Atari Lynx", manufacturer: "Atari" },
+  {
+    system: "Atari 800",
+    manufacturer: "Atari",
+    year: 1979,
+    characterRom: { width: 8, height: 8, characterCount: 128 },
+    romChipIds: ["atari-os-rom"],
+    notes: "Identical font storage to Atari 400.",
+  },
 
   // =========================================================================
-  // IBM PC
+  // Coleco
   // =========================================================================
   {
-    system: "PC CGA",
-    manufacturer: "IBM",
+    system: "ColecoVision",
+    manufacturer: "Coleco",
+    year: 1982,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["colecovision-bios", "tms9918"],
+    notes: "Font stored in 8KB BIOS ROM, uses TMS9928A VDP.",
   },
-  {
-    system: "PC EGA",
-    manufacturer: "IBM",
-    characterRom: { width: 8, height: 14, characterCount: 256 },
-  },
-  {
-    system: "PC VGA",
-    manufacturer: "IBM",
-    characterRom: { width: 8, height: 16, characterCount: 256 },
-  },
-  { system: "PC MDA", manufacturer: "IBM" },
-  { system: "PC Hercules", manufacturer: "IBM" },
 
   // =========================================================================
-  // Nintendo
+  // Commodore
   // =========================================================================
   {
-    system: "NES/Famicom",
-    manufacturer: "Nintendo",
-    characterRom: { width: 8, height: 8, characterCount: 512 },
+    system: "VIC-20",
+    manufacturer: "Commodore",
+    year: 1980,
+    characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["mos-901460-03"],
+    notes: "Two character sets: Uppercase/Graphics and Upper/Lowercase.",
   },
-  { system: "SNES", manufacturer: "Nintendo" },
-  { system: "Game Boy", manufacturer: "Nintendo" },
-  { system: "Game Boy Color", manufacturer: "Nintendo" },
-  { system: "Game Boy Advance", manufacturer: "Nintendo" },
+  {
+    system: "C64",
+    manufacturer: "Commodore",
+    year: 1982,
+    characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["mos-901225-01"],
+    notes: "Two character sets: Uppercase/Graphics and Upper/Lowercase (PETSCII).",
+  },
+  {
+    system: "PET 8032",
+    manufacturer: "Commodore",
+    year: 1980,
+    characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["mos-901447-10"],
+    notes: "Business and Graphics character sets.",
+  },
+
+  // =========================================================================
+  // Dragon Data
+  // =========================================================================
+  {
+    system: "Dragon 32",
+    manufacturer: "Dragon Data",
+    year: 1982,
+    characterRom: { width: 5, height: 7, characterCount: 64 },
+    romChipIds: ["mc6847"],
+    notes: "Similar to TRS-80 CoCo, uses MC6847 VDG.",
+  },
+
+  // =========================================================================
+  // Mattel
+  // =========================================================================
+  {
+    system: "Intellivision",
+    manufacturer: "Mattel",
+    year: 1979,
+    characterRom: { width: 8, height: 8, characterCount: 213 },
+    romChipIds: ["intellivision-grom"],
+    notes: "GROM contains 213 predefined 8x8 images including alphanumerics.",
+  },
+
+  // =========================================================================
+  // NEC
+  // =========================================================================
+  {
+    system: "NEC PC-6001",
+    manufacturer: "NEC",
+    year: 1981,
+    characterRom: { width: 5, height: 7, characterCount: 64 },
+    romChipIds: ["mc6847"],
+    notes: "Uses MC6847 VDG internal character set.",
+  },
+
+  // =========================================================================
+  // Philips
+  // =========================================================================
+  {
+    system: "Philips P2000",
+    manufacturer: "Philips",
+    year: 1980,
+    characterRom: { width: 5, height: 9, characterCount: 96 },
+    romChipIds: ["saa5050"],
+    notes: "Teletext character set with block graphics.",
+  },
 
   // =========================================================================
   // Sega
   // =========================================================================
-  { system: "Master System", manufacturer: "Sega" },
-  { system: "Genesis/Mega Drive", manufacturer: "Sega" },
-  { system: "Game Gear", manufacturer: "Sega" },
-  { system: "Saturn", manufacturer: "Sega" },
-
-  // =========================================================================
-  // Amstrad
-  // =========================================================================
   {
-    system: "CPC 464",
-    manufacturer: "Amstrad",
+    system: "Sega SG-1000",
+    manufacturer: "Sega",
+    year: 1983,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["tms9918"],
+    notes: "No built-in font; patterns loaded from cartridge into VDP RAM.",
   },
   {
-    system: "CPC 6128",
-    manufacturer: "Amstrad",
+    system: "Sega SC-3000",
+    manufacturer: "Sega",
+    year: 1983,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["tms9918"],
+    notes: "Font provided by BASIC cartridge, includes katakana.",
   },
-  { system: "CPC 664", manufacturer: "Amstrad" },
-  { system: "PCW", manufacturer: "Amstrad" },
 
   // =========================================================================
-  // Texas Instruments
+  // Sinclair
   // =========================================================================
   {
-    system: "TI-99/4A",
-    manufacturer: "Texas Instruments",
-    characterRom: { width: 8, height: 8, characterCount: 256 },
+    system: "ZX Spectrum",
+    manufacturer: "Sinclair",
+    year: 1982,
+    characterRom: { width: 8, height: 8, characterCount: 96 },
+    romChipIds: ["sinclair-spectrum-rom"],
+    notes: "Printable ASCII (32-127). Font embedded in 16KB system ROM.",
   },
 
   // =========================================================================
@@ -188,59 +280,223 @@ export const SYSTEMS: SystemInfo[] = [
   {
     system: "TRS-80 Model I",
     manufacturer: "Tandy",
-    characterRom: { width: 8, height: 8, characterCount: 128 },
+    year: 1977,
+    characterRom: { width: 5, height: 8, characterCount: 128 },
+    romChipIds: ["mcm6673"],
+    notes: "Uppercase only; lowercase via hardware modification.",
   },
-  { system: "TRS-80 Model III", manufacturer: "Tandy" },
-  { system: "TRS-80 Color Computer", manufacturer: "Tandy" },
-  { system: "TRS-80 Model 4", manufacturer: "Tandy" },
+  {
+    system: "TRS-80 CoCo",
+    manufacturer: "Tandy",
+    year: 1980,
+    characterRom: { width: 5, height: 7, characterCount: 64 },
+    romChipIds: ["mc6847"],
+    notes: "MC6847 VDG. Lowercase rendered as inverse uppercase.",
+  },
 
   // =========================================================================
-  // MSX
+  // Texas Instruments
   // =========================================================================
   {
-    system: "MSX",
-    manufacturer: "MSX",
+    system: "TI-99/4A",
+    manufacturer: "Texas Instruments",
+    year: 1981,
     characterRom: { width: 8, height: 8, characterCount: 256 },
+    romChipIds: ["tms9918"],
+    notes: "User-definable patterns stored in VDP RAM, loaded from GROM.",
   },
-  { system: "MSX2", manufacturer: "MSX" },
-  { system: "MSX2+", manufacturer: "MSX" },
-  { system: "MSX turbo R", manufacturer: "MSX" },
+];
 
+/**
+ * Character ROM IC chips used in early 8-bit computers and game consoles.
+ * Each chip may be used in multiple systems.
+ */
+export const ROM_CHIPS: RomChipInfo[] = [
   // =========================================================================
-  // Acorn
+  // Atari (embedded ROM)
   // =========================================================================
   {
-    system: "BBC Micro",
-    manufacturer: "Acorn",
-    characterRom: { width: 8, height: 8, characterCount: 256 },
+    id: "atari-os-rom",
+    partNumber: "Atari OS ROM",
+    manufacturer: "Atari",
+    type: "System ROM (embedded font)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 128,
+    usedIn: ["Atari 400", "Atari 800"],
+    notes: "Font in OS ROM; allows software redirection to RAM.",
   },
-  { system: "Electron", manufacturer: "Acorn" },
-  { system: "Archimedes", manufacturer: "Acorn" },
 
   // =========================================================================
   // Coleco
   // =========================================================================
-  { system: "ColecoVision", manufacturer: "Coleco" },
-  { system: "Adam", manufacturer: "Coleco" },
+  {
+    id: "colecovision-bios",
+    partNumber: "ColecoVision BIOS",
+    manufacturer: "Coleco",
+    type: "System BIOS (8KB)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 256,
+    usedIn: ["ColecoVision"],
+    notes: "Contains startup code, bitmap fonts, and utility routines.",
+  },
 
   // =========================================================================
-  // Mattel
+  // General Instrument
   // =========================================================================
-  { system: "Intellivision", manufacturer: "Mattel" },
+  {
+    id: "gi-ro-3-2513",
+    partNumber: "RO-3-2513",
+    manufacturer: "General Instrument",
+    type: "Mask ROM",
+    glyph: { width: 5, height: 7 },
+    glyphCount: 64,
+    usedIn: ["Apple II"],
+    notes: "Pin-compatible with Signetics 2513, used in Apple II clones.",
+  },
+  {
+    id: "intellivision-grom",
+    partNumber: "GROM",
+    manufacturer: "General Instrument",
+    type: "Graphics ROM (part of STIC)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 213,
+    usedIn: ["Intellivision"],
+    notes: "Contains 213 predefined 8x8 images including alphanumerics.",
+  },
 
   // =========================================================================
-  // NEC
+  // MOS Technology
   // =========================================================================
-  { system: "PC Engine/TurboGrafx-16", manufacturer: "NEC" },
-  { system: "PC-8801", manufacturer: "NEC" },
-  { system: "PC-9801", manufacturer: "NEC" },
+  {
+    id: "mos-901225-01",
+    partNumber: "901225-01",
+    manufacturer: "MOS Technology",
+    type: "Mask ROM (2332-type)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 256,
+    usedIn: ["C64"],
+    notes: "Commonly replaced via EPROM adapters for custom fonts.",
+  },
+  {
+    id: "mos-901447-10",
+    partNumber: "901447-10",
+    manufacturer: "MOS Technology",
+    type: "Mask ROM (2316-type)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 256,
+    usedIn: ["PET 8032"],
+    notes: "Reversed characters generated by hardware logic.",
+  },
+  {
+    id: "mos-901460-03",
+    partNumber: "901460-03",
+    manufacturer: "MOS Technology",
+    type: "Mask ROM (2332-type)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 256,
+    usedIn: ["VIC-20"],
+    notes: "4K×8 mask ROM; byte-wide organization.",
+  },
 
   // =========================================================================
-  // Sharp
+  // Motorola
   // =========================================================================
-  { system: "MZ-80", manufacturer: "Sharp" },
-  { system: "X1", manufacturer: "Sharp" },
-  { system: "X68000", manufacturer: "Sharp" },
+  {
+    id: "mc6847",
+    partNumber: "MC6847",
+    manufacturer: "Motorola",
+    type: "Video Display Generator (VDG)",
+    glyph: { width: 5, height: 7 },
+    glyphCount: 64,
+    usedIn: ["TRS-80 CoCo", "Dragon 32", "Acorn Atom", "NEC PC-6001"],
+    notes: "All-in-one VDG with internal 64-character ROM.",
+  },
+  {
+    id: "mc6847t1",
+    partNumber: "MC6847T1",
+    manufacturer: "Motorola",
+    type: "Video Display Generator (enhanced)",
+    glyph: { width: 5, height: 7 },
+    glyphCount: 96,
+    usedIn: [],
+    notes: "Enhanced version with 96 characters including lowercase.",
+  },
+  {
+    id: "mcm6673",
+    partNumber: "MCM6673",
+    manufacturer: "Motorola",
+    type: "Mask ROM (custom)",
+    glyph: { width: 5, height: 8 },
+    glyphCount: 128,
+    usedIn: ["TRS-80 Model I"],
+    notes: "Custom for Radio Shack. Outputs 5 bits per row.",
+  },
+  {
+    id: "mcm6674",
+    partNumber: "MCM6674",
+    manufacturer: "Motorola",
+    type: "Mask ROM",
+    glyph: { width: 5, height: 8 },
+    glyphCount: 128,
+    usedIn: [],
+    notes: "General-purpose character generator for terminals.",
+  },
+
+  // =========================================================================
+  // Mullard/Philips
+  // =========================================================================
+  {
+    id: "saa5050",
+    partNumber: "SAA5050",
+    manufacturer: "Mullard/Philips",
+    type: "Teletext Character Generator",
+    glyph: { width: 5, height: 9 },
+    glyphCount: 96,
+    usedIn: ["BBC Micro", "Philips P2000"],
+    notes: "Teletext IC. Internal 5x9 font interpolated to 10x18.",
+  },
+
+  // =========================================================================
+  // Signetics
+  // =========================================================================
+  {
+    id: "signetics-2513",
+    partNumber: "2513",
+    manufacturer: "Signetics",
+    type: "Mask ROM",
+    glyph: { width: 5, height: 7 },
+    glyphCount: 64,
+    usedIn: ["Apple II"],
+    notes: "One of the earliest character generator ROMs.",
+  },
+
+  // =========================================================================
+  // Sinclair (embedded ROM)
+  // =========================================================================
+  {
+    id: "sinclair-spectrum-rom",
+    partNumber: "Spectrum ROM",
+    manufacturer: "Sinclair",
+    type: "System ROM (embedded font)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 96,
+    usedIn: ["ZX Spectrum"],
+    notes: "Font at end of 16KB ROM; 768 bytes for custom fonts.",
+  },
+
+  // =========================================================================
+  // Texas Instruments
+  // =========================================================================
+  {
+    id: "tms9918",
+    partNumber: "TMS9918A",
+    manufacturer: "Texas Instruments",
+    type: "Video Display Processor (VDP)",
+    glyph: { width: 8, height: 8 },
+    glyphCount: 256,
+    usedIn: ["TI-99/4A", "ColecoVision", "MSX", "Sega SG-1000", "Sega SC-3000"],
+    notes: "No internal font; patterns stored in 16KB VRAM.",
+  },
 ];
 
 // ============================================================================
@@ -371,7 +627,7 @@ function getSystemsWithCharacterCount(count: number): string[] {
 }
 
 /**
- * Standard dimension presets (format-based, shown in "Standard Formats" dropdown section)
+ * Standard dimension presets (format-based, shown in "Other Sizes" dropdown section)
  */
 export const DIMENSION_PRESETS: DimensionPreset[] = [
   {
@@ -381,40 +637,46 @@ export const DIMENSION_PRESETS: DimensionPreset[] = [
     systems: getSystemsWithDimensions(8, 8),
   },
   {
+    name: "5x7 (MC6847/2513)",
+    width: 5,
+    height: 7,
+    systems: getSystemsWithDimensions(5, 7),
+  },
+  {
+    name: "5x8 (TRS-80)",
+    width: 5,
+    height: 8,
+    systems: getSystemsWithDimensions(5, 8),
+  },
+  {
+    name: "5x9 (Teletext)",
+    width: 5,
+    height: 9,
+    systems: getSystemsWithDimensions(5, 9),
+  },
+  {
     name: "8x16 (Extended)",
     width: 8,
     height: 16,
-    systems: getSystemsWithDimensions(8, 16),
+    systems: [],
   },
   {
     name: "8x14 (VGA Text)",
     width: 8,
     height: 14,
-    systems: getSystemsWithDimensions(8, 14),
+    systems: [],
   },
   {
-    name: "8x10 (Apple II Lores)",
-    width: 8,
-    height: 10,
-    systems: ["Apple II"],
-  },
-  {
-    name: "5x7 (LED Matrix)",
-    width: 5,
-    height: 7,
-    systems: ["LED Displays", "Dot Matrix"],
-  },
-  {
-    name: "6x8 (C64 Hires)",
+    name: "6x8 (Custom)",
     width: 6,
     height: 8,
-    systems: ["C64"],
+    systems: [],
   },
   {
-    name: "4x8 (VIC-20 Multicolor)",
-    width: 4,
-    height: 8,
-    systems: ["VIC-20"],
+    name: "16x16 (Icons)",
+    width: 16,
+    height: 16,
+    systems: [],
   },
 ];
 
@@ -431,33 +693,38 @@ export interface CharacterCountPreset {
 }
 
 /**
- * Standard character count presets (format-based, shown in "Standard Counts" dropdown section)
+ * Standard character count presets (format-based, shown in "Other Counts" dropdown section)
  */
 export const CHARACTER_COUNT_PRESETS: CharacterCountPreset[] = [
   {
-    name: "64 (Quarter ROM)",
+    name: "64 (MC6847)",
     count: 64,
     systems: getSystemsWithCharacterCount(64),
   },
   {
-    name: "96 (ZX Spectrum)",
+    name: "96 (Teletext)",
     count: 96,
     systems: getSystemsWithCharacterCount(96),
   },
   {
-    name: "128 (Half ROM)",
+    name: "128 (Atari)",
     count: 128,
     systems: getSystemsWithCharacterCount(128),
   },
   {
-    name: "256 (Full Set)",
+    name: "213 (Intellivision)",
+    count: 213,
+    systems: getSystemsWithCharacterCount(213),
+  },
+  {
+    name: "256 (Standard)",
     count: 256,
     systems: getSystemsWithCharacterCount(256),
   },
   {
     name: "512 (Extended)",
     count: 512,
-    systems: getSystemsWithCharacterCount(512),
+    systems: [],
   },
 ];
 
@@ -565,4 +832,124 @@ export function getSystemInfo(system: string): SystemInfo | undefined {
  */
 export function getSystemsWithRomPresets(): SystemInfo[] {
   return SYSTEMS_WITH_CHARACTER_ROM;
+}
+
+// ============================================================================
+// ROM Chip Helper Types and Functions
+// ============================================================================
+
+/**
+ * ROM chip dimension preset (for dropdown compatibility)
+ */
+export interface RomChipDimensionPreset {
+  /** ROM chip ID */
+  id: string;
+  /** Part number */
+  partNumber: string;
+  /** Chip manufacturer */
+  manufacturer: string;
+  /** Character width in pixels */
+  width: number;
+  /** Character height in pixels */
+  height: number;
+  /** Systems that use this chip */
+  usedIn: string[];
+}
+
+/**
+ * ROM chip character count preset (for dropdown compatibility)
+ */
+export interface RomChipCharacterCountPreset {
+  /** ROM chip ID */
+  id: string;
+  /** Part number */
+  partNumber: string;
+  /** Chip manufacturer */
+  manufacturer: string;
+  /** Number of glyphs */
+  count: number;
+  /** Systems that use this chip */
+  usedIn: string[];
+}
+
+/**
+ * ROM chip dimension presets for dropdowns (derived from ROM_CHIPS)
+ */
+export const ROM_CHIP_DIMENSION_PRESETS: RomChipDimensionPreset[] = ROM_CHIPS.map(
+  (chip) => ({
+    id: chip.id,
+    partNumber: chip.partNumber,
+    manufacturer: chip.manufacturer,
+    width: chip.glyph.width,
+    height: chip.glyph.height,
+    usedIn: chip.usedIn,
+  })
+);
+
+/**
+ * ROM chip character count presets for dropdowns (derived from ROM_CHIPS)
+ */
+export const ROM_CHIP_CHARACTER_COUNT_PRESETS: RomChipCharacterCountPreset[] = ROM_CHIPS.map(
+  (chip) => ({
+    id: chip.id,
+    partNumber: chip.partNumber,
+    manufacturer: chip.manufacturer,
+    count: chip.glyphCount,
+    usedIn: chip.usedIn,
+  })
+);
+
+/**
+ * Get ROM chip dimension presets grouped by manufacturer
+ */
+export function getRomChipPresetsByManufacturer(): Record<string, RomChipDimensionPreset[]> {
+  const grouped: Record<string, RomChipDimensionPreset[]> = {};
+  for (const preset of ROM_CHIP_DIMENSION_PRESETS) {
+    if (!grouped[preset.manufacturer]) {
+      grouped[preset.manufacturer] = [];
+    }
+    grouped[preset.manufacturer].push(preset);
+  }
+  return grouped;
+}
+
+/**
+ * Get ROM chip character count presets grouped by manufacturer
+ */
+export function getRomChipCharacterCountPresetsByManufacturer(): Record<string, RomChipCharacterCountPreset[]> {
+  const grouped: Record<string, RomChipCharacterCountPreset[]> = {};
+  for (const preset of ROM_CHIP_CHARACTER_COUNT_PRESETS) {
+    if (!grouped[preset.manufacturer]) {
+      grouped[preset.manufacturer] = [];
+    }
+    grouped[preset.manufacturer].push(preset);
+  }
+  return grouped;
+}
+
+/**
+ * Get ROM chip info by ID
+ */
+export function getRomChipById(id: string): RomChipInfo | undefined {
+  return ROM_CHIPS.find((chip) => chip.id === id);
+}
+
+/**
+ * Get all ROM chips used by a specific system
+ */
+export function getRomChipsForSystem(system: string): RomChipInfo[] {
+  return ROM_CHIPS.filter((chip) =>
+    chip.usedIn.some((s) => s.toLowerCase() === system.toLowerCase())
+  );
+}
+
+/**
+ * Get all unique ROM chip manufacturers
+ */
+export function getAllRomChipManufacturers(): string[] {
+  const manufacturers = new Set<string>();
+  for (const chip of ROM_CHIPS) {
+    manufacturers.add(chip.manufacturer);
+  }
+  return Array.from(manufacturers);
 }

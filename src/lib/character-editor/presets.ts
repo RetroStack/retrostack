@@ -35,37 +35,48 @@ export interface DimensionPresetWithExamples {
  * - ImportFromFontModal (character import from fonts)
  * - SizePresetDropdown (quick size selection)
  * - ResizeModal (character resize)
+ *
+ * Based on historical character generator ROM specifications.
+ * Dimensions use glyph size (actual drawn pixels), not cell size.
  */
 export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
   {
     width: 5,
     height: 7,
     label: "5x7",
-    examples: ["LED Matrix", "Dot Matrix Displays"],
+    examples: ["Apple II", "TRS-80 CoCo", "Dragon 32", "MC6847"],
     recommendedFontSize: 6,
-    priority: 2,
+    priority: 3,
   },
   {
     width: 5,
     height: 8,
     label: "5x8",
-    examples: ["Apple I", "TRS-80 M1", "Signetics 2513"],
+    examples: ["TRS-80 Model I", "MCM6673"],
     recommendedFontSize: 7,
+    priority: 2,
+  },
+  {
+    width: 5,
+    height: 9,
+    label: "5x9",
+    examples: ["BBC Micro Mode 7", "Philips P2000", "SAA5050 Teletext"],
+    recommendedFontSize: 8,
     priority: 2,
   },
   {
     width: 6,
     height: 8,
     label: "6x8",
-    examples: ["C64 Hires", "VIC-20"],
+    examples: ["Custom"],
     recommendedFontSize: 7,
-    priority: 1,
+    priority: 0,
   },
   {
     width: 8,
     height: 8,
     label: "8x8",
-    examples: ["C64", "ZX Spectrum", "MSX", "Amstrad CPC", "BBC Micro", "Apple II"],
+    examples: ["C64", "VIC-20", "Atari 400/800", "ZX Spectrum", "TI-99/4A", "MSX", "ColecoVision"],
     recommendedFontSize: 8,
     priority: 3,
   },
@@ -81,9 +92,9 @@ export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
     width: 6,
     height: 10,
     label: "6x10",
-    examples: ["SAA5050 Teletext"],
+    examples: [],
     recommendedFontSize: 9,
-    priority: 1,
+    priority: 0,
   },
   {
     width: 5,
@@ -97,9 +108,9 @@ export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
     width: 7,
     height: 12,
     label: "7x12",
-    examples: ["Motorola MC6847"],
+    examples: [],
     recommendedFontSize: 11,
-    priority: 1,
+    priority: 0,
   },
   {
     width: 8,
@@ -107,7 +118,7 @@ export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
     label: "8x12",
     examples: ["EGA 43-line mode"],
     recommendedFontSize: 11,
-    priority: 1,
+    priority: 0,
   },
   {
     width: 8,
@@ -115,7 +126,7 @@ export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
     label: "8x14",
     examples: ["IBM EGA", "VGA 25-line"],
     recommendedFontSize: 13,
-    priority: 2,
+    priority: 1,
   },
   {
     width: 5,
@@ -131,7 +142,7 @@ export const UNIFIED_DIMENSION_PRESETS: DimensionPresetWithExamples[] = [
     label: "8x16",
     examples: ["IBM VGA", "PC BIOS"],
     recommendedFontSize: 14,
-    priority: 3,
+    priority: 2,
   },
   {
     width: 16,
@@ -193,42 +204,51 @@ export interface CharacterCountPresetWithExamples {
 
 /**
  * Unified character count presets with examples
+ * Based on historical character generator ROM specifications.
+ * Character counts use per-bank values for multi-bank systems.
  */
 export const UNIFIED_CHARACTER_COUNT_PRESETS: CharacterCountPresetWithExamples[] = [
   {
     count: 64,
     label: "64",
-    examples: ["ZX80", "ZX81"],
+    examples: ["Apple II", "TRS-80 CoCo", "Dragon 32", "MC6847"],
     description: "Quarter ROM",
-    priority: 1,
+    priority: 2,
   },
   {
     count: 96,
     label: "96",
-    examples: ["ZX Spectrum"],
-    description: "Printable ASCII",
-    priority: 1,
+    examples: ["ZX Spectrum", "BBC Micro Mode 7", "SAA5050"],
+    description: "Printable ASCII / Teletext",
+    priority: 2,
   },
   {
     count: 128,
     label: "128",
     examples: ["Atari 400/800", "TRS-80 Model I"],
     description: "Half ROM",
-    priority: 2,
+    priority: 3,
+  },
+  {
+    count: 213,
+    label: "213",
+    examples: ["Intellivision GROM"],
+    description: "Intellivision",
+    priority: 1,
   },
   {
     count: 256,
     label: "256",
-    examples: ["C64", "VIC-20", "PET", "Apple II", "IBM PC"],
+    examples: ["C64", "VIC-20", "TI-99/4A", "MSX", "ColecoVision"],
     description: "Full Set",
     priority: 3,
   },
   {
     count: 512,
     label: "512",
-    examples: ["NES/Famicom"],
+    examples: ["Extended ROM"],
     description: "Extended",
-    priority: 1,
+    priority: 0,
   },
 ];
 

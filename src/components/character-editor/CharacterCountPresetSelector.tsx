@@ -5,7 +5,10 @@ import {
   CharacterCountPresetWithExamples,
   UNIFIED_CHARACTER_COUNT_PRESETS,
 } from "@/lib/character-editor/presets";
-import { getSystemCharacterCountPresetsByManufacturer } from "@/lib/character-editor/manufacturers";
+import {
+  getSystemCharacterCountPresetsByManufacturer,
+  getRomChipCharacterCountPresetsByManufacturer,
+} from "@/lib/character-editor/manufacturers";
 
 const BUTTON_WIDTH = 48; // Approximate width of a preset button
 const DROPDOWN_BUTTON_WIDTH = 56; // Width of "More" button
@@ -90,6 +93,9 @@ export function CharacterCountPresetSelector({
 
   // Get system presets grouped by manufacturer
   const systemPresetsByManufacturer = getSystemCharacterCountPresetsByManufacturer();
+
+  // Get ROM chip presets grouped by manufacturer
+  const romChipPresetsByManufacturer = getRomChipCharacterCountPresetsByManufacturer();
 
   const isSelected = (preset: CharacterCountPresetWithExamples) =>
     currentCount === preset.count;
@@ -178,12 +184,12 @@ export function CharacterCountPresetSelector({
 
           {/* Dropdown panel */}
           {isDropdownOpen && (
-            <div className="absolute z-50 left-0 top-full mt-1 w-64 max-h-80 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl">
-              {/* Overflow presets (if any) */}
+            <div className="absolute z-50 left-0 top-full mt-1 w-72 max-h-96 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl">
+              {/* Other Counts section (overflow presets) */}
               {overflowPresets.length > 0 && (
                 <div className="p-2 border-b border-retro-grid/30">
                   <div className="text-[10px] text-gray-500 uppercase mb-1">
-                    More Counts
+                    Other Counts
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {overflowPresets.map((preset) => (
@@ -209,13 +215,22 @@ export function CharacterCountPresetSelector({
                 </div>
               )}
 
+              {/* Systems section header */}
+              {Object.keys(systemPresetsByManufacturer).length > 0 && (
+                <div className="px-2 pt-2 pb-1">
+                  <div className="text-[10px] text-retro-cyan uppercase font-medium">
+                    Systems
+                  </div>
+                </div>
+              )}
+
               {/* Systems section - organized by manufacturer */}
               {Object.entries(systemPresetsByManufacturer)
                 .filter(([, systemPresets]) => systemPresets.length > 0)
                 .map(([manufacturer, systemPresets]) => (
                   <div
                     key={manufacturer}
-                    className="p-2 border-b border-retro-grid/30 last:border-0"
+                    className="px-2 pb-2"
                   >
                     <div className="text-[10px] text-gray-500 uppercase mb-1">
                       {manufacturer}
@@ -241,6 +256,62 @@ export function CharacterCountPresetSelector({
                           `}
                         >
                           {systemPreset.system}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+              {/* Divider between Systems and ROM ICs */}
+              {Object.keys(romChipPresetsByManufacturer).length > 0 && (
+                <div className="border-t border-retro-grid/30" />
+              )}
+
+              {/* Character ROM ICs section header */}
+              {Object.keys(romChipPresetsByManufacturer).length > 0 && (
+                <div className="px-2 pt-2 pb-1">
+                  <div className="text-[10px] text-retro-cyan uppercase font-medium">
+                    Character ROM ICs
+                  </div>
+                </div>
+              )}
+
+              {/* ROM ICs section - organized by manufacturer */}
+              {Object.entries(romChipPresetsByManufacturer)
+                .filter(([, chipPresets]) => chipPresets.length > 0)
+                .map(([manufacturer, chipPresets]) => (
+                  <div
+                    key={`rom-${manufacturer}`}
+                    className="px-2 pb-2"
+                  >
+                    <div className="text-[10px] text-gray-500 uppercase mb-1">
+                      {manufacturer}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {chipPresets.map((chipPreset) => (
+                        <button
+                          key={`${chipPreset.id}-${chipPreset.count}`}
+                          onClick={() => {
+                            onSelect(chipPreset.count);
+                            setIsDropdownOpen(false);
+                          }}
+                          disabled={disabled}
+                          title={
+                            chipPreset.usedIn.length > 0
+                              ? `${chipPreset.count} chars - Used in: ${chipPreset.usedIn.join(", ")}`
+                              : `${chipPreset.count} characters`
+                          }
+                          className={`
+                            px-2 py-1 text-xs rounded transition-colors
+                            ${
+                              isCurrentCount(chipPreset.count)
+                                ? "bg-retro-purple/20 text-retro-purple"
+                                : "text-gray-400 hover:bg-retro-grid/20"
+                            }
+                            disabled:opacity-50
+                          `}
+                        >
+                          {chipPreset.partNumber}
                         </button>
                       ))}
                     </div>
