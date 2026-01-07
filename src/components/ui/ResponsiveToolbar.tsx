@@ -18,6 +18,8 @@ export interface ToolbarAction {
   tooltip?: string;
   /** Keyboard shortcut displayed in tooltip */
   shortcut?: string;
+  /** Active state color variant. Default is "cyan" */
+  activeVariant?: "cyan" | "amber";
 }
 
 export interface ToolbarSeparator {
@@ -182,7 +184,9 @@ export function ResponsiveToolbar({
                     item.disabled
                       ? "text-gray-600 cursor-not-allowed"
                       : item.active
-                      ? "text-retro-cyan bg-retro-purple/40"
+                      ? item.activeVariant === "amber"
+                        ? "text-retro-amber bg-retro-amber/20"
+                        : "text-retro-cyan bg-retro-purple/40"
                       : "text-gray-300 hover:text-retro-cyan hover:bg-retro-purple/30"
                   }
                 `}

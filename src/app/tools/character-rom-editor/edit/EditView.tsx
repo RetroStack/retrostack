@@ -26,6 +26,8 @@ import {
   SnapshotsModal,
   HistorySlider,
   ShareModal,
+  OverlaySearchModal,
+  CharacterDisplay,
 } from "@/components/character-editor";
 import {
   useCharacterLibrary,
@@ -106,6 +108,11 @@ export function EditView() {
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [showShare, setShowShare] = useState(false);
+
+  // Overlay state
+  const [overlayCharacterSet, setOverlayCharacterSet] = useState<CharacterSet | null>(null);
+  const [showOverlaySearch, setShowOverlaySearch] = useState(false);
+  const [overlayMode, setOverlayMode] = useState<"stretch" | "pixel" | "side-by-side">("pixel");
 
   // Context menu state
   const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
@@ -792,6 +799,31 @@ export function EditView() {
     { type: "separator", id: "sep-5" },
     // Group 6: Navigation/View
     {
+      id: "overlay",
+      label: "Overlay",
+      tooltip: "Overlay another character set for tracing",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        </svg>
+      ),
+      onClick: () => {
+        if (overlayCharacterSet) {
+          setOverlayCharacterSet(null);
+        } else {
+          setShowOverlaySearch(true);
+        }
+      },
+      active: !!overlayCharacterSet,
+      activeVariant: "amber" as const,
+      priority: 0,
+    },
+    {
       id: "goto",
       label: "Go to",
       tooltip: "Jump to a specific character by index",
@@ -924,6 +956,43 @@ export function EditView() {
           className="flex-shrink-0"
         />
 
+        {/* Overlay mode toggle strip - appears when overlay is active */}
+        {overlayCharacterSet && (
+          <div className="flex items-center gap-2 px-4 py-1.5 bg-retro-navy/60 border-b border-retro-grid/30 text-xs flex-shrink-0">
+            <span className="text-gray-400">Overlay:</span>
+            <span className="text-retro-amber truncate max-w-[150px]">{overlayCharacterSet.metadata.name}</span>
+            <span className="text-gray-500">|</span>
+            <button
+              onClick={() => setOverlayMode("pixel")}
+              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "pixel" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+            >
+              1:1 Pixels
+            </button>
+            <button
+              onClick={() => setOverlayMode("stretch")}
+              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "stretch" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+            >
+              Stretch
+            </button>
+            <button
+              onClick={() => setOverlayMode("side-by-side")}
+              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "side-by-side" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+            >
+              Side by Side
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={() => setOverlayCharacterSet(null)}
+              className="text-gray-400 hover:text-red-400 transition-colors"
+              title="Remove overlay"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Main content area - takes remaining space */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <ToolContent
@@ -967,25 +1036,55 @@ export function EditView() {
             rightSidebarWidth="120px"
             rightSidebarCollapsible={false}
           >
-            <EditorCanvas
-              character={selectedCharacter}
-              config={editor.config}
-              onPixelToggle={editor.toggleSelectedPixel}
-              onPixelSet={editor.setSelectedPixel}
-              onDragStart={editor.startBatch}
-              onDragEnd={() => editor.endBatch("Paint pixels")}
-              getPixelState={editor.getSelectedPixelState}
-              batchMode={isBatchMode}
-              foregroundColor={colors.foreground}
-              backgroundColor={colors.background}
-              gridColor={colors.gridColor}
-              zoom={zoom}
-              minZoom={8}
-              maxZoom={100}
-              onZoomChange={setZoom}
-              onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
-              onPixelLeave={() => setHoverCoords(null)}
-            />
+            <div className={`h-full ${overlayMode === "side-by-side" && overlayCharacterSet ? "flex items-center justify-center gap-8" : ""}`}>
+              <EditorCanvas
+                character={selectedCharacter}
+                config={editor.config}
+                onPixelToggle={editor.toggleSelectedPixel}
+                onPixelSet={editor.setSelectedPixel}
+                onDragStart={editor.startBatch}
+                onDragEnd={() => editor.endBatch("Paint pixels")}
+                getPixelState={editor.getSelectedPixelState}
+                batchMode={isBatchMode}
+                foregroundColor={colors.foreground}
+                backgroundColor={colors.background}
+                gridColor={colors.gridColor}
+                zoom={zoom}
+                minZoom={8}
+                maxZoom={100}
+                onZoomChange={setZoom}
+                onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
+                onPixelLeave={() => setHoverCoords(null)}
+                overlayCharacter={overlayCharacterSet?.characters[editor.selectedIndex] || null}
+                overlayConfig={overlayCharacterSet?.config}
+                overlayMode={overlayMode}
+              />
+              {/* Side-by-side comparison panel */}
+              {overlayMode === "side-by-side" && overlayCharacterSet && (
+                <div className="flex flex-col items-center">
+                  <div className="text-xs text-gray-400 mb-2">
+                    {overlayCharacterSet.metadata.name} #{editor.selectedIndex}
+                  </div>
+                  <div className="border border-retro-amber/30 rounded p-1 bg-black/30">
+                    <CharacterDisplay
+                      character={overlayCharacterSet.characters[editor.selectedIndex] || { pixels: Array(overlayCharacterSet.config.height).fill(null).map(() => Array(overlayCharacterSet.config.width).fill(false)) }}
+                      mode="large"
+                      scale={zoom}
+                      foregroundColor={colors.foreground}
+                      backgroundColor={colors.background}
+                      gridColor={colors.gridColor}
+                      gridThickness={1}
+                      interactive={false}
+                    />
+                  </div>
+                  {!overlayCharacterSet.characters[editor.selectedIndex] && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      No character at this index
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </ToolContent>
         </div>
 
@@ -1169,6 +1268,14 @@ export function EditView() {
           config={editor.config}
         />
       )}
+
+      {/* Overlay search modal */}
+      <OverlaySearchModal
+        isOpen={showOverlaySearch}
+        onClose={() => setShowOverlaySearch(false)}
+        excludeId={id || undefined}
+        onSelectSet={setOverlayCharacterSet}
+      />
 
       {/* Character context menu */}
       {contextMenu && (

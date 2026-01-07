@@ -154,6 +154,9 @@ export { HistorySlider } from "./HistorySlider";
 export { ShareModal } from "./ShareModal";
 export type { ShareModalProps } from "./ShareModal";
 
+export { OverlaySearchModal } from "./OverlaySearchModal";
+export type { OverlaySearchModalProps } from "./OverlaySearchModal";
+
 export { CharacterContextMenu, useContextMenu } from "./CharacterContextMenu";
 export type { CharacterContextMenuProps, ContextMenuItem } from "./CharacterContextMenu";
 

@@ -43,6 +43,12 @@ export interface EditorCanvasProps {
   onPixelLeave?: () => void;
   /** Additional CSS classes */
   className?: string;
+  /** Overlay character for tracing (optional) */
+  overlayCharacter?: Character | null;
+  /** Configuration of the overlay character set */
+  overlayConfig?: CharacterSetConfig;
+  /** Overlay rendering mode */
+  overlayMode?: "stretch" | "pixel" | "side-by-side";
 }
 
 /**
@@ -69,8 +75,12 @@ export function EditorCanvas({
   onPixelHover,
   onPixelLeave,
   className = "",
+  overlayCharacter,
+  overlayConfig,
+  overlayMode = "pixel",
 }: EditorCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragValue, setDragValue] = useState<boolean | null>(null);
   const lastPinchDistanceRef = useRef<number | null>(null);
@@ -89,6 +99,77 @@ export function EditorCanvas({
     }
     return mixed.size > 0 ? mixed : undefined;
   }, [batchMode, getPixelState, character, config.height, config.width]);
+
+  // Calculate overlay canvas dimensions and render
+  useEffect(() => {
+    const canvas = overlayCanvasRef.current;
+    if (!canvas || !overlayConfig) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Calculate main canvas dimensions (matching PixelGrid calculations)
+    const mainWidth = config.width;
+    const mainHeight = config.height;
+    const overlayWidth = overlayConfig.width;
+    const overlayHeight = overlayConfig.height;
+
+    // Canvas dimensions should match the main character display (with grid)
+    const cellSize = zoom + gridThickness;
+    const canvasWidth = mainWidth * cellSize + gridThickness;
+    const canvasHeight = mainHeight * cellSize + gridThickness;
+
+    // Set canvas size
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // If no overlay character at current index, nothing to draw
+    if (!overlayCharacter) return;
+
+    // Semi-transparent pink for overlay pixels
+    const overlayColor = "rgba(255, 0, 128, 0.5)";
+    ctx.fillStyle = overlayColor;
+
+    if (overlayMode === "stretch") {
+      // Stretch mode: shrink overlay to fit within current character's canvas area
+      // Each overlay pixel is drawn at a smaller size to fit all pixels
+      const availableWidth = mainWidth * cellSize;
+      const availableHeight = mainHeight * cellSize;
+
+      // Calculate pixel size to fit overlay within available space
+      const pixelWidth = availableWidth / overlayWidth;
+      const pixelHeight = availableHeight / overlayHeight;
+
+      for (let row = 0; row < overlayHeight; row++) {
+        for (let col = 0; col < overlayWidth; col++) {
+          const isOn = overlayCharacter.pixels[row]?.[col] || false;
+          if (isOn) {
+            const x = gridThickness + col * pixelWidth;
+            const y = gridThickness + row * pixelHeight;
+            ctx.fillRect(x, y, pixelWidth, pixelHeight);
+          }
+        }
+      }
+    } else {
+      // Pixel-by-pixel mode: draw at same scale, clip to visible area
+      const maxRows = Math.min(overlayHeight, mainHeight);
+      const maxCols = Math.min(overlayWidth, mainWidth);
+
+      for (let row = 0; row < maxRows; row++) {
+        for (let col = 0; col < maxCols; col++) {
+          const isOn = overlayCharacter.pixels[row]?.[col] || false;
+          if (isOn) {
+            const x = col * cellSize + gridThickness;
+            const y = row * cellSize + gridThickness;
+            ctx.fillRect(x, y, zoom, zoom);
+          }
+        }
+      }
+    }
+  }, [overlayCharacter, overlayConfig, overlayMode, config.width, config.height, zoom, gridThickness]);
 
   const handlePixelClick = useCallback(
     (row: number, col: number, isRightClick?: boolean) => {
@@ -247,22 +328,42 @@ export function EditorCanvas({
         onMouseLeave={handleDragEnd}
         onMouseUp={handleDragEnd}
       >
-        <CharacterDisplay
-          character={character}
-          mode="large"
-          scale={zoom}
-          foregroundColor={foregroundColor}
-          backgroundColor={backgroundColor}
-          gridColor={gridColor}
-          gridThickness={gridThickness}
-          onPixelClick={handlePixelClick}
-          onPixelDrag={handlePixelDrag}
-          onDragEnd={handleDragEnd}
-          onPixelHover={onPixelHover}
-          onPixelLeave={onPixelLeave}
-          interactive={true}
-          mixedPixels={mixedPixels}
-        />
+        <div className="relative">
+          <CharacterDisplay
+            character={character}
+            mode="large"
+            scale={zoom}
+            foregroundColor={foregroundColor}
+            backgroundColor={backgroundColor}
+            gridColor={gridColor}
+            gridThickness={gridThickness}
+            onPixelClick={handlePixelClick}
+            onPixelDrag={handlePixelDrag}
+            onDragEnd={handleDragEnd}
+            onPixelHover={onPixelHover}
+            onPixelLeave={onPixelLeave}
+            interactive={true}
+            mixedPixels={mixedPixels}
+          />
+          {/* Overlay canvas for tracing another character set (not shown in side-by-side mode) */}
+          {overlayConfig && overlayMode !== "side-by-side" && (() => {
+            const cellSize = zoom + gridThickness;
+            const w = config.width * cellSize + gridThickness;
+            const h = config.height * cellSize + gridThickness;
+            return (
+              <canvas
+                ref={overlayCanvasRef}
+                className="absolute top-0 left-0 pointer-events-none"
+                style={{
+                  imageRendering: "pixelated",
+                  zIndex: 10,
+                  width: w,
+                  height: h,
+                }}
+              />
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
