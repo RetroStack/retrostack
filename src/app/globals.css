@@ -187,6 +187,95 @@ body {
   59.8% { opacity: 1; }
 }
 
+/* Neon Glow Animation - slow intensity variation with subtle shimmer */
+.neon-glow-pink {
+  animation: glowPink 12s ease-in-out infinite, shimmer 8s ease-in-out infinite;
+}
+
+.neon-glow-cyan {
+  animation: glowCyan 12s ease-in-out infinite, shimmer 8s ease-in-out infinite;
+  animation-delay: 2s, 1s;
+}
+
+.neon-glow-violet {
+  animation: glowViolet 12s ease-in-out infinite, shimmer 8s ease-in-out infinite;
+  animation-delay: 4s, 2s;
+}
+
+.neon-glow-amber {
+  animation: glowAmber 12s ease-in-out infinite, shimmer 8s ease-in-out infinite;
+  animation-delay: 6s, 0.5s;
+}
+
+@keyframes glowPink {
+  0%, 100% {
+    text-shadow:
+      0 0 3px var(--retro-pink),
+      0 0 8px var(--retro-pink),
+      0 0 15px var(--retro-pink);
+  }
+  50% {
+    text-shadow:
+      0 0 4px var(--retro-pink),
+      0 0 10px var(--retro-pink),
+      0 0 18px var(--retro-pink);
+  }
+}
+
+@keyframes glowCyan {
+  0%, 100% {
+    text-shadow:
+      0 0 3px var(--retro-cyan),
+      0 0 8px var(--retro-cyan),
+      0 0 15px var(--retro-cyan);
+  }
+  50% {
+    text-shadow:
+      0 0 4px var(--retro-cyan),
+      0 0 10px var(--retro-cyan),
+      0 0 18px var(--retro-cyan);
+  }
+}
+
+@keyframes glowViolet {
+  0%, 100% {
+    text-shadow:
+      0 0 3px var(--retro-violet),
+      0 0 8px var(--retro-violet),
+      0 0 15px var(--retro-violet);
+  }
+  50% {
+    text-shadow:
+      0 0 4px var(--retro-violet),
+      0 0 10px var(--retro-violet),
+      0 0 18px var(--retro-violet);
+  }
+}
+
+@keyframes glowAmber {
+  0%, 100% {
+    text-shadow:
+      0 0 3px var(--retro-amber),
+      0 0 8px var(--retro-amber),
+      0 0 15px var(--retro-amber);
+  }
+  50% {
+    text-shadow:
+      0 0 4px var(--retro-amber),
+      0 0 10px var(--retro-amber),
+      0 0 18px var(--retro-amber);
+  }
+}
+
+/* Subtle shimmer - slight brightness variation for realism */
+@keyframes shimmer {
+  0%, 100% { filter: brightness(1); }
+  20% { filter: brightness(1.01); }
+  40% { filter: brightness(0.99); }
+  60% { filter: brightness(1.005); }
+  80% { filter: brightness(0.995); }
+}
+
 /* Neon Border Effects */
 .neon-border-pink {
   border: 1px solid var(--retro-pink);
