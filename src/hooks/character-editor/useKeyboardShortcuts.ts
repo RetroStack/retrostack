@@ -145,7 +145,6 @@ export function createEditorShortcuts(actions: {
   saveAs?: () => void;
   editMetadata?: () => void;
   resetChanges?: () => void;
-  showChangeLog?: () => void;
   reorderCharacters?: () => void;
 }): KeyboardShortcut[] {
   return [
@@ -446,16 +445,6 @@ export function createEditorShortcuts(actions: {
             action: actions.resetChanges,
             description: "Reset changes",
             context: "Editor",
-          },
-        ]
-      : []),
-    ...(actions.showChangeLog
-      ? [
-          {
-            key: "l",
-            action: actions.showChangeLog,
-            description: "Show change log",
-            context: "View",
           },
         ]
       : []),

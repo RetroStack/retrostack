@@ -149,8 +149,7 @@ export type { ImportFromTextModalProps } from "./ImportFromTextModal";
 export { SnapshotsModal } from "./SnapshotsModal";
 export type { SnapshotsModalProps } from "./SnapshotsModal";
 
-export { ChangeLogModal } from "./ChangeLogModal";
-export type { ChangeLogModalProps } from "./ChangeLogModal";
+export { HistorySlider } from "./HistorySlider";
 
 export { ShareModal } from "./ShareModal";
 export type { ShareModalProps } from "./ShareModal";

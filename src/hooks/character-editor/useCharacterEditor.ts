@@ -25,7 +25,7 @@ import {
   scaleCharacter,
   ScaleAlgorithm,
 } from "@/lib/character-editor/transforms";
-import { useUndoRedo, deepClone } from "./useUndoRedo";
+import { useUndoRedo, deepClone, HistoryEntry } from "./useUndoRedo";
 
 export interface EditorState {
   characters: Character[];
@@ -103,6 +103,14 @@ export interface UseCharacterEditorResult {
   markSaved: () => void;
   /** Reset editor with new character set */
   reset: (characterSet: CharacterSet) => void;
+  /** Full history timeline for slider display */
+  history: HistoryEntry<EditorState>[];
+  /** Current position in history */
+  historyIndex: number;
+  /** Jump to a specific point in history */
+  jumpToHistory: (index: number) => void;
+  /** Total number of history entries */
+  totalHistoryEntries: number;
 }
 
 /**
@@ -131,6 +139,10 @@ export function useCharacterEditor(
     redo,
     canUndo,
     canRedo,
+    history,
+    historyIndex,
+    jumpToHistory,
+    totalHistoryEntries,
   } = useUndoRedo<EditorState>(initialState);
 
   // Selection state (not undoable)
@@ -148,9 +160,9 @@ export function useCharacterEditor(
 
   // Helper to update state and mark dirty
   const updateState = useCallback(
-    (updater: (state: EditorState) => EditorState) => {
+    (updater: (state: EditorState) => EditorState, label?: string) => {
       const newState = updater(deepClone(editorState));
-      setEditorState(newState);
+      setEditorState(newState, label);
       setIsDirty(true);
     },
     [editorState, setEditorState]
@@ -532,5 +544,9 @@ export function useCharacterEditor(
     isDirty,
     markSaved,
     reset,
+    history,
+    historyIndex,
+    jumpToHistory,
+    totalHistoryEntries,
   };
 }

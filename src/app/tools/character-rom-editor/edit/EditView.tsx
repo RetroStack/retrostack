@@ -24,7 +24,7 @@ import {
   CharacterContextMenu,
   useContextMenu,
   SnapshotsModal,
-  ChangeLogModal,
+  HistorySlider,
   ShareModal,
 } from "@/components/character-editor";
 import {
@@ -33,7 +33,6 @@ import {
   useKeyboardShortcuts,
   createEditorShortcuts,
   useSnapshots,
-  useChangeLog,
 } from "@/hooks/character-editor";
 import { useCharacterEditor } from "@/hooks/character-editor/useCharacterEditor";
 import { CharacterSet, AnchorPoint } from "@/lib/character-editor/types";
@@ -106,7 +105,6 @@ export function EditView() {
   const [showAsciiMap, setShowAsciiMap] = useState(false);
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showSnapshots, setShowSnapshots] = useState(false);
-  const [showChangeLog, setShowChangeLog] = useState(false);
   const [showShare, setShowShare] = useState(false);
 
   // Context menu state
@@ -128,12 +126,6 @@ export function EditView() {
     enabled: !!characterSet,
   });
 
-  // Change log
-  const changeLog = useChangeLog({
-    maxEntries: 100,
-    enabled: !!characterSet,
-  });
-
   // Handle snapshot save
   const handleSnapshotSave = useCallback(
     async (name: string) => {
@@ -148,13 +140,13 @@ export function EditView() {
 
   // Handle snapshot restore
   const handleSnapshotRestore = useCallback(
-    (characters: import("@/lib/character-editor/types").Character[]) => {
+    (characters: import("@/lib/character-editor/types").Character[], snapshotName?: string) => {
       if (characterSet) {
         editor.reset({
           ...characterSet,
           characters,
         });
-        toast.info("Snapshot restored");
+        toast.info(snapshotName ? `Restored: ${snapshotName}` : "Snapshot restored");
       }
     },
     [characterSet, editor, toast],
@@ -436,7 +428,6 @@ export function EditView() {
         saveAs: openSaveAsDialog,
         editMetadata: () => setShowMetadataModal(true),
         resetChanges: handleReset,
-        showChangeLog: () => setShowChangeLog(true),
         reorderCharacters: () => setShowReorderModal(true),
       }),
     [editor, handleSave, handleExport, handleReset, openSaveAsDialog, navigatePrev, navigateNext, navigatePageUp, navigatePageDown, navigateFirst, navigateLast],
@@ -466,15 +457,15 @@ export function EditView() {
       {
         label: "Invert",
         shortcut: "I",
-        onClick: () => editor.invertSelected(),
+        onClick: editor.invertSelected,
       },
       {
         label: "Clear",
-        onClick: () => editor.clearSelected(),
+        onClick: editor.clearSelected,
       },
       {
         label: "Fill",
-        onClick: () => editor.fillSelected(),
+        onClick: editor.fillSelected,
       },
       { label: "", onClick: () => {}, divider: true },
       {
@@ -798,24 +789,6 @@ export function EditView() {
       onClick: () => setShowSnapshots(true),
       priority: 1,
     },
-    {
-      id: "changelog",
-      label: `Log (${changeLog.count})`,
-      tooltip: "View history of changes made this session",
-      shortcut: "L",
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      onClick: () => setShowChangeLog(true),
-      priority: 0,
-    },
     { type: "separator", id: "sep-5" },
     // Group 6: Navigation/View
     {
@@ -971,8 +944,8 @@ export function EditView() {
             character={selectedCharacter}
             characterWidth={editor.config.width}
             characterHeight={editor.config.height}
-            onShift={(direction) => editor.shiftSelected(direction)}
-            onRotate={(direction) => editor.rotateSelected(direction)}
+            onShift={editor.shiftSelected}
+            onRotate={editor.rotateSelected}
             onFlipHorizontal={editor.flipSelectedHorizontal}
             onFlipVertical={editor.flipSelectedVertical}
             onInvert={editor.invertSelected}
@@ -1007,6 +980,15 @@ export function EditView() {
           onPixelLeave={() => setHoverCoords(null)}
         />
       </ToolContent>
+
+      {/* History timeline slider */}
+      <HistorySlider
+        history={editor.history}
+        currentIndex={editor.historyIndex}
+        onJump={editor.jumpToHistory}
+        canRedo={editor.canRedo}
+        totalEntries={editor.totalHistoryEntries}
+      />
 
       {/* Keyboard shortcuts footer */}
       <EditorFooter hoverCoords={hoverCoords} />
@@ -1072,7 +1054,9 @@ export function EditView() {
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         currentConfig={editor.config}
-        onImport={editor.addCharacters}
+        onImport={(chars) => {
+          editor.addCharacters(chars);
+        }}
       />
 
       {/* Copy character modal */}
@@ -1095,7 +1079,9 @@ export function EditView() {
         isOpen={showReorderModal}
         onClose={() => setShowReorderModal(false)}
         characters={editor.characters}
-        onReorder={editor.setCharacters}
+        onReorder={(chars) => {
+          editor.setCharacters(chars);
+        }}
       />
 
       {/* Scale modal */}
@@ -1160,15 +1146,6 @@ export function EditView() {
         onDelete={snapshots.remove}
         onRename={snapshots.rename}
         onRestoreApply={handleSnapshotRestore}
-      />
-
-      {/* Change log modal */}
-      <ChangeLogModal
-        isOpen={showChangeLog}
-        onClose={() => setShowChangeLog(false)}
-        entries={changeLog.entries}
-        onClear={changeLog.clear}
-        onExport={changeLog.exportAsText}
       />
 
       {/* Share modal */}

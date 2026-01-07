@@ -23,7 +23,7 @@ export interface SnapshotsModalProps {
   onRestore: (snapshotId: string) => Promise<Character[] | null>;
   onDelete: (snapshotId: string) => Promise<boolean>;
   onRename: (snapshotId: string, newName: string) => Promise<boolean>;
-  onRestoreApply: (characters: Character[]) => void;
+  onRestoreApply: (characters: Character[], snapshotName?: string) => void;
 }
 
 /**
@@ -111,11 +111,12 @@ export function SnapshotsModal({
 
   // Handle restore
   const handleRestore = useCallback(() => {
-    if (previewCharacters) {
-      onRestoreApply(previewCharacters);
+    if (previewCharacters && selectedSnapshot) {
+      const snapshot = snapshots.find((s) => s.id === selectedSnapshot);
+      onRestoreApply(previewCharacters, snapshot?.name);
       onClose();
     }
-  }, [previewCharacters, onRestoreApply, onClose]);
+  }, [previewCharacters, selectedSnapshot, snapshots, onRestoreApply, onClose]);
 
   // Handle delete
   const handleDelete = useCallback(

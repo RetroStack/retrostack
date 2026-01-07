@@ -9,7 +9,7 @@ export { useCharacterEditor } from "./useCharacterEditor";
 export type { UseCharacterEditorResult, EditorState } from "./useCharacterEditor";
 
 export { useUndoRedo, deepClone } from "./useUndoRedo";
-export type { UseUndoRedoResult } from "./useUndoRedo";
+export type { UseUndoRedoResult, HistoryEntry } from "./useUndoRedo";
 
 export {
   useKeyboardShortcuts,
