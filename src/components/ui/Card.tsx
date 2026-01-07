@@ -62,7 +62,7 @@ type CardContentProps = HTMLAttributes<HTMLDivElement>;
 export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className = "", children, ...props }, ref) => {
     return (
-      <div ref={ref} className={`text-gray-300 ${className}`} {...props}>
+      <div ref={ref} className={`text-text-secondary ${className}`} {...props}>
         {children}
       </div>
     );

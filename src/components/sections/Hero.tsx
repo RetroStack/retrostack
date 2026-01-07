@@ -56,7 +56,7 @@ export function Hero() {
 
         {/* Description - fluid */}
         <p
-          className="font-terminal text-gray-300 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2"
+          className="font-terminal text-text-secondary max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed px-2"
           style={{ fontSize: "clamp(1rem, 1.5vw + 0.75rem, 1.5rem)" }}
         >
           {SITE_CONFIG.description}

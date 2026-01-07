@@ -12,11 +12,24 @@
   --retro-grid: #2a2a5a;
   --retro-pink-glow: rgba(255, 42, 109, 0.6);
   --retro-cyan-glow: rgba(0, 245, 255, 0.6);
+  --retro-violet-glow: rgba(157, 78, 221, 0.6);
+  --retro-amber-glow: rgba(255, 184, 0, 0.6);
 
   /* Text colors */
   --text-primary: #ededed;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
+
+  /* Surface colors for components */
+  --surface-primary: #0a0a1a;
+  --surface-secondary: #1a1a3e;
+  --surface-elevated: #1a1a3e;
+  --surface-overlay: rgba(10, 10, 26, 0.95);
+
+  /* Border colors */
+  --border-subtle: rgba(42, 42, 90, 0.5);
+  --border-default: #2a2a5a;
+  --border-strong: #3a3a6a;
 
   /* Fluid layout dimensions */
   --header-height: clamp(56px, 5vw + 40px, 72px);
@@ -37,28 +50,246 @@
   --font-size-3xl: clamp(28px, 4vw + 12px, 48px);
 }
 
-/* Light Theme */
+/* Light Theme - High Contrast */
 html.light {
-  --retro-dark: #f5f5f5;
-  --retro-navy: #e8e8f0;
-  --retro-purple: #d8d0e8;
-  --retro-pink: #d9205a;
-  --retro-cyan: #00a8b0;
-  --retro-violet: #7c3db0;
-  --retro-amber: #d49800;
-  --retro-grid: #c0c0d0;
-  --retro-pink-glow: rgba(217, 32, 90, 0.4);
-  --retro-cyan-glow: rgba(0, 168, 176, 0.4);
+  /* Core backgrounds - more contrast between levels */
+  --retro-dark: #ffffff;
+  --retro-navy: #f0f0f8;
+  --retro-purple: #e8e0f4;
+  --retro-grid: #d0d0e0;
 
-  /* Text colors for light mode */
+  /* Accent colors - deeper/richer for better visibility on light bg */
+  --retro-pink: #c41850;
+  --retro-cyan: #007a85;
+  --retro-violet: #6b2d9e;
+  --retro-amber: #b87f00;
+
+  /* Glow effects - slightly stronger for light mode */
+  --retro-pink-glow: rgba(196, 24, 80, 0.5);
+  --retro-cyan-glow: rgba(0, 122, 133, 0.5);
+  --retro-violet-glow: rgba(107, 45, 158, 0.5);
+  --retro-amber-glow: rgba(184, 127, 0, 0.5);
+
+  /* Text colors - WCAG AA compliant on white */
   --text-primary: #1a1a2e;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  --text-secondary: #3d4451;
+  --text-muted: #5c6370;
+
+  /* Surface colors for components */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f5f5fa;
+  --surface-elevated: #ffffff;
+  --surface-overlay: rgba(255, 255, 255, 0.95);
+
+  /* Border colors */
+  --border-subtle: #e0e0ea;
+  --border-default: #c8c8d8;
+  --border-strong: #a0a0b8;
 }
 
 html.light body {
   background: var(--retro-dark);
   color: var(--text-primary);
+}
+
+/* Light Theme - Component Overrides */
+html.light .glass {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-default);
+}
+
+html.light .glass-dark {
+  background: rgba(240, 240, 248, 0.9);
+  border: 1px solid var(--border-subtle);
+}
+
+html.light .card-retro {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(240, 240, 248, 0.9) 100%
+  );
+  border: 1px solid var(--border-default);
+}
+
+html.light .card-retro:hover {
+  border-color: var(--retro-violet);
+  box-shadow:
+    0 4px 20px rgba(107, 45, 158, 0.15),
+    0 0 0 1px var(--retro-violet);
+}
+
+html.light .gradient-overlay {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(232, 224, 244, 0.4) 50%,
+    var(--retro-dark) 100%
+  );
+}
+
+/* Light theme neon text - reduced glow, stronger contrast */
+html.light .neon-pink {
+  text-shadow:
+    0 0 2px var(--retro-pink-glow),
+    0 0 6px var(--retro-pink-glow);
+}
+
+html.light .neon-cyan {
+  text-shadow:
+    0 0 2px var(--retro-cyan-glow),
+    0 0 6px var(--retro-cyan-glow);
+}
+
+html.light .neon-violet {
+  text-shadow:
+    0 0 2px var(--retro-violet-glow),
+    0 0 6px var(--retro-violet-glow);
+}
+
+html.light .neon-amber {
+  text-shadow:
+    0 0 2px var(--retro-amber-glow),
+    0 0 6px var(--retro-amber-glow);
+}
+
+/* Light theme neon borders - softer glow */
+html.light .neon-border-pink {
+  box-shadow:
+    0 0 4px var(--retro-pink-glow),
+    0 0 8px var(--retro-pink-glow);
+}
+
+html.light .neon-border-cyan {
+  box-shadow:
+    0 0 4px var(--retro-cyan-glow),
+    0 0 8px var(--retro-cyan-glow);
+}
+
+/* Light theme buttons - adjusted hover states */
+html.light .btn-neon-pink {
+  box-shadow: 0 0 8px var(--retro-pink-glow);
+}
+
+html.light .btn-neon-pink:hover {
+  background: var(--retro-pink);
+  color: white;
+  box-shadow:
+    0 0 10px var(--retro-pink-glow),
+    0 0 20px var(--retro-pink-glow);
+}
+
+html.light .btn-neon-cyan {
+  box-shadow: 0 0 8px var(--retro-cyan-glow);
+}
+
+html.light .btn-neon-cyan:hover {
+  background: var(--retro-cyan);
+  color: white;
+  box-shadow:
+    0 0 10px var(--retro-cyan-glow),
+    0 0 20px var(--retro-cyan-glow);
+}
+
+html.light .btn-neon-violet {
+  box-shadow: 0 0 8px var(--retro-violet-glow);
+}
+
+html.light .btn-neon-violet:hover {
+  background: var(--retro-violet);
+  color: white;
+  box-shadow:
+    0 0 10px var(--retro-violet-glow),
+    0 0 20px var(--retro-violet-glow);
+}
+
+/* Light theme hover glow effects */
+html.light .hover-glow-pink:hover {
+  box-shadow:
+    0 4px 16px rgba(196, 24, 80, 0.2),
+    0 0 0 1px var(--retro-pink);
+}
+
+html.light .hover-glow-cyan:hover {
+  box-shadow:
+    0 4px 16px rgba(0, 122, 133, 0.2),
+    0 0 0 1px var(--retro-cyan);
+}
+
+/* Light theme grid background */
+html.light .grid-background::before {
+  opacity: 0.3;
+}
+
+/* Light theme - Override Tailwind gray text colors for better contrast */
+/* These override the default Tailwind grays to be darker in light mode */
+html.light .text-gray-200 {
+  color: #374151; /* gray-700 equivalent */
+}
+
+html.light .text-gray-300 {
+  color: #374151; /* gray-700 equivalent */
+}
+
+html.light .text-gray-400 {
+  color: #4b5563; /* gray-600 equivalent */
+}
+
+html.light .text-gray-500 {
+  color: #4b5563; /* gray-600 equivalent */
+}
+
+html.light .text-white {
+  color: #1f2937; /* gray-800 for headings */
+}
+
+/* Light theme - Override placeholder colors */
+html.light .placeholder-gray-500::placeholder,
+html.light .placeholder-gray-600::placeholder {
+  color: #9ca3af; /* gray-400 - visible but subtle */
+}
+
+/* Light theme - Override border colors for form inputs */
+html.light .border-retro-grid\/50,
+html.light .border-retro-grid\/30 {
+  border-color: rgba(200, 200, 216, 0.8);
+}
+
+/* Light theme - Input and textarea backgrounds */
+html.light .bg-retro-dark {
+  background-color: #ffffff;
+}
+
+html.light .bg-retro-navy {
+  background-color: #f0f0f8;
+}
+
+html.light .bg-retro-navy\/50 {
+  background-color: rgba(240, 240, 248, 0.7);
+}
+
+/* Light theme - Modal backdrop */
+html.light .bg-black\/70 {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+html.light .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+html.light .bg-black\/50 {
+  background-color: rgba(100, 100, 120, 0.1);
+}
+
+/* Light theme - Keyboard shortcuts styling */
+html.light .bg-gray-700\/50 {
+  background-color: rgba(200, 200, 216, 0.5);
+}
+
+/* Light theme - Better contrast for disabled states */
+html.light .text-gray-500.cursor-not-allowed,
+html.light .disabled\:opacity-50:disabled {
+  opacity: 0.6;
 }
 
 /* Smooth transition for theme changes */
@@ -72,7 +303,7 @@ html * {
 
 /* Tailwind v4 Theme Configuration */
 @theme inline {
-  /* Colors */
+  /* Core retro colors */
   --color-retro-dark: var(--retro-dark);
   --color-retro-navy: var(--retro-navy);
   --color-retro-purple: var(--retro-purple);
@@ -81,6 +312,21 @@ html * {
   --color-retro-violet: var(--retro-violet);
   --color-retro-amber: var(--retro-amber);
   --color-retro-grid: var(--retro-grid);
+
+  /* Semantic text colors - auto-switch with theme */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  /* Semantic surface colors - auto-switch with theme */
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
+
+  /* Semantic border colors - auto-switch with theme */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
 
   /* Fonts */
   --font-terminal: "VT323", monospace;
@@ -100,7 +346,7 @@ html {
 
 body {
   background: var(--retro-dark);
-  color: #ededed;
+  color: var(--text-primary);
   font-family: var(--font-ui), system-ui, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;

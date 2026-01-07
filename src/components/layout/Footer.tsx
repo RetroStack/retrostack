@@ -21,7 +21,7 @@ export function Footer() {
                   {SITE_CONFIG.name}
                 </span>
               </Link>
-              <p className="mt-3 sm:mt-4 text-sm text-gray-400 max-w-xs">
+              <p className="mt-3 sm:mt-4 text-sm text-text-secondary max-w-xs">
                 {SITE_CONFIG.description}
               </p>
             </div>
@@ -37,7 +37,7 @@ export function Footer() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className="inline-flex items-center min-h-[36px] sm:min-h-[32px] text-sm text-gray-400 hover:text-retro-pink transition-colors duration-200"
+                        className="inline-flex items-center min-h-[36px] sm:min-h-[32px] text-sm text-text-secondary hover:text-retro-pink transition-colors duration-200"
                       >
                         {item.label}
                       </Link>
@@ -51,7 +51,7 @@ export function Footer() {
           {/* Bottom Bar */}
           <div className="pt-6 sm:pt-8 border-t border-retro-grid/50 flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Copyright */}
-            <p className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+            <p className="text-xs sm:text-sm text-text-muted text-center sm:text-left">
               © {currentYear} {SITE_CONFIG.name}. All rights reserved.
             </p>
 
@@ -62,7 +62,7 @@ export function Footer() {
                   href={SOCIAL_LINKS.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="touch-target flex items-center justify-center text-gray-400 hover:text-retro-cyan transition-colors duration-200 rounded-md hover:bg-retro-purple/30"
+                  className="touch-target flex items-center justify-center text-text-secondary hover:text-retro-cyan transition-colors duration-200 rounded-md hover:bg-retro-purple/30"
                   aria-label="GitHub"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ export function Footer() {
                   href={SOCIAL_LINKS.patreon}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="touch-target flex items-center justify-center text-gray-400 hover:text-retro-pink transition-colors duration-200 rounded-md hover:bg-retro-purple/30"
+                  className="touch-target flex items-center justify-center text-text-secondary hover:text-retro-pink transition-colors duration-200 rounded-md hover:bg-retro-purple/30"
                   aria-label="Patreon"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

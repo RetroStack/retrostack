@@ -43,7 +43,7 @@ function applyTheme(theme: "dark" | "light") {
   if (metaThemeColor) {
     metaThemeColor.setAttribute(
       "content",
-      theme === "dark" ? "#0a0a1a" : "#f5f5f5"
+      theme === "dark" ? "#0a0a1a" : "#ffffff"
     );
   }
 }
