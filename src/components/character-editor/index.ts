@@ -88,6 +88,9 @@ export type { ResizeModalProps } from "./ResizeModal";
 export { ManufacturerSystemSelect, ManufacturerSystemSelectCompact } from "./ManufacturerSystemSelect";
 export type { ManufacturerSystemSelectProps } from "./ManufacturerSystemSelect";
 
+export { MetadataStep } from "./MetadataStep";
+export type { MetadataStepProps } from "./MetadataStep";
+
 export { SizePresetDropdown } from "./SizePresetDropdown";
 export type { SizePresetDropdownProps } from "./SizePresetDropdown";
 

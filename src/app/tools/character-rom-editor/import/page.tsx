@@ -1,11 +1,11 @@
 import { Metadata } from "next";
-import { ImportView } from "./ImportView";
+import { ImportHubView } from "./ImportHubView";
 
 export const metadata: Metadata = {
-  title: "Import Character ROM - RetroStack",
-  description: "Import binary character ROM files and configure dimensions and format settings.",
+  title: "Import Character Set - RetroStack",
+  description: "Import character sets from binary ROM files, images, fonts, or code.",
 };
 
 export default function ImportPage() {
-  return <ImportView />;
+  return <ImportHubView />;
 }
