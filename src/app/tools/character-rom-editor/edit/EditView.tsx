@@ -1148,6 +1148,7 @@ export function EditView() {
         onClose={() => setShowSnapshots(false)}
         snapshots={snapshots.snapshots}
         loading={snapshots.loading}
+        error={snapshots.error}
         isAtCapacity={snapshots.isAtCapacity}
         maxSnapshots={snapshots.maxSnapshots}
         currentCharacters={editor.characters}

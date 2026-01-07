@@ -7,9 +7,8 @@
 
 import { Character, CharacterSetConfig, generateId } from "./types";
 import { serializeCharacterRom, binaryToBase64, base64ToBinary, parseCharacterRom } from "./binary";
+import { getSharedDatabase } from "./storage";
 
-const DB_NAME = "retrostack-character-editor";
-const DB_VERSION = 4; // Bumped for snapshots store
 const SNAPSHOTS_STORE = "snapshots";
 const MAX_SNAPSHOTS_PER_SET = 10;
 
@@ -34,57 +33,14 @@ export interface Snapshot {
 }
 
 /**
- * Check if IndexedDB is available
+ * Get the IndexedDB database (uses shared database from storage.ts)
  */
-function isIndexedDBAvailable(): boolean {
-  try {
-    if (typeof window === "undefined") return false;
-    return !!window.indexedDB;
-  } catch {
-    return false;
+async function getDatabase(): Promise<IDBDatabase> {
+  const db = await getSharedDatabase();
+  if (!db) {
+    throw new Error("Database not available - storage may be disabled in your browser");
   }
-}
-
-/**
- * Get the IndexedDB database
- */
-function getDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (!isIndexedDBAvailable()) {
-      reject(new Error("IndexedDB not available"));
-      return;
-    }
-
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => {
-      reject(new Error("Failed to open database"));
-    };
-
-    request.onsuccess = () => {
-      const db = request.result;
-      // Verify the snapshots store exists (may not if upgrade was blocked by another tab)
-      if (!db.objectStoreNames.contains(SNAPSHOTS_STORE)) {
-        db.close();
-        reject(new Error("Database upgrade required - please close other tabs and refresh"));
-        return;
-      }
-      resolve(db);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      // Create snapshots store if it doesn't exist
-      if (!db.objectStoreNames.contains(SNAPSHOTS_STORE)) {
-        const store = db.createObjectStore(SNAPSHOTS_STORE, {
-          keyPath: "id",
-        });
-        store.createIndex("by-character-set", "characterSetId", { unique: false });
-        store.createIndex("by-created", "createdAt", { unique: false });
-      }
-    };
-  });
+  return db;
 }
 
 /**

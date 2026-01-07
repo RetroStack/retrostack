@@ -8,8 +8,9 @@
 import { SerializedCharacterSet, generateId } from "./types";
 
 const DB_NAME = "retrostack-character-editor";
-const DB_VERSION = 4; // Bumped for locale field migration
+const DB_VERSION = 5; // Bumped for snapshots store
 const STORE_NAME = "character-sets";
+const SNAPSHOTS_STORE = "snapshots";
 const FALLBACK_KEY = "retrostack-character-sets";
 
 /**
@@ -159,6 +160,15 @@ class CharacterStorage {
               }
             };
           }
+        }
+
+        // Create snapshots store (for all versions, including new and migrating DBs)
+        if (!db.objectStoreNames.contains(SNAPSHOTS_STORE)) {
+          const snapshotsStore = db.createObjectStore(SNAPSHOTS_STORE, {
+            keyPath: "id",
+          });
+          snapshotsStore.createIndex("by-character-set", "characterSetId", { unique: false });
+          snapshotsStore.createIndex("by-created", "createdAt", { unique: false });
         }
       };
     });
@@ -560,6 +570,16 @@ class CharacterStorage {
 
 // Export singleton instance
 export const characterStorage = new CharacterStorage();
+
+/**
+ * Get the shared IndexedDB database instance
+ * Used by other modules (like snapshots) that need to access the same database
+ */
+export async function getSharedDatabase(): Promise<IDBDatabase | null> {
+  await characterStorage.initialize();
+  // Access the private db field through the class
+  return (characterStorage as unknown as { db: IDBDatabase | null }).db;
+}
 
 // Auto-save utilities
 const AUTO_SAVE_KEY = "character-editor-autosave";
