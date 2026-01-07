@@ -11,7 +11,7 @@ interface ImportOption {
   description: string;
   icon: React.ReactNode;
   href: string;
-  color: "cyan" | "pink" | "purple" | "violet";
+  color: "cyan" | "pink" | "amber" | "violet";
 }
 
 const IMPORT_OPTIONS: ImportOption[] = [
@@ -76,7 +76,7 @@ const IMPORT_OPTIONS: ImportOption[] = [
       </svg>
     ),
     href: "/tools/character-rom-editor/import/font",
-    color: "cyan",
+    color: "amber",
   },
   {
     title: "Code / Text",
@@ -114,11 +114,11 @@ const colorClasses = {
     icon: "text-retro-pink",
     iconBg: "bg-retro-pink/20",
   },
-  purple: {
-    border: "hover:border-retro-purple",
-    bg: "hover:bg-retro-purple/5",
-    icon: "text-retro-purple",
-    iconBg: "bg-retro-purple/20",
+  amber: {
+    border: "hover:border-retro-amber",
+    bg: "hover:bg-retro-amber/5",
+    icon: "text-retro-amber",
+    iconBg: "bg-retro-amber/20",
   },
   violet: {
     border: "hover:border-retro-violet",

@@ -8,6 +8,7 @@
   --retro-pink: #ff2a6d;
   --retro-cyan: #00f5ff;
   --retro-violet: #9d4edd;
+  --retro-amber: #ffb800;
   --retro-grid: #2a2a5a;
   --retro-pink-glow: rgba(255, 42, 109, 0.6);
   --retro-cyan-glow: rgba(0, 245, 255, 0.6);
@@ -44,6 +45,7 @@ html.light {
   --retro-pink: #d9205a;
   --retro-cyan: #00a8b0;
   --retro-violet: #7c3db0;
+  --retro-amber: #d49800;
   --retro-grid: #c0c0d0;
   --retro-pink-glow: rgba(217, 32, 90, 0.4);
   --retro-cyan-glow: rgba(0, 168, 176, 0.4);
@@ -77,6 +79,7 @@ html * {
   --color-retro-pink: var(--retro-pink);
   --color-retro-cyan: var(--retro-cyan);
   --color-retro-violet: var(--retro-violet);
+  --color-retro-amber: var(--retro-amber);
   --color-retro-grid: var(--retro-grid);
 
   /* Fonts */
@@ -126,6 +129,14 @@ body {
     0 0 3px var(--retro-violet),
     0 0 8px var(--retro-violet),
     0 0 15px var(--retro-violet);
+}
+
+.neon-amber {
+  color: var(--retro-amber);
+  text-shadow:
+    0 0 3px var(--retro-amber),
+    0 0 8px var(--retro-amber),
+    0 0 15px var(--retro-amber);
 }
 
 /* Neon Flicker Animations - Individual character control */

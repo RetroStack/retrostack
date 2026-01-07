@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react";
 
-type NeonColor = "pink" | "cyan" | "violet";
+type NeonColor = "pink" | "cyan" | "violet" | "amber";
 
 interface NeonTextProps extends HTMLAttributes<HTMLElement> {
   color?: NeonColor;
@@ -12,6 +12,7 @@ const colorStyles: Record<NeonColor, string> = {
   pink: "neon-pink",
   cyan: "neon-cyan",
   violet: "neon-violet",
+  amber: "neon-amber",
 };
 
 export function NeonText({
