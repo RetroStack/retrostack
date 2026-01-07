@@ -15,6 +15,7 @@ import {
   LibraryFilters,
   OnboardingTour,
 } from "@/components/character-editor";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import { useToast } from "@/hooks/useToast";
 import { useOnboarding, CHARACTER_EDITOR_ONBOARDING_STEPS } from "@/hooks";
@@ -299,23 +300,34 @@ export function CharacterEditorLibrary() {
 
             <div className="flex gap-2">
               {onboarding.hasCompleted || onboarding.hasDismissed ? (
-                <button
-                  onClick={onboarding.start}
-                  className="text-xs text-gray-500 hover:text-retro-cyan transition-colors flex items-center gap-1 mr-2"
-                  title="Restart onboarding tour"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Tour
-                </button>
+                <Tooltip content="Restart onboarding tour" position="bottom">
+                  <button
+                    onClick={onboarding.start}
+                    className="text-xs text-gray-500 hover:text-retro-cyan transition-colors flex items-center mr-2"
+                  >
+                    <svg className="w-4 h-4 min-[1120px]:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="hidden min-[1120px]:inline">Tour</span>
+                  </button>
+                </Tooltip>
               ) : null}
-              <Button href="/tools/character-rom-editor/add" variant="pink">
-                Add ROM
-              </Button>
-              <Button href="/tools/character-rom-editor/import" variant="cyan">
-                Import ROM
-              </Button>
+              <Tooltip content="Create a new character set from scratch" position="bottom">
+                <Button href="/tools/character-rom-editor/add" variant="pink">
+                  <svg className="w-4 h-4 min-[1120px]:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="hidden min-[1120px]:inline">Add ROM</span>
+                </Button>
+              </Tooltip>
+              <Tooltip content="Import from binary, image, font, or code" position="bottom">
+                <Button href="/tools/character-rom-editor/import" variant="cyan">
+                  <svg className="w-4 h-4 min-[1120px]:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="hidden min-[1120px]:inline">Import ROM</span>
+                </Button>
+              </Tooltip>
             </div>
           </div>
 

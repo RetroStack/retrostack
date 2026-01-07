@@ -246,7 +246,7 @@ export function DimensionPresetSelector({
                             px-2 py-1 text-xs rounded transition-colors
                             ${
                               isCurrentDimension(systemPreset.width, systemPreset.height)
-                                ? "bg-retro-pink/20 text-retro-pink"
+                                ? "bg-retro-cyan/20 text-retro-cyan"
                                 : "text-gray-400 hover:bg-retro-grid/20"
                             }
                             disabled:opacity-50

@@ -7,6 +7,7 @@ import { Navigation, TabletNavigation } from "./Navigation";
 import { MobileMenu, HamburgerButton } from "./MobileMenu";
 import { Container } from "@/components/ui/Container";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { SITE_CONFIG } from "@/lib/constants";
 
 export function Header() {
@@ -68,34 +69,35 @@ export function Header() {
             {/* Theme toggle, Bug Report, and Mobile Menu Button */}
             <div className="flex items-center gap-1 sm:gap-2">
               <ThemeToggle className="hidden sm:block" />
-              <a
-                href="https://github.com/RetroStack/retrostack.github.io/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex p-2 rounded-lg transition-colors hover:bg-retro-grid/20"
-                aria-label="Report a bug"
-                title="Report a bug"
-              >
-                <svg
-                  className="w-5 h-5 text-gray-400 hover:text-retro-pink transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <Tooltip content="Report a bug" position="bottom">
+                <a
+                  href="https://github.com/RetroStack/retrostack.github.io/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:flex p-2 rounded-lg transition-colors hover:bg-retro-grid/20"
+                  aria-label="Report a bug"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-2.21 0-4 1.79-4 4v4c0 2.21 1.79 4 4 4s4-1.79 4-4v-4c0-2.21-1.79-4-4-4z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8V6m0 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-6 6H4m2 4H4m16-4h-2m2 4h-2M7 10l-2-2m12 2l2-2M7 18l-2 2m12-2l2 2"
-                  />
-                </svg>
-              </a>
+                  <svg
+                    className="w-5 h-5 text-gray-400 hover:text-retro-pink transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-2.21 0-4 1.79-4 4v4c0 2.21 1.79 4 4 4s4-1.79 4-4v-4c0-2.21-1.79-4-4-4z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8V6m0 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-6 6H4m2 4H4m16-4h-2m2 4h-2M7 10l-2-2m12 2l2-2M7 18l-2 2m12-2l2 2"
+                    />
+                  </svg>
+                </a>
+              </Tooltip>
               <HamburgerButton onClick={() => setMobileMenuOpen(true)} />
             </div>
           </div>

@@ -71,12 +71,12 @@ const IMPORT_OPTIONS: ImportOption[] = [
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={1.5}
-          d="M4 6h16M4 12h8m-8 6h16"
+          d="M4 6h16M12 6v14"
         />
       </svg>
     ),
     href: "/tools/character-rom-editor/import/font",
-    color: "purple",
+    color: "cyan",
   },
   {
     title: "Code / Text",

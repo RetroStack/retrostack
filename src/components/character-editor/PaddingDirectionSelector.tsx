@@ -38,7 +38,7 @@ export function PaddingDirectionSelector({
           flex-1 px-3 py-2 text-xs rounded border transition-colors
           ${
             value === "right"
-              ? "border-retro-pink bg-retro-pink/10 text-retro-pink"
+              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
               : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
           }
           disabled:opacity-50
@@ -54,7 +54,7 @@ export function PaddingDirectionSelector({
           flex-1 px-3 py-2 text-xs rounded border transition-colors
           ${
             value === "left"
-              ? "border-retro-pink bg-retro-pink/10 text-retro-pink"
+              ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan"
               : "border-retro-grid/50 text-gray-400 hover:border-retro-grid"
           }
           disabled:opacity-50
