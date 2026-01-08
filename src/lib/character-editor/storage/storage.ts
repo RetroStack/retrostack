@@ -579,8 +579,31 @@ export const characterStorage = new CharacterStorage();
  */
 export async function getSharedDatabase(): Promise<IDBDatabase | null> {
   await characterStorage.initialize();
-  // Access the private db field through the class
-  return (characterStorage as unknown as { db: IDBDatabase | null }).db;
+  const db = (characterStorage as unknown as { db: IDBDatabase | null }).db;
+
+  // Check if required stores exist - if not, the database needs to be recreated
+  if (db && !db.objectStoreNames.contains(CHARACTER_EDITOR_SNAPSHOTS_STORE)) {
+    console.warn("Database missing snapshots store, triggering recreation...");
+    db.close();
+
+    // Delete and recreate the database
+    await new Promise<void>((resolve) => {
+      const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+      deleteRequest.onsuccess = () => resolve();
+      deleteRequest.onerror = () => resolve(); // Continue even if delete fails
+      deleteRequest.onblocked = () => resolve();
+    });
+
+    // Reset the singleton and reinitialize
+    (characterStorage as unknown as { db: IDBDatabase | null; initialized: boolean }).db = null;
+    (characterStorage as unknown as { db: IDBDatabase | null; initialized: boolean; initPromise: Promise<void> | null }).initialized = false;
+    (characterStorage as unknown as { db: IDBDatabase | null; initialized: boolean; initPromise: Promise<void> | null }).initPromise = null;
+
+    await characterStorage.initialize();
+    return (characterStorage as unknown as { db: IDBDatabase | null }).db;
+  }
+
+  return db;
 }
 
 // Auto-save utilities

@@ -198,7 +198,7 @@ export function LibraryCard({
           {onEdit && (
             <button
               onClick={onEdit}
-              className="px-2 py-1 text-xs bg-retro-cyan/20 text-retro-cyan rounded hover:bg-retro-cyan/30 transition-colors"
+              className="px-2 py-1 text-xs bg-retro-amber/20 text-retro-amber rounded transition-all shadow-[0_0_8px_rgba(255,184,0,0.25)] hover:bg-retro-amber hover:text-retro-dark hover:shadow-[0_0_8px_var(--retro-amber),0_0_15px_var(--retro-amber),0_0_30px_var(--retro-amber)]"
             >
               Edit
             </button>

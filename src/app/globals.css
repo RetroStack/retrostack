@@ -168,39 +168,39 @@ html.light .neon-border-cyan {
 
 /* Light theme buttons - adjusted hover states */
 html.light .btn-neon-pink {
-  box-shadow: 0 0 8px var(--retro-pink-glow);
+  box-shadow: 0 0 6px var(--retro-pink-glow);
 }
 
 html.light .btn-neon-pink:hover {
   background: var(--retro-pink);
   color: white;
   box-shadow:
-    0 0 10px var(--retro-pink-glow),
-    0 0 20px var(--retro-pink-glow);
+    0 0 8px var(--retro-pink-glow),
+    0 0 15px var(--retro-pink-glow);
 }
 
 html.light .btn-neon-cyan {
-  box-shadow: 0 0 8px var(--retro-cyan-glow);
+  box-shadow: 0 0 6px var(--retro-cyan-glow);
 }
 
 html.light .btn-neon-cyan:hover {
   background: var(--retro-cyan);
   color: white;
   box-shadow:
-    0 0 10px var(--retro-cyan-glow),
-    0 0 20px var(--retro-cyan-glow);
+    0 0 8px var(--retro-cyan-glow),
+    0 0 15px var(--retro-cyan-glow);
 }
 
 html.light .btn-neon-violet {
-  box-shadow: 0 0 8px var(--retro-violet-glow);
+  box-shadow: 0 0 6px var(--retro-violet-glow);
 }
 
 html.light .btn-neon-violet:hover {
   background: var(--retro-violet);
   color: white;
   box-shadow:
-    0 0 10px var(--retro-violet-glow),
-    0 0 20px var(--retro-violet-glow);
+    0 0 8px var(--retro-violet-glow),
+    0 0 15px var(--retro-violet-glow);
 }
 
 /* Light theme hover glow effects */
@@ -659,48 +659,48 @@ body {
   background: transparent;
   color: var(--retro-pink);
   border: 2px solid var(--retro-pink);
-  box-shadow: 0 0 10px rgba(255, 42, 109, 0.3);
+  box-shadow: 0 0 8px rgba(255, 42, 109, 0.25);
 }
 
 .btn-neon-pink:hover {
   background: var(--retro-pink);
   color: var(--retro-dark);
   box-shadow:
-    0 0 10px var(--retro-pink),
-    0 0 20px var(--retro-pink),
-    0 0 40px var(--retro-pink);
+    0 0 8px var(--retro-pink),
+    0 0 15px var(--retro-pink),
+    0 0 30px var(--retro-pink);
 }
 
 .btn-neon-cyan {
   background: transparent;
   color: var(--retro-cyan);
   border: 2px solid var(--retro-cyan);
-  box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.25);
 }
 
 .btn-neon-cyan:hover {
   background: var(--retro-cyan);
   color: var(--retro-dark);
   box-shadow:
-    0 0 10px var(--retro-cyan),
-    0 0 20px var(--retro-cyan),
-    0 0 40px var(--retro-cyan);
+    0 0 8px var(--retro-cyan),
+    0 0 15px var(--retro-cyan),
+    0 0 30px var(--retro-cyan);
 }
 
 .btn-neon-violet {
   background: transparent;
   color: var(--retro-violet);
   border: 2px solid var(--retro-violet);
-  box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+  box-shadow: 0 0 8px rgba(157, 78, 221, 0.25);
 }
 
 .btn-neon-violet:hover {
   background: var(--retro-violet);
   color: var(--retro-dark);
   box-shadow:
-    0 0 10px var(--retro-violet),
-    0 0 20px var(--retro-violet),
-    0 0 40px var(--retro-violet);
+    0 0 8px var(--retro-violet),
+    0 0 15px var(--retro-violet),
+    0 0 30px var(--retro-violet);
 }
 
 /* Card Styles */

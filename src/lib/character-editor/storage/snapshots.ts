@@ -8,8 +8,9 @@
 import { Character, CharacterSetConfig, generateId } from "../types";
 import { serializeCharacterRom, binaryToBase64, base64ToBinary, parseCharacterRom } from "../import/binary";
 import { getSharedDatabase } from "./storage";
+import { CHARACTER_EDITOR_SNAPSHOTS_STORE } from "./keys";
 
-const SNAPSHOTS_STORE = "snapshots";
+const SNAPSHOTS_STORE = CHARACTER_EDITOR_SNAPSHOTS_STORE;
 const MAX_SNAPSHOTS_PER_SET = 10;
 
 /**
@@ -34,11 +35,17 @@ export interface Snapshot {
 
 /**
  * Get the IndexedDB database (uses shared database from storage.ts)
+ * Returns null if database or snapshots store is not available
  */
-async function getDatabase(): Promise<IDBDatabase> {
+async function getDatabase(): Promise<IDBDatabase | null> {
   const db = await getSharedDatabase();
   if (!db) {
-    throw new Error("Database not available - storage may be disabled in your browser");
+    return null;
+  }
+  // Verify the snapshots store exists
+  if (!db.objectStoreNames.contains(SNAPSHOTS_STORE)) {
+    console.warn("Snapshots store not found in database. Please refresh the page to trigger database migration.");
+    return null;
   }
   return db;
 }
@@ -78,6 +85,9 @@ export function restoreSnapshot(snapshot: Snapshot): Character[] {
  */
 export async function saveSnapshot(snapshot: Snapshot): Promise<void> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("Snapshots not available. Please refresh the page.");
+  }
 
   // Check if we've exceeded the limit for this character set
   const existingSnapshots = await getSnapshotsForCharacterSet(snapshot.characterSetId);
@@ -99,9 +109,13 @@ export async function saveSnapshot(snapshot: Snapshot): Promise<void> {
 
 /**
  * Get all snapshots for a character set
+ * Returns empty array if snapshots store is not available
  */
 export async function getSnapshotsForCharacterSet(characterSetId: string): Promise<Snapshot[]> {
   const db = await getDatabase();
+  if (!db) {
+    return []; // Gracefully return empty if store not available
+  }
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([SNAPSHOTS_STORE], "readonly");
@@ -127,6 +141,9 @@ export async function getSnapshotsForCharacterSet(characterSetId: string): Promi
  */
 export async function getSnapshotById(id: string): Promise<Snapshot | null> {
   const db = await getDatabase();
+  if (!db) {
+    return null;
+  }
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([SNAPSHOTS_STORE], "readonly");
@@ -148,6 +165,9 @@ export async function getSnapshotById(id: string): Promise<Snapshot | null> {
  */
 export async function deleteSnapshot(id: string): Promise<void> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("Snapshots not available. Please refresh the page.");
+  }
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([SNAPSHOTS_STORE], "readwrite");
@@ -175,8 +195,11 @@ export async function deleteAllSnapshotsForCharacterSet(characterSetId: string):
  */
 export async function renameSnapshot(id: string, newName: string): Promise<void> {
   const db = await getDatabase();
-  const snapshot = await getSnapshotById(id);
+  if (!db) {
+    throw new Error("Snapshots not available. Please refresh the page.");
+  }
 
+  const snapshot = await getSnapshotById(id);
   if (!snapshot) {
     throw new Error("Snapshot not found");
   }
