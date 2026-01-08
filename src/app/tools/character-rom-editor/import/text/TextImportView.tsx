@@ -8,14 +8,12 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import {
-  CharacterPreview,
-  ImportStepIndicator,
-  MetadataStep,
-  DimensionPresetSelector,
-  PaddingDirectionSelector,
-  BitDirectionSelector,
-} from "@/components/character-editor";
+import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
+import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
+import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
+import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
+import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
+import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import {
@@ -23,7 +21,7 @@ import {
   getDefaultTextImportOptions,
   parseTextToCharacters,
   getParseResultSummary,
-} from "@/lib/character-editor/textImport";
+} from "@/lib/character-editor/import/textImport";
 import { CharacterSetConfig, Character, generateId } from "@/lib/character-editor/types";
 
 type WizardStep = 1 | 2 | 3;

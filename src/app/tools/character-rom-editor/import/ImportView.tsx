@@ -8,16 +8,14 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import {
-  ImportDropZone,
-  CharacterPreview,
-  ManufacturerSystemSelect,
-  ImportStepIndicator,
-  SizePresetDropdown,
-  ImportFromImageModal,
-  ImportFromFontModal,
-  ImportFromTextModal,
-} from "@/components/character-editor";
+import { ImportDropZone } from "@/components/character-editor/import/ImportDropZone";
+import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
+import { ManufacturerSystemSelect } from "@/components/character-editor/selectors/ManufacturerSystemSelect";
+import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
+import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
+import { ImportFromImageModal } from "./modals/ImportFromImageModal";
+import { ImportFromFontModal } from "./modals/ImportFromFontModal";
+import { ImportFromTextModal } from "./modals/ImportFromTextModal";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
   CharacterSetConfig,
@@ -27,7 +25,7 @@ import {
   createDefaultConfig,
   generateId,
 } from "@/lib/character-editor/types";
-import { parseCharacterRom } from "@/lib/character-editor/binary";
+import { parseCharacterRom } from "@/lib/character-editor/import/binary";
 import { calculateCharacterCount, formatFileSize } from "@/lib/character-editor/utils";
 
 type WizardStep = 1 | 2 | 3;

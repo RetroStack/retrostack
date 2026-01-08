@@ -8,9 +8,9 @@
  */
 
 import { SerializedCharacterSet } from "./types";
-import { binaryToBase64 } from "./binary";
-import charsetData from "./builtinCharsets.json";
-import { getEnabledExternalSources, ExternalCharsetSource } from "./externalSources";
+import { binaryToBase64 } from "./import/binary";
+import charsetData from "./data/builtinCharsets.json";
+import { getEnabledExternalSources, ExternalCharsetSource } from "./data/externalSources";
 
 /**
  * Source character set data format with full metadata

@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { CharacterPreviewGrid } from "@/components/character-editor";
+import { CharacterPreviewGrid } from "@/components/character-editor/character/CharacterGrid";
 import {
   decodeCharacterSet,
   getHashFromUrl,
-} from "@/lib/character-editor/sharing";
+} from "@/lib/character-editor/storage/sharing";
 import {
   Character,
   CharacterSetConfig,

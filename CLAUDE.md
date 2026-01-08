@@ -50,3 +50,7 @@ npm run deploy           # Deploy to GitHub Pages
 - Systems and tools preview sections
 - Visual regression testing
 - Static export for GitHub Pages deployment
+
+## Coding Conventions
+
+- **No barrel files**: Do not create index.ts files that re-export from other files. Import directly from the source file instead of using barrel exports. This keeps the dependency graph explicit and avoids circular import issues.

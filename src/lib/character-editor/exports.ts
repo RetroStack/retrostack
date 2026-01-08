@@ -14,7 +14,7 @@ import {
   bytesPerLine,
   bytesPerCharacter,
 } from "./types";
-import { characterToBytes } from "./binary";
+import { characterToBytes } from "./import/binary";
 import { jsPDF } from "jspdf";
 
 /**

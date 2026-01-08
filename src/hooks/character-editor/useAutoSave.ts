@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef, useState } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
-import { serializeCharacterRom, binaryToBase64 } from "@/lib/character-editor/binary";
+import { serializeCharacterRom, binaryToBase64 } from "@/lib/character-editor/import/binary";
 
 const AUTO_SAVE_KEY = "character-editor-autosave";
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds

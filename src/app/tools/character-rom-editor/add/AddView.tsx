@@ -8,13 +8,11 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import {
-  ManufacturerSystemSelect,
-  ImportStepIndicator,
-  LibraryCardCompact,
-  SizePresetDropdown,
-  CharacterCountPresetDropdown,
-} from "@/components/character-editor";
+import { ManufacturerSystemSelect } from "@/components/character-editor/selectors/ManufacturerSystemSelect";
+import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
+import { LibraryCardCompact } from "@/components/character-editor/library/LibraryCard";
+import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
+import { CharacterCountPresetDropdown } from "@/components/character-editor/selectors/CharacterCountPresetDropdown";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import {
   CharacterSetConfig,
@@ -23,7 +21,7 @@ import {
   createDefaultConfig,
   generateId,
 } from "@/lib/character-editor/types";
-import { deserializeCharacterSet } from "@/lib/character-editor/binary";
+import { deserializeCharacterSet } from "@/lib/character-editor/import/binary";
 import { resizeCharacter } from "@/lib/character-editor/transforms";
 import { getAnchorPositions, getAnchorPositionLabel } from "@/lib/character-editor/presets";
 

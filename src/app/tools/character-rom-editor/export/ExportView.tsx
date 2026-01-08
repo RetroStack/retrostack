@@ -8,16 +8,14 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import {
-  CharacterPreview,
-  ColorPresetSelector,
-  PaddingDirectionSelector,
-  BitDirectionSelector,
-} from "@/components/character-editor";
-import { CustomColors } from "@/lib/character-editor/colorPresets";
+import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
+import { ColorPresetSelector } from "@/components/character-editor/selectors/ColorPresetSelector";
+import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
+import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
+import { CustomColors } from "@/lib/character-editor/data/colorPresets";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import { CharacterSet, PaddingDirection, BitDirection, bytesPerCharacter } from "@/lib/character-editor/types";
-import { createDownloadBlob, downloadBlob } from "@/lib/character-editor/binary";
+import { createDownloadBlob, downloadBlob } from "@/lib/character-editor/import/binary";
 import { getSuggestedFilename, formatFileSize } from "@/lib/character-editor/utils";
 import {
   EXPORT_FORMATS,

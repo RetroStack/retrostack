@@ -11,7 +11,7 @@ import {
   deleteSnapshot,
   renameSnapshot,
   getMaxSnapshots,
-} from "@/lib/character-editor/snapshots";
+} from "@/lib/character-editor/storage/snapshots";
 
 export interface UseSnapshotsOptions {
   /** Character set ID to manage snapshots for */

@@ -8,15 +8,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
-import {
-  LibraryGrid,
-  LibraryGridEmptyResults,
-  LibraryGridError,
-  LibraryFilters,
-  OnboardingTour,
-  type SortField,
-  type SortDirection,
-} from "@/components/character-editor";
+import { LibraryGrid, LibraryGridEmptyResults, LibraryGridError } from "@/components/character-editor/library/LibraryGrid";
+import { LibraryFilters, type SortField, type SortDirection } from "@/components/character-editor/library/LibraryFilters";
+import { OnboardingTour } from "@/components/character-editor/help/OnboardingTour";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useCharacterLibrary } from "@/hooks/character-editor";
 import { useToast } from "@/hooks/useToast";

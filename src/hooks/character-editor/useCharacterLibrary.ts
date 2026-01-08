@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { SerializedCharacterSet, CharacterSet, generateId } from "@/lib/character-editor/types";
-import { characterStorage } from "@/lib/character-editor/storage";
-import { deserializeCharacterSet, serializeCharacterSet } from "@/lib/character-editor/binary";
+import { characterStorage } from "@/lib/character-editor/storage/storage";
+import { deserializeCharacterSet, serializeCharacterSet } from "@/lib/character-editor/import/binary";
 import {
   getBuiltInIds,
   getBuiltInCharacterSetById,

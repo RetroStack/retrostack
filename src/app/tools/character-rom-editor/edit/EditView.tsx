@@ -5,30 +5,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ToolLayout, ToolContent } from "@/components/layout/ToolLayout";
 import { ToolbarItem } from "@/components/ui/ResponsiveToolbar";
-import {
-  EditorCanvas,
-  EditorSidebar,
-  EditorHeader,
-  EditorFooter,
-  KeyboardShortcutsHelp,
-  TransformToolbar,
-  MetadataEditModal,
-  ResizeModal,
-  ImportCharactersModal,
-  CopyCharacterModal,
-  ReorderModal,
-  ScaleModal,
-  GoToCharacterModal,
-  AsciiMapModal,
-  TextPreviewModal,
-  CharacterContextMenu,
-  useContextMenu,
-  SnapshotsModal,
-  HistorySlider,
-  ShareModal,
-  OverlaySearchModal,
-  CharacterDisplay,
-} from "@/components/character-editor";
+import { EditorCanvas } from "@/components/character-editor/editor/EditorCanvas";
+import { EditorSidebar } from "@/components/character-editor/editor/EditorSidebar";
+import { EditorHeader } from "@/components/character-editor/editor/EditorHeader";
+import { EditorFooter } from "@/components/character-editor/editor/EditorFooter";
+import { TransformToolbar } from "@/components/character-editor/editor/TransformToolbar";
+import { HistorySlider } from "@/components/character-editor/editor/HistorySlider";
+import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
+import { CharacterContextMenu, useContextMenu } from "@/components/character-editor/character/CharacterContextMenu";
+import { KeyboardShortcutsHelp } from "@/components/character-editor/help/KeyboardShortcutsHelp";
+import { MetadataEditModal } from "./modals/MetadataEditModal";
+import { ResizeModal } from "./modals/ResizeModal";
+import { ImportCharactersModal } from "./modals/ImportCharactersModal";
+import { CopyCharacterModal } from "./modals/CopyCharacterModal";
+import { ReorderModal } from "./modals/ReorderModal";
+import { ScaleModal } from "./modals/ScaleModal";
+import { GoToCharacterModal } from "./modals/GoToCharacterModal";
+import { AsciiMapModal } from "./modals/AsciiMapModal";
+import { TextPreviewModal } from "./modals/TextPreviewModal";
+import { SnapshotsModal } from "./modals/SnapshotsModal";
+import { ShareModal } from "./modals/ShareModal";
+import { OverlaySearchModal } from "./modals/OverlaySearchModal";
 import {
   useCharacterLibrary,
   useAutoSave,
@@ -38,8 +35,8 @@ import {
 } from "@/hooks/character-editor";
 import { useCharacterEditor } from "@/hooks/character-editor/useCharacterEditor";
 import { CharacterSet, AnchorPoint } from "@/lib/character-editor/types";
-import { getActiveColors, CustomColors } from "@/lib/character-editor/colorPresets";
-import { base64ToBinary, parseCharacterRom } from "@/lib/character-editor/binary";
+import { getActiveColors, CustomColors } from "@/lib/character-editor/data/colorPresets";
+import { base64ToBinary, parseCharacterRom } from "@/lib/character-editor/import/binary";
 import { useToast } from "@/hooks/useToast";
 
 /**
