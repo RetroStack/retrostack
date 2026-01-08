@@ -6,12 +6,14 @@
  */
 
 import { SerializedCharacterSet, generateId } from "../types";
-
-const DB_NAME = "retrostack-character-editor";
-const DB_VERSION = 5; // Bumped for snapshots store
-const STORE_NAME = "character-sets";
-const SNAPSHOTS_STORE = "snapshots";
-const FALLBACK_KEY = "retrostack-character-sets";
+import {
+  DB_NAME,
+  DB_VERSION,
+  CHARACTER_EDITOR_STORE_NAME,
+  CHARACTER_EDITOR_SNAPSHOTS_STORE,
+  CHARACTER_EDITOR_STORAGE_KEY_FALLBACK,
+  CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE,
+} from "./keys";
 
 /**
  * Check if IndexedDB is available
@@ -70,8 +72,8 @@ class CharacterStorage {
         const oldVersion = event.oldVersion;
 
         // Create the character sets store (if new database)
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, {
+        if (!db.objectStoreNames.contains(CHARACTER_EDITOR_STORE_NAME)) {
+          const store = db.createObjectStore(CHARACTER_EDITOR_STORE_NAME, {
             keyPath: "metadata.id",
           });
 
@@ -87,7 +89,7 @@ class CharacterStorage {
         } else {
           // Migration from v1 to v2: add manufacturer/system indexes and fields
           if (oldVersion < 2) {
-            const store = transaction.objectStore(STORE_NAME);
+            const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
 
             // Add new indexes if they don't exist
             if (!store.indexNames.contains("by-manufacturer")) {
@@ -118,7 +120,7 @@ class CharacterStorage {
 
           // Migration from v2 to v3: add isPinned field
           if (oldVersion < 3) {
-            const store = transaction.objectStore(STORE_NAME);
+            const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
 
             // Migrate existing records to add isPinned field
             const cursorRequest = store.openCursor();
@@ -138,7 +140,7 @@ class CharacterStorage {
 
           // Migration from v3 to v4: add locale field and index
           if (oldVersion < 4) {
-            const store = transaction.objectStore(STORE_NAME);
+            const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
 
             // Add locale index if it doesn't exist
             if (!store.indexNames.contains("by-locale")) {
@@ -163,8 +165,8 @@ class CharacterStorage {
         }
 
         // Create snapshots store (for all versions, including new and migrating DBs)
-        if (!db.objectStoreNames.contains(SNAPSHOTS_STORE)) {
-          const snapshotsStore = db.createObjectStore(SNAPSHOTS_STORE, {
+        if (!db.objectStoreNames.contains(CHARACTER_EDITOR_SNAPSHOTS_STORE)) {
+          const snapshotsStore = db.createObjectStore(CHARACTER_EDITOR_SNAPSHOTS_STORE, {
             keyPath: "id",
           });
           snapshotsStore.createIndex("by-character-set", "characterSetId", { unique: false });
@@ -186,7 +188,7 @@ class CharacterStorage {
    */
   private fallbackGetAll(): SerializedCharacterSet[] {
     try {
-      const data = localStorage.getItem(FALLBACK_KEY);
+      const data = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
       if (!data) return [];
       const sets = JSON.parse(data) as SerializedCharacterSet[];
       // Ensure manufacturer/system/locale/isPinned fields exist for migrated data
@@ -210,7 +212,7 @@ class CharacterStorage {
    */
   private fallbackSaveAll(sets: SerializedCharacterSet[]): void {
     try {
-      localStorage.setItem(FALLBACK_KEY, JSON.stringify(sets));
+      localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK, JSON.stringify(sets));
     } catch (e) {
       console.error("Failed to save to localStorage:", e);
       throw new Error("Storage quota exceeded");
@@ -228,8 +230,8 @@ class CharacterStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db!.transaction([CHARACTER_EDITOR_STORE_NAME], "readonly");
+      const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
       const request = store.getAll();
 
       request.onsuccess = () => {
@@ -264,8 +266,8 @@ class CharacterStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db!.transaction([CHARACTER_EDITOR_STORE_NAME], "readonly");
+      const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
       const request = store.get(id);
 
       request.onsuccess = () => {
@@ -307,8 +309,8 @@ class CharacterStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db!.transaction([CHARACTER_EDITOR_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
       const request = store.put(setWithSizeKey);
 
       request.onsuccess = () => {
@@ -386,8 +388,8 @@ class CharacterStorage {
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db!.transaction([CHARACTER_EDITOR_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
       const request = store.delete(id);
 
       request.onsuccess = () => {
@@ -548,13 +550,13 @@ class CharacterStorage {
     await this.initialize();
 
     if (this.useFallback()) {
-      localStorage.removeItem(FALLBACK_KEY);
+      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
       return;
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db!.transaction([CHARACTER_EDITOR_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
       const request = store.clear();
 
       request.onsuccess = () => {
@@ -582,7 +584,6 @@ export async function getSharedDatabase(): Promise<IDBDatabase | null> {
 }
 
 // Auto-save utilities
-const AUTO_SAVE_KEY = "character-editor-autosave";
 
 export interface AutoSaveData {
   characterSetId: string;
@@ -603,7 +604,7 @@ export interface AutoSaveData {
  */
 export function saveAutoSave(data: AutoSaveData): void {
   try {
-    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(data));
+    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
   } catch (e) {
     console.error("Failed to auto-save:", e);
   }
@@ -614,7 +615,7 @@ export function saveAutoSave(data: AutoSaveData): void {
  */
 export function getAutoSave(): AutoSaveData | null {
   try {
-    const data = localStorage.getItem(AUTO_SAVE_KEY);
+    const data = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     if (!data) return null;
     return JSON.parse(data);
   } catch {
@@ -626,7 +627,7 @@ export function getAutoSave(): AutoSaveData | null {
  * Clear auto-save data
  */
 export function clearAutoSave(): void {
-  localStorage.removeItem(AUTO_SAVE_KEY);
+  localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
 }
 
 /**

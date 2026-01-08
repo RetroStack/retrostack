@@ -55,6 +55,29 @@ npm run deploy           # Deploy to GitHub Pages
 
 - **No barrel files**: Do not create index.ts files that re-export from other files. Import directly from the source file instead of using barrel exports. This keeps the dependency graph explicit and avoids circular import issues.
 
+## Local Storage Conventions
+
+All localStorage and IndexedDB keys must follow a consistent naming pattern and be centralized in a keys file for each tool/feature.
+
+### Naming Pattern
+- **App-wide settings**: `retrostack-<setting>` (e.g., `retrostack-theme`)
+- **Tool-specific settings**: `retrostack-<tool-name>-<setting>` (e.g., `retrostack-character-editor-onboarding`)
+
+### Key Files
+Each tool should have a centralized keys file that exports all storage key constants:
+
+- **Character Editor**: `src/lib/character-editor/storage/keys.ts`
+  - Shared database config: `DB_NAME` ("retrostack-web"), `DB_VERSION`
+  - Editor-specific IndexedDB stores: `CHARACTER_EDITOR_STORE_NAME`, `CHARACTER_EDITOR_SNAPSHOTS_STORE`
+  - Editor-specific localStorage keys: `CHARACTER_EDITOR_STORAGE_KEY_*`
+
+### Adding New Storage Keys
+1. Add the new key constant to the appropriate keys file
+2. Use the tool prefix for tool-specific constants (e.g., `CHARACTER_EDITOR_*`)
+3. Shared database config (`DB_NAME`, `DB_VERSION`) is reused across all tools
+4. Follow the naming pattern for values: `retrostack-<tool>-<setting>`
+5. Import and use the constant instead of hardcoding strings
+
 ## Form Input Design
 
 All form inputs should follow these consistent styling patterns:

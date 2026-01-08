@@ -17,10 +17,10 @@ import { useCharacterLibrary } from "@/hooks/character-editor";
 import { useToast } from "@/hooks/useToast";
 import { useOnboarding, CHARACTER_EDITOR_ONBOARDING_STEPS } from "@/hooks";
 import { getCharacterCount } from "@/lib/character-editor/types";
-
-// LocalStorage keys for persisting sort preferences
-const SORT_FIELD_STORAGE_KEY = "retrostack-character-editor-sort-field";
-const SORT_DIRECTION_STORAGE_KEY = "retrostack-character-editor-sort-direction";
+import {
+  CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD,
+  CHARACTER_EDITOR_STORAGE_KEY_SORT_DIRECTION,
+} from "@/lib/character-editor/storage/keys";
 
 // Default sort settings
 const DEFAULT_SORT_FIELD: SortField = "name";
@@ -69,8 +69,8 @@ export function CharacterEditorLibrary() {
   // Load sort preferences from localStorage on mount
   useEffect(() => {
     try {
-      const storedSortField = localStorage.getItem(SORT_FIELD_STORAGE_KEY);
-      const storedSortDirection = localStorage.getItem(SORT_DIRECTION_STORAGE_KEY);
+      const storedSortField = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD);
+      const storedSortDirection = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_SORT_DIRECTION);
 
       if (storedSortField) {
         setSortField(storedSortField as SortField);
@@ -409,7 +409,7 @@ export function CharacterEditorLibrary() {
   const handleSortFieldChange = useCallback((field: SortField) => {
     setSortField(field);
     try {
-      localStorage.setItem(SORT_FIELD_STORAGE_KEY, field);
+      localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD, field);
     } catch {
       // localStorage might not be available
     }
@@ -419,7 +419,7 @@ export function CharacterEditorLibrary() {
     setSortDirection((prev: SortDirection) => {
       const newDirection = prev === "asc" ? "desc" : "asc";
       try {
-        localStorage.setItem(SORT_DIRECTION_STORAGE_KEY, newDirection);
+        localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_SORT_DIRECTION, newDirection);
       } catch {
         // localStorage might not be available
       }

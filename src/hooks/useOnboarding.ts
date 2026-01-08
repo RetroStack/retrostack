@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-
-const ONBOARDING_STORAGE_KEY = "retrostack-character-editor-onboarding";
+import { CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING } from "@/lib/character-editor/storage/keys";
 
 /**
  * A single step in the onboarding tour
@@ -52,7 +51,7 @@ function loadState(): OnboardingState {
   if (typeof window === "undefined") return getDefaultState();
 
   try {
-    const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    const stored = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING);
     if (stored) {
       return JSON.parse(stored) as OnboardingState;
     }
@@ -70,7 +69,7 @@ function saveState(state: OnboardingState): void {
   if (typeof window === "undefined") return;
 
   try {
-    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING, JSON.stringify(state));
   } catch {
     // Ignore errors
   }

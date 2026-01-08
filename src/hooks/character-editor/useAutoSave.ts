@@ -3,8 +3,8 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { serializeCharacterRom, binaryToBase64 } from "@/lib/character-editor/import/binary";
+import { CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE } from "@/lib/character-editor/storage/keys";
 
-const AUTO_SAVE_KEY = "character-editor-autosave";
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 export interface AutoSaveData {
@@ -68,7 +68,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
     if (!characterSetId) return;
 
     try {
-      const saved = localStorage.getItem(AUTO_SAVE_KEY);
+      const saved = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
       if (saved) {
         const data: AutoSaveData = JSON.parse(saved);
         // Only offer recovery if it's for the same character set and is dirty
@@ -96,7 +96,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
         timestamp: Date.now(),
         isDirty,
       };
-      localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(data));
+      localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
       lastSaveRef.current = Date.now();
     } catch (e) {
       console.error("Auto-save failed:", e);
@@ -150,7 +150,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
   const discard = useCallback(() => {
     setRecoveryData(null);
     try {
-      localStorage.removeItem(AUTO_SAVE_KEY);
+      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     } catch {
       // Ignore errors
     }
@@ -158,7 +158,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
 
   const clearAutoSave = useCallback(() => {
     try {
-      localStorage.removeItem(AUTO_SAVE_KEY);
+      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     } catch {
       // Ignore errors
     }

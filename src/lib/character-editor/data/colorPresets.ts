@@ -85,8 +85,10 @@ export const COLOR_PRESETS: ColorPreset[] = [
   },
 ];
 
-const COLOR_PRESET_STORAGE_KEY = "character-editor-color-preset";
-const CUSTOM_COLORS_STORAGE_KEY = "character-editor-custom-colors";
+import {
+  CHARACTER_EDITOR_STORAGE_KEY_COLOR_PRESET,
+  CHARACTER_EDITOR_STORAGE_KEY_CUSTOM_COLORS,
+} from "../storage/keys";
 
 export interface CustomColors {
   foreground: string;
@@ -113,7 +115,7 @@ export function getPresetById(id: string): ColorPreset | undefined {
  */
 export function saveSelectedPreset(presetId: string): void {
   try {
-    localStorage.setItem(COLOR_PRESET_STORAGE_KEY, presetId);
+    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_COLOR_PRESET, presetId);
   } catch {
     // Ignore storage errors
   }
@@ -124,7 +126,7 @@ export function saveSelectedPreset(presetId: string): void {
  */
 export function getSavedPresetId(): string {
   try {
-    return localStorage.getItem(COLOR_PRESET_STORAGE_KEY) || "classic";
+    return localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_COLOR_PRESET) || "classic";
   } catch {
     return "classic";
   }
@@ -135,7 +137,7 @@ export function getSavedPresetId(): string {
  */
 export function saveCustomColors(colors: CustomColors): void {
   try {
-    localStorage.setItem(CUSTOM_COLORS_STORAGE_KEY, JSON.stringify(colors));
+    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_CUSTOM_COLORS, JSON.stringify(colors));
   } catch {
     // Ignore storage errors
   }
@@ -146,7 +148,7 @@ export function saveCustomColors(colors: CustomColors): void {
  */
 export function getCustomColors(): CustomColors {
   try {
-    const saved = localStorage.getItem(CUSTOM_COLORS_STORAGE_KEY);
+    const saved = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_CUSTOM_COLORS);
     if (saved) {
       return JSON.parse(saved);
     }
