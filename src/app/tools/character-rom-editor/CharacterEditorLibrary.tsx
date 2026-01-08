@@ -9,6 +9,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { NeonText } from "@/components/effects/NeonText";
 import { LibraryGrid, LibraryGridEmptyResults, LibraryGridError } from "@/components/character-editor/library/LibraryGrid";
+import { MetadataEditModal } from "./edit/modals/MetadataEditModal";
 import { LibraryFilters, type SortField, type SortDirection } from "@/components/character-editor/library/LibraryFilters";
 import { OnboardingTour } from "@/components/character-editor/help/OnboardingTour";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -31,6 +32,7 @@ export function CharacterEditorLibrary() {
     deleteSet,
     saveAs,
     rename,
+    updateMetadata,
     togglePinned,
     availableSizes,
     getById,
@@ -109,6 +111,9 @@ export function CharacterEditorLibrary() {
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
+
+  // Edit metadata state
+  const [editMetadataId, setEditMetadataId] = useState<string | null>(null);
 
   // Filter character sets
   const filteredSets = useMemo(() => {
@@ -305,6 +310,22 @@ export function CharacterEditorLibrary() {
     }
   }, [togglePinned]);
 
+  const handleEditMetadata = useCallback((id: string) => {
+    setEditMetadataId(id);
+  }, []);
+
+  const handleSaveMetadata = useCallback(async (metadata: Parameters<typeof updateMetadata>[1]) => {
+    if (!editMetadataId) return;
+
+    try {
+      await updateMetadata(editMetadataId, metadata);
+      toast.success("Metadata updated");
+    } catch (e) {
+      console.error("Failed to update metadata:", e);
+      toast.error("Failed to update metadata");
+    }
+  }, [editMetadataId, updateMetadata, toast]);
+
   const confirmRename = useCallback(async () => {
     if (!renameId || !renameName.trim()) return;
 
@@ -397,6 +418,11 @@ export function CharacterEditorLibrary() {
   // Find the set being renamed
   const setToRename = renameId
     ? characterSets.find((s) => s.metadata.id === renameId)
+    : null;
+
+  // Find the set for metadata editing
+  const setToEditMetadata = editMetadataId
+    ? characterSets.find((s) => s.metadata.id === editMetadataId)
     : null;
 
   return (
@@ -516,6 +542,7 @@ export function CharacterEditorLibrary() {
               onDelete={handleDelete}
               onDuplicate={handleDuplicate}
               onRename={handleRename}
+              onEditMetadata={handleEditMetadata}
               onTogglePinned={handleTogglePinned}
               onImport={handleImport}
               onCreate={handleCreate}
@@ -622,6 +649,16 @@ export function CharacterEditorLibrary() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit metadata modal */}
+      {setToEditMetadata && (
+        <MetadataEditModal
+          isOpen={!!editMetadataId}
+          onClose={() => setEditMetadataId(null)}
+          metadata={setToEditMetadata.metadata}
+          onSave={handleSaveMetadata}
+        />
       )}
 
       {/* Onboarding tour */}

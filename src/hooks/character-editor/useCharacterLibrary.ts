@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { SerializedCharacterSet, CharacterSet, generateId } from "@/lib/character-editor/types";
+import { SerializedCharacterSet, CharacterSet, CharacterSetMetadata, generateId } from "@/lib/character-editor/types";
 import { characterStorage } from "@/lib/character-editor/storage/storage";
 import { deserializeCharacterSet, serializeCharacterSet } from "@/lib/character-editor/import/binary";
 import {
@@ -28,6 +28,8 @@ export interface UseCharacterLibraryResult {
   saveAs: (characterSet: CharacterSet, newName: string) => Promise<string>;
   /** Rename a character set */
   rename: (id: string, newName: string) => Promise<void>;
+  /** Update metadata for a character set */
+  updateMetadata: (id: string, metadata: Partial<CharacterSetMetadata>) => Promise<void>;
   /** Delete a character set */
   deleteSet: (id: string) => Promise<void>;
   /** Toggle pinned state of a character set */
@@ -188,6 +190,28 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
     }
   }, [refresh]);
 
+  // Update metadata
+  const updateMetadata = useCallback(async (id: string, metadata: Partial<CharacterSetMetadata>): Promise<void> => {
+    try {
+      const serialized = await characterStorage.getById(id);
+      if (!serialized) {
+        throw new Error("Character set not found");
+      }
+      const updated: SerializedCharacterSet = {
+        ...serialized,
+        metadata: {
+          ...serialized.metadata,
+          ...metadata,
+          updatedAt: Date.now(),
+        },
+      };
+      await characterStorage.save(updated);
+      await refresh();
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : "Failed to update metadata");
+    }
+  }, [refresh]);
+
   // Delete character set
   const deleteSet = useCallback(async (id: string): Promise<void> => {
     try {
@@ -244,6 +268,7 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
     save,
     saveAs,
     rename,
+    updateMetadata,
     deleteSet,
     togglePinned,
     search: searchSets,

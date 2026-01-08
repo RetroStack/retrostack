@@ -20,6 +20,8 @@ export interface LibraryCardProps {
   onDuplicate?: () => void;
   /** Callback when rename is clicked */
   onRename?: () => void;
+  /** Callback when edit metadata is clicked */
+  onEditMetadata?: () => void;
   /** Callback when pin is toggled */
   onTogglePinned?: () => void;
 }
@@ -34,6 +36,7 @@ export function LibraryCard({
   onDelete,
   onDuplicate,
   onRename,
+  onEditMetadata,
   onTogglePinned,
 }: LibraryCardProps) {
   const { metadata, config } = characterSet;
@@ -88,6 +91,14 @@ export function LibraryCard({
       });
     }
 
+    if (onEditMetadata) {
+      items.push({
+        id: "edit-metadata",
+        label: "Edit Metadata",
+        onClick: onEditMetadata,
+      });
+    }
+
     if (onExport) {
       items.push({
         id: "export",
@@ -114,7 +125,7 @@ export function LibraryCard({
     }
 
     return items;
-  }, [onEdit, onRename, onExport, onDuplicate, onDelete, onTogglePinned, metadata.isBuiltIn, metadata.isPinned]);
+  }, [onEdit, onRename, onEditMetadata, onExport, onDuplicate, onDelete, onTogglePinned, metadata.isBuiltIn, metadata.isPinned]);
 
   return (
     <div className={`card-retro p-4 flex flex-col gap-3 hover-glow-cyan transition-all h-full relative has-[[aria-expanded=true]]:z-50 ${metadata.isPinned ? "ring-1 ring-retro-yellow/50" : ""}`}>
