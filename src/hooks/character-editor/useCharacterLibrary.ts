@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SerializedCharacterSet, CharacterSet, generateId } from "@/lib/character-editor/types";
 import { characterStorage } from "@/lib/character-editor/storage";
 import { deserializeCharacterSet, serializeCharacterSet } from "@/lib/character-editor/binary";
-import { getDefaultCharacterSets } from "@/lib/character-editor/defaults";
+import { getBuiltInIds, getBuiltInCharacterSetById } from "@/lib/character-editor/defaults";
 
 export interface UseCharacterLibraryResult {
   /** All character sets in the library */
@@ -58,17 +58,26 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
       // Initialize storage
       await characterStorage.initialize();
 
-      // Check if library is empty and add defaults
-      const isEmpty = await characterStorage.isEmpty();
-      if (isEmpty) {
-        const defaults = getDefaultCharacterSets();
-        for (const defaultSet of defaults) {
-          await characterStorage.save(defaultSet);
+      // Get all existing character set IDs from the database
+      const existingSets = await characterStorage.getAll();
+      const existingIds = new Set(existingSets.map((set) => set.metadata.id));
+
+      // Get all built-in IDs and find which ones are missing
+      const builtInIds = getBuiltInIds();
+      const missingIds = builtInIds.filter((id) => !existingIds.has(id));
+
+      // Import only the missing built-in character sets
+      if (missingIds.length > 0) {
+        for (const id of missingIds) {
+          const builtInSet = getBuiltInCharacterSetById(id);
+          if (builtInSet) {
+            await characterStorage.save(builtInSet);
+          }
         }
       }
 
-      // Load all character sets
-      const sets = await characterStorage.getAll();
+      // Load all character sets (including newly added ones)
+      const sets = missingIds.length > 0 ? await characterStorage.getAll() : existingSets;
       setCharacterSets(sets);
 
       // Get available sizes for filtering
