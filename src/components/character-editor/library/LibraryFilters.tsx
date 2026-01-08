@@ -213,9 +213,15 @@ export function LibraryFilters({
           )}
         </div>
 
+        {/* Vertical separator */}
+        {onSortFieldChange && onSortDirectionToggle && (
+          <div className="w-px bg-retro-grid/50 mx-2 self-stretch" />
+        )}
+
         {/* Sort controls */}
         {onSortFieldChange && onSortDirectionToggle && (
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
+            <span className="text-xs text-gray-400 mr-1">Sort:</span>
             {/* Sort field dropdown */}
             <select
               value={sortField}
