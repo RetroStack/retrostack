@@ -201,7 +201,7 @@ export function LibraryCard({
         </div>
 
         {/* Dates */}
-        <div className="flex items-center gap-3 text-gray-500">
+        <div className="flex items-center justify-between text-gray-500">
           <span title="Date created">
             <span className="text-[8px] text-gray-600">Created:</span> {formatDate(metadata.createdAt)}
           </span>
