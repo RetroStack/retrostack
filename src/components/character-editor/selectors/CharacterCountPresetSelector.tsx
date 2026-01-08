@@ -232,10 +232,10 @@ export function CharacterCountPresetSelector({
                     key={manufacturer}
                     className="px-2 pb-2"
                   >
-                    <div className="text-[10px] text-gray-500 uppercase mb-1">
+                    <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded mb-1">
                       {manufacturer}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ml-3 flex flex-wrap gap-1">
                       {systemPresets.map((systemPreset) => (
                         <button
                           key={`${systemPreset.system}-${systemPreset.count}`}
@@ -246,11 +246,11 @@ export function CharacterCountPresetSelector({
                           disabled={disabled}
                           title={`${systemPreset.count} characters`}
                           className={`
-                            px-2 py-1 text-xs rounded transition-colors
+                            px-2 py-0.5 text-xs rounded transition-all
                             ${
                               isCurrentCount(systemPreset.count)
-                                ? "bg-retro-amber/20 text-retro-amber"
-                                : "text-gray-400 hover:bg-retro-grid/20"
+                                ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
+                                : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
                             }
                             disabled:opacity-50
                           `}
@@ -284,10 +284,10 @@ export function CharacterCountPresetSelector({
                     key={`rom-${manufacturer}`}
                     className="px-2 pb-2"
                   >
-                    <div className="text-[10px] text-gray-500 uppercase mb-1">
+                    <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded mb-1">
                       {manufacturer}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ml-3 flex flex-wrap gap-1">
                       {chipPresets.map((chipPreset) => (
                         <button
                           key={`${chipPreset.id}-${chipPreset.count}`}
@@ -302,11 +302,11 @@ export function CharacterCountPresetSelector({
                               : `${chipPreset.count} characters`
                           }
                           className={`
-                            px-2 py-1 text-xs rounded transition-colors
+                            px-2 py-0.5 text-xs rounded transition-all
                             ${
                               isCurrentCount(chipPreset.count)
-                                ? "bg-retro-purple/20 text-retro-purple"
-                                : "text-gray-400 hover:bg-retro-grid/20"
+                                ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
+                                : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
                             }
                             disabled:opacity-50
                           `}

@@ -60,10 +60,12 @@ npm run deploy           # Deploy to GitHub Pages
 All localStorage and IndexedDB keys must follow a consistent naming pattern and be centralized in a keys file for each tool/feature.
 
 ### Naming Pattern
+
 - **App-wide settings**: `retrostack-<setting>` (e.g., `retrostack-theme`)
 - **Tool-specific settings**: `retrostack-<tool-name>-<setting>` (e.g., `retrostack-character-editor-onboarding`)
 
 ### Key Files
+
 Each tool should have a centralized keys file that exports all storage key constants:
 
 - **Character Editor**: `src/lib/character-editor/storage/keys.ts`
@@ -72,6 +74,7 @@ Each tool should have a centralized keys file that exports all storage key const
   - Editor-specific localStorage keys: `CHARACTER_EDITOR_STORAGE_KEY_*`
 
 ### Adding New Storage Keys
+
 1. Add the new key constant to the appropriate keys file
 2. Use the tool prefix for tool-specific constants (e.g., `CHARACTER_EDITOR_*`)
 3. Shared database config (`DB_NAME`, `DB_VERSION`) is reused across all tools
@@ -83,68 +86,80 @@ Each tool should have a centralized keys file that exports all storage key const
 All form inputs should follow these consistent styling patterns:
 
 ### Editable Text Inputs (input, textarea)
-```
+
+```css
 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-retro-cyan
 ```
+
 - Dark solid background (`bg-retro-dark`)
 - White text (`text-white`)
 - Cyan focus border (`focus:border-retro-cyan`)
 
 ### Non-editable Dropdowns (select, MultiSelectDropdown)
-```
+
+```css
 bg-retro-navy/50 border border-retro-grid/50 rounded text-sm text-gray-200 focus:outline-none focus:border-retro-cyan
 ```
+
 - Semi-transparent navy background (`bg-retro-navy/50`)
 - Gray text (`text-gray-200`)
 - Cyan focus border (`focus:border-retro-cyan`)
 
 ### Option Buttons (chip/pill selectors)
-```
-// Default state
+
+```css
+/* Default state */
 border-retro-grid/50 text-gray-400 hover:border-retro-grid
 
-// Selected state (pink)
+/* Selected state (pink) */
 border-retro-pink bg-retro-pink/10 text-retro-pink
 ```
+
 - Use pink for selected state to indicate active selection
 - Gray border and text for unselected state
 
 ### Range Sliders (trackbars)
-```
+
+```css
 accent-retro-cyan
 ```
+
 - Use cyan/blue accent color for all range input sliders
 - Provides visual distinction from selection buttons
 
 ### Checkboxes
-```
+
+```css
 rounded border-retro-grid/50 bg-retro-navy/50 text-retro-cyan focus:ring-retro-cyan
 ```
+
 - Cyan check color to match slider accent
 - Navy background with grid border
 
 ### Dropdown Trigger Buttons (3D raised style)
-```
-// Base styles
+
+```css
+/* Base styles */
 text-retro-cyan rounded
 
-// 3D gradient background (light top, dark bottom)
+/* 3D gradient background (light top, dark bottom) */
 bg-gradient-to-b from-gray-600/50 to-gray-700/50
 
-// Blue border with lighter top edge for depth
+/* Blue border with lighter top edge for depth */
 border border-retro-cyan/50 border-t-retro-cyan/70
 
-// Shadow for raised effect
+/* Shadow for raised effect */
 shadow-md shadow-black/30
 
-// Hover state (lighter)
+/* Hover state (lighter) */
 hover:from-gray-500/50 hover:to-gray-600/50 hover:border-retro-cyan
 
-// Active/pressed state (darker, reduced shadow)
+/* Active/pressed state (darker, reduced shadow) */
 active:from-gray-700/50 active:to-gray-800/50 active:shadow-sm
 
 transition-all
 ```
+
 - 3D raised button effect with gradient and shadow
 - Blue/cyan text (`text-retro-cyan`)
 - Gradient background: lighter at top, darker at bottom
@@ -158,8 +173,35 @@ transition-all
   - Color preset selector - `ColorPresetSelector`
   - Multi-select dropdowns - `MultiSelectDropdown`
 
+### Dropdown Panel Design
+
+Dropdown panels should follow this consistent structure:
+
+```css
+/* Panel container */
+bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl
+
+/* Section headers (manufacturer/category groupings) */
+w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded
+
+/* Option chips inside sections */
+/* Default state */
+px-2 py-0.5 text-xs rounded bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white
+
+/* Selected state */
+bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber
+```
+
+- Section headers have cyan text on cyan/10 background
+- Option chips use amber color scheme with background
+- Selected options have ring highlight
+- Options are indented under their section header (`ml-3`)
+- Used in: `ChipSelect`, `ManufacturerSystemSelect`, `DimensionPresetSelector`, `CharacterCountPresetSelector`
+
 ### Shared Metadata Form
+
 Use the `MetadataStep` component (`src/components/character-editor/import/MetadataStep.tsx`) for all character set metadata forms. It includes:
+
 - Name, Description, Manufacturer/System, Chip, Locale, Source fields
 - Auto-fill chip when system is selected
 - Consistent styling with the design system

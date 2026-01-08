@@ -245,10 +245,10 @@ export function DimensionPresetSelector({
                     key={manufacturer}
                     className="px-2 pb-2"
                   >
-                    <div className="text-[10px] text-gray-500 uppercase mb-1">
+                    <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded mb-1">
                       {manufacturer}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ml-3 flex flex-wrap gap-1">
                       {systemPresets.map((systemPreset) => (
                         <button
                           key={`${systemPreset.system}-${systemPreset.width}x${systemPreset.height}`}
@@ -259,11 +259,11 @@ export function DimensionPresetSelector({
                           disabled={disabled}
                           title={`${systemPreset.width}x${systemPreset.height}`}
                           className={`
-                            px-2 py-1 text-xs rounded transition-colors
+                            px-2 py-0.5 text-xs rounded transition-all
                             ${
                               isCurrentDimension(systemPreset.width, systemPreset.height)
-                                ? "bg-retro-amber/20 text-retro-amber"
-                                : "text-gray-400 hover:bg-retro-grid/20"
+                                ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
+                                : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
                             }
                             disabled:opacity-50
                           `}
@@ -297,10 +297,10 @@ export function DimensionPresetSelector({
                     key={`rom-${manufacturer}`}
                     className="px-2 pb-2"
                   >
-                    <div className="text-[10px] text-gray-500 uppercase mb-1">
+                    <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded mb-1">
                       {manufacturer}
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="ml-3 flex flex-wrap gap-1">
                       {chipPresets.map((chipPreset) => (
                         <button
                           key={`${chipPreset.id}-${chipPreset.width}x${chipPreset.height}`}
@@ -315,11 +315,11 @@ export function DimensionPresetSelector({
                               : `${chipPreset.width}x${chipPreset.height}`
                           }
                           className={`
-                            px-2 py-1 text-xs rounded transition-colors
+                            px-2 py-0.5 text-xs rounded transition-all
                             ${
                               isCurrentDimension(chipPreset.width, chipPreset.height)
-                                ? "bg-retro-purple/20 text-retro-purple"
-                                : "text-gray-400 hover:bg-retro-grid/20"
+                                ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
+                                : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
                             }
                             disabled:opacity-50
                           `}
