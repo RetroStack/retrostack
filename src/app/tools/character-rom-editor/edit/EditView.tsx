@@ -26,6 +26,7 @@ import { TextPreviewModal } from "./modals/TextPreviewModal";
 import { SnapshotsModal } from "./modals/SnapshotsModal";
 import { ShareModal } from "./modals/ShareModal";
 import { OverlaySearchModal } from "./modals/OverlaySearchModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   useCharacterLibrary,
   useAutoSave,
@@ -110,6 +111,9 @@ export function EditView() {
   const [overlayCharacterSet, setOverlayCharacterSet] = useState<CharacterSet | null>(null);
   const [showOverlaySearch, setShowOverlaySearch] = useState(false);
   const [overlayMode, setOverlayMode] = useState<"stretch" | "pixel" | "side-by-side">("pixel");
+
+  // Leave confirmation state
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // Context menu state
   const { contextMenu, showContextMenu, hideContextMenu } = useContextMenu();
@@ -221,15 +225,18 @@ export function EditView() {
   // Handle back navigation with unsaved changes warning
   const handleBack = useCallback(() => {
     if (editor.isDirty) {
-      if (confirm("You have unsaved changes. Are you sure you want to leave?")) {
-        // User explicitly chose not to save, clear auto-save to prevent recovery dialog
-        autoSave.clearAutoSave();
-        router.push("/tools/character-rom-editor");
-      }
+      setShowLeaveConfirm(true);
     } else {
       router.push("/tools/character-rom-editor");
     }
-  }, [editor.isDirty, router, autoSave]);
+  }, [editor.isDirty, router]);
+
+  // Confirm leaving with unsaved changes
+  const confirmLeave = useCallback(() => {
+    autoSave.clearAutoSave();
+    setShowLeaveConfirm(false);
+    router.push("/tools/character-rom-editor");
+  }, [autoSave, router]);
 
   // Handle export
   const handleExport = useCallback(() => {
@@ -1105,34 +1112,21 @@ export function EditView() {
       </div>
 
       {/* Recovery dialog */}
-      {autoSave.hasRecoveryData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="relative w-full max-w-md bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
-            <h2 className="text-lg font-medium text-white mb-2">Recover Unsaved Changes?</h2>
-            <p className="text-sm text-gray-400 mb-4">
-              We found unsaved changes from a previous session. Would you like to recover them?
-            </p>
-            <div className="text-xs text-gray-500 mb-6">
-              Last saved: {autoSave.recoveryData && new Date(autoSave.recoveryData.timestamp).toLocaleString()}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={autoSave.discard}
-                className="flex-1 px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-              >
-                Discard
-              </button>
-              <button
-                onClick={handleRecover}
-                className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors"
-              >
-                Recover
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={autoSave.hasRecoveryData}
+        title="Recover Unsaved Changes?"
+        message="We found unsaved changes from a previous session. Would you like to recover them?"
+        details={
+          autoSave.recoveryData && (
+            <>Last saved: {new Date(autoSave.recoveryData.timestamp).toLocaleString()}</>
+          )
+        }
+        confirmLabel="Recover"
+        cancelLabel="Discard"
+        variant="info"
+        onConfirm={handleRecover}
+        onCancel={autoSave.discard}
+      />
 
       {/* Keyboard shortcuts help */}
       <KeyboardShortcutsHelp
@@ -1382,6 +1376,18 @@ export function EditView() {
           </div>
         </div>
       )}
+
+      {/* Leave confirmation dialog (for unsaved changes) */}
+      <ConfirmDialog
+        isOpen={showLeaveConfirm}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        variant="warning"
+        onConfirm={confirmLeave}
+        onCancel={() => setShowLeaveConfirm(false)}
+      />
     </ToolLayout>
   );
 }

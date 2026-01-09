@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { HistoryEntry } from "@/hooks/character-editor";
 
 interface HistorySliderProps<T> {
@@ -28,6 +28,7 @@ export function HistorySlider<T>({
   totalEntries,
 }: HistorySliderProps<T>) {
   const sliderRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState(0);
@@ -44,8 +45,8 @@ export function HistorySlider<T>({
     [maxIndex]
   );
 
-  // Calculate index from mouse position
-  const getIndexFromPosition = useCallback(
+  // Calculate index from client X position
+  const getIndexFromClientX = useCallback(
     (clientX: number) => {
       if (!sliderRef.current || maxIndex === 0) return 0;
       const rect = sliderRef.current.getBoundingClientRect();
@@ -56,38 +57,64 @@ export function HistorySlider<T>({
     [maxIndex]
   );
 
-  // Handle mouse/touch events for dragging
+  // Store onJump in a ref so window event handlers always have the latest version
+  const onJumpRef = useRef(onJump);
+  onJumpRef.current = onJump;
+
+  const getIndexFromClientXRef = useRef(getIndexFromClientX);
+  getIndexFromClientXRef.current = getIndexFromClientX;
+
+  // Window-level move handler for reliable dragging on touch devices
+  useEffect(() => {
+    const handleWindowPointerMove = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      const index = getIndexFromClientXRef.current(e.clientX);
+      onJumpRef.current(index);
+    };
+
+    const handleWindowPointerUp = () => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      setIsDragging(false);
+    };
+
+    // Use passive: false to allow preventDefault if needed
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    window.addEventListener("pointercancel", handleWindowPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerUp);
+    };
+  }, []);
+
+  // Handle pointer down on the slider
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      e.preventDefault(); // Prevent text selection and other default behaviors
+      isDraggingRef.current = true;
       setIsDragging(true);
-      const index = getIndexFromPosition(e.clientX);
+      const index = getIndexFromClientX(e.clientX);
       onJump(index);
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [getIndexFromPosition, onJump]
+    [getIndexFromClientX, onJump]
   );
 
+  // Handle hover (only when not dragging)
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (isDragging) {
-        const index = getIndexFromPosition(e.clientX);
-        onJump(index);
-      } else {
-        // Update hover state
-        const index = getIndexFromPosition(e.clientX);
-        setHoveredIndex(index);
-        if (sliderRef.current) {
-          const rect = sliderRef.current.getBoundingClientRect();
-          setTooltipPosition(e.clientX - rect.left);
-        }
+      if (isDraggingRef.current) return; // Handled by window listener
+      const index = getIndexFromClientX(e.clientX);
+      setHoveredIndex(index);
+      if (sliderRef.current) {
+        const rect = sliderRef.current.getBoundingClientRect();
+        setTooltipPosition(e.clientX - rect.left);
       }
     },
-    [isDragging, getIndexFromPosition, onJump]
+    [getIndexFromClientX]
   );
-
-  const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
 
   const handlePointerLeave = useCallback(() => {
     setHoveredIndex(null);
@@ -146,9 +173,9 @@ export function HistorySlider<T>({
       <div
         ref={sliderRef}
         className="flex-1 h-6 relative cursor-pointer select-none"
+        style={{ touchAction: "none" }} // Prevent browser handling touch gestures
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
         onKeyDown={handleKeyDown}
         tabIndex={0}

@@ -247,49 +247,108 @@ export function PixelGrid({
     onPixelLeave?.();
   }, [isDragging, onDragEnd, onPixelLeave]);
 
-  // Touch handlers
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLCanvasElement>) => {
-      if (!interactive) return;
+  // Touch handlers - use refs for callbacks to avoid re-registering listeners
+  const interactiveRef = useRef(interactive);
+  const onPixelClickRef = useRef(onPixelClick);
+  const onPixelDragRef = useRef(onPixelDrag);
+  const onDragEndRef = useRef(onDragEnd);
+  const isDraggingRef = useRef(isDragging);
+
+  // Keep refs in sync
+  useEffect(() => {
+    interactiveRef.current = interactive;
+  }, [interactive]);
+  useEffect(() => {
+    onPixelClickRef.current = onPixelClick;
+  }, [onPixelClick]);
+  useEffect(() => {
+    onPixelDragRef.current = onPixelDrag;
+  }, [onPixelDrag]);
+  useEffect(() => {
+    onDragEndRef.current = onDragEnd;
+  }, [onDragEnd]);
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
+
+  // Native touch event handlers with { passive: false } to allow preventDefault
+  // React's synthetic events are passive by default, causing the error on iPad
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const getPixelFromTouchEvent = (e: TouchEvent) => {
+      if (e.touches.length === 0) return null;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const canvasX = x * scaleX;
+      const canvasY = y * scaleY;
+
+      const cellSize = scale + (showGrid ? gridThickness : 0);
+      const col = Math.floor((canvasX - gridOffset) / cellSize);
+      const row = Math.floor((canvasY - gridOffset) / cellSize);
+
+      if (row >= 0 && row < height && col >= 0 && col < width) {
+        return { row, col };
+      }
+      return null;
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!interactiveRef.current) return;
       e.preventDefault();
 
-      const pixel = getPixelFromEvent(e);
-      if (pixel && onPixelClick) {
-        onPixelClick(pixel.row, pixel.col);
+      const pixel = getPixelFromTouchEvent(e);
+      if (pixel && onPixelClickRef.current) {
+        onPixelClickRef.current(pixel.row, pixel.col);
         lastPixelRef.current = pixel;
         setIsDragging(true);
       }
-    },
-    [interactive, getPixelFromEvent, onPixelClick]
-  );
+    };
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent<HTMLCanvasElement>) => {
-      if (!interactive || !isDragging || !onPixelDrag) return;
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!interactiveRef.current || !isDraggingRef.current || !onPixelDragRef.current) return;
       e.preventDefault();
 
-      const pixel = getPixelFromEvent(e);
+      const pixel = getPixelFromTouchEvent(e);
       if (pixel) {
         if (
           !lastPixelRef.current ||
           lastPixelRef.current.row !== pixel.row ||
           lastPixelRef.current.col !== pixel.col
         ) {
-          onPixelDrag(pixel.row, pixel.col);
+          onPixelDragRef.current(pixel.row, pixel.col);
           lastPixelRef.current = pixel;
         }
       }
-    },
-    [interactive, isDragging, getPixelFromEvent, onPixelDrag]
-  );
+    };
 
-  const handleTouchEnd = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      lastPixelRef.current = null;
-      onDragEnd?.();
-    }
-  }, [isDragging, onDragEnd]);
+    const handleTouchEnd = () => {
+      if (isDraggingRef.current) {
+        setIsDragging(false);
+        lastPixelRef.current = null;
+        onDragEndRef.current?.();
+      }
+    };
+
+    // Add listeners with { passive: false } to allow preventDefault
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [scale, showGrid, gridThickness, gridOffset, height, width]);
 
   return (
     <canvas
@@ -306,9 +365,6 @@ export function PixelGrid({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       onContextMenu={handleContextMenu}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     />
   );
 }
