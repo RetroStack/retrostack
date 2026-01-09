@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { LibraryCardCompact } from "@/components/character-editor/library/LibraryCard";
 import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
 import { useCharacterLibrary } from "@/hooks/character-editor";
@@ -14,6 +14,7 @@ import { deserializeCharacterSet } from "@/lib/character-editor/import/binary";
 import { resizeCharacter } from "@/lib/character-editor/transforms";
 import { formatSize } from "@/lib/character-editor/utils";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useDragSelect } from "@/hooks/useDragSelect";
 import { SelectionModeBar } from "@/components/ui/SelectionModeBar";
 
 // 3x3 anchor grid
@@ -81,6 +82,7 @@ function CharacterButton({
       onTouchEnd={longPressHandlers.onTouchEnd}
       onTouchMove={longPressHandlers.onTouchMove}
       onContextMenu={longPressHandlers.onContextMenu}
+      data-grid-index={index}
       className={`
         p-1 rounded border-2 transition-all relative touch-manipulation
         ${isSelected
@@ -153,6 +155,9 @@ export function ImportCharactersModal({
   // Selection mode for touch-friendly multi-select
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
+  // Grid ref for drag-select
+  const gridRef = useRef<HTMLDivElement>(null);
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
@@ -202,6 +207,49 @@ export function ImportCharactersModal({
         set.metadata.description.toLowerCase().includes(query)
     );
   }, [characterSets, searchQuery]);
+
+  // Get item index from screen coordinates (for drag-select)
+  // Uses DOM-based lookup for accuracy with auto-sized grid cells
+  const getIndexFromPoint = useCallback(
+    (clientX: number, clientY: number): number | null => {
+      const element = document.elementFromPoint(clientX, clientY);
+      if (!element) return null;
+
+      // Traverse up to find element with data-grid-index
+      let current: Element | null = element;
+      while (current && current !== document.body) {
+        const indexAttr = current.getAttribute("data-grid-index");
+        if (indexAttr !== null) {
+          const index = parseInt(indexAttr, 10);
+          return index >= 0 && index < sourceCharacters.length ? index : null;
+        }
+        current = current.parentElement;
+      }
+
+      return null;
+    },
+    [sourceCharacters.length],
+  );
+
+  // Toggle selection for drag-select
+  const toggleSelectionIndex = useCallback((index: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }, []);
+
+  // Drag-select hook for iOS Photos-style multi-select
+  const dragSelect = useDragSelect({
+    enabled: isSelectionMode,
+    onItemTouched: toggleSelectionIndex,
+    getIndexFromPoint,
+  });
 
   // Handlers
   const handleSelectSet = useCallback((set: SerializedCharacterSet) => {
@@ -478,10 +526,18 @@ export function ImportCharactersModal({
                 }`}
               >
                 <div
-                  className="grid gap-1"
+                  ref={gridRef}
+                  className="grid gap-1 select-none"
                   style={{
                     gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(selectedSet.config.width * 3, 24) + 8}px, 1fr))`,
                   }}
+                  onTouchStartCapture={dragSelect.onTouchStart}
+                  onTouchMoveCapture={dragSelect.onTouchMove}
+                  onTouchEndCapture={dragSelect.onTouchEnd}
+                  onMouseDownCapture={dragSelect.onMouseDown}
+                  onMouseMoveCapture={dragSelect.onMouseMove}
+                  onMouseUpCapture={dragSelect.onMouseUp}
+                  onClickCapture={dragSelect.onClickCapture}
                 >
                   {sourceCharacters.map((char, index) => (
                     <CharacterButton

@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useMemo, useCallback } from "react";
+import { useRef, useMemo, useCallback, useState } from "react";
 import { CharacterDisplay, EmptyCharacterDisplay } from "./CharacterDisplay";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import { useLongPress } from "@/hooks/useLongPress";
+import { useDragSelect } from "@/hooks/useDragSelect";
 
 export interface CharacterGridProps {
   /** Array of characters to display */
@@ -320,6 +321,7 @@ function CharacterGridItem({
       role="option"
       aria-selected={isSelected}
       tabIndex={0}
+      data-grid-index={index}
       className="focus:outline-none focus-visible:ring-1 focus-visible:ring-retro-cyan rounded relative touch-manipulation"
       style={{ touchAction: "manipulation" }}
     >
@@ -380,34 +382,80 @@ export function InteractiveCharacterGrid({
   onLongPress,
 }: CharacterGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const { size } = useResizeObserver<HTMLDivElement>();
 
   // Calculate character display size (scaled)
   const charWidth = config.width * smallScale;
+  const charHeight = config.height * smallScale;
+
+  // Cell dimensions including padding for selection ring
+  const cellWidth = charWidth + gap + 8;
+  const cellHeight = charHeight + gap + 8;
 
   const columns = useMemo(() => {
     if (!size.width) return minColumns;
 
-    const cellWidth = charWidth + gap + 8; // Account for selection ring
     const availableWidth = size.width - gap;
     const cols = Math.floor(availableWidth / cellWidth);
 
     return Math.max(minColumns, Math.min(maxColumns, cols));
-  }, [size.width, charWidth, gap, minColumns, maxColumns]);
+  }, [size.width, cellWidth, gap, minColumns, maxColumns]);
+
+  // Get item index from screen coordinates (for drag-select)
+  // Uses DOM-based lookup for accuracy with auto-sized grid cells
+  const getIndexFromPoint = useCallback(
+    (clientX: number, clientY: number): number | null => {
+      const element = document.elementFromPoint(clientX, clientY);
+      if (!element) return null;
+
+      // Traverse up to find element with data-grid-index
+      let current: Element | null = element;
+      while (current && current !== document.body) {
+        const indexAttr = current.getAttribute("data-grid-index");
+        if (indexAttr !== null) {
+          const index = parseInt(indexAttr, 10);
+          return index >= 0 && index < characters.length ? index : null;
+        }
+        current = current.parentElement;
+      }
+
+      return null;
+    },
+    [characters.length],
+  );
+
+  // Drag-select hook for iOS Photos-style multi-select
+  const dragSelect = useDragSelect({
+    enabled: isSelectionMode,
+    onItemTouched: (index) => onSelect?.(index, false, true), // Toggle mode
+    getIndexFromPoint,
+  });
+
+  // Debug: log when selection mode changes
+  console.log('[CharacterGrid] isSelectionMode:', isSelectionMode, 'isDragging:', dragSelect.isDragging);
 
   return (
     <div
       ref={containerRef}
-      className={`overflow-auto p-2 ${className} ${isSelectionMode ? "ring-1 ring-retro-cyan/30 rounded" : ""}`}
+      className={`overflow-auto p-2 ${className} ${isSelectionMode ? "ring-4 ring-retro-cyan rounded bg-retro-cyan/10" : ""} ${dragSelect.isDragging ? "ring-4 ring-retro-pink bg-retro-pink/20" : ""}`}
       role="listbox"
       aria-label="Character selection grid"
     >
       <div
-        className="grid"
+        ref={gridRef}
+        className="grid select-none"
         style={{
           gridTemplateColumns: `repeat(${columns}, auto)`,
           gap: `${gap}px`,
         }}
+        onTouchStartCapture={dragSelect.onTouchStart}
+        onTouchMoveCapture={dragSelect.onTouchMove}
+        onTouchEndCapture={dragSelect.onTouchEnd}
+        onMouseDownCapture={dragSelect.onMouseDown}
+        onMouseMoveCapture={dragSelect.onMouseMove}
+        onMouseUpCapture={dragSelect.onMouseUp}
+        onClickCapture={dragSelect.onClickCapture}
       >
         {characters.map((character, index) => (
           <CharacterGridItem

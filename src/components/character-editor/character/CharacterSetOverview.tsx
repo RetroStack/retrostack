@@ -81,6 +81,18 @@ export function CharacterSetOverview({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
 
+  // Drag-select tracking refs
+  const dragSelectRef = useRef<{
+    isActive: boolean;
+    hasMoved: boolean;
+    touchedIndices: Set<number>;
+  }>({
+    isActive: false,
+    hasMoved: false,
+    touchedIndices: new Set(),
+  });
+  const DRAG_THRESHOLD = 5;
+
   // Calculate layout
   const charWidth = config.width * pixelScale;
   const charHeight = config.height * pixelScale;
@@ -311,6 +323,7 @@ export function CharacterSetOverview({
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       if (e.touches.length !== 1) {
         clearLongPressTimer();
+        dragSelectRef.current = { isActive: false, hasMoved: false, touchedIndices: new Set() };
         return;
       }
 
@@ -327,6 +340,13 @@ export function CharacterSetOverview({
         index,
       };
 
+      // Initialize drag-select state (active when in selection mode)
+      dragSelectRef.current = {
+        isActive: isSelectionMode,
+        hasMoved: false,
+        touchedIndices: new Set([index]), // Track starting item
+      };
+
       // Start long press timer
       if (onLongPress) {
         clearLongPressTimer();
@@ -336,7 +356,7 @@ export function CharacterSetOverview({
         }, LONG_PRESS_THRESHOLD);
       }
     },
-    [getIndexFromCoords, onLongPress, clearLongPressTimer],
+    [getIndexFromCoords, onLongPress, clearLongPressTimer, isSelectionMode],
   );
 
   // Handle touch move
@@ -344,6 +364,7 @@ export function CharacterSetOverview({
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       if (e.touches.length !== 1 || !touchStartRef.current) {
         clearLongPressTimer();
+        dragSelectRef.current = { isActive: false, hasMoved: false, touchedIndices: new Set() };
         return;
       }
 
@@ -355,14 +376,46 @@ export function CharacterSetOverview({
       if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
         clearLongPressTimer();
       }
+
+      // Drag-select logic (when in selection mode)
+      const dragState = dragSelectRef.current;
+      if (dragState.isActive && onToggleSelection) {
+        // Check if we've moved enough to recognize as drag
+        if (!dragState.hasMoved) {
+          if (dx >= DRAG_THRESHOLD || dy >= DRAG_THRESHOLD) {
+            dragState.hasMoved = true;
+            // Toggle the starting item
+            const startIndex = touchStartRef.current.index;
+            if (startIndex !== undefined) {
+              onToggleSelection(startIndex);
+            }
+          }
+        }
+
+        // If dragging, check current position
+        if (dragState.hasMoved) {
+          const currentIndex = getIndexFromCoords(touch.clientX, touch.clientY);
+          if (currentIndex !== null && !dragState.touchedIndices.has(currentIndex)) {
+            // New item under finger - toggle it
+            dragState.touchedIndices.add(currentIndex);
+            onToggleSelection(currentIndex);
+          }
+        }
+      }
     },
-    [clearLongPressTimer],
+    [clearLongPressTimer, getIndexFromCoords, onToggleSelection],
   );
 
   // Handle touch end
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       clearLongPressTimer();
+
+      const dragState = dragSelectRef.current;
+      const wasDragging = dragState.hasMoved;
+
+      // Reset drag-select state
+      dragSelectRef.current = { isActive: false, hasMoved: false, touchedIndices: new Set() };
 
       if (!touchStartRef.current) return;
 
@@ -371,6 +424,12 @@ export function CharacterSetOverview({
 
       // If it was a long press, don't handle as tap
       if (isLongPressRef.current) {
+        e.preventDefault();
+        return;
+      }
+
+      // If it was a drag-select gesture, don't handle as tap (items already toggled during drag)
+      if (wasDragging) {
         e.preventDefault();
         return;
       }

@@ -832,13 +832,14 @@ For touch-friendly multi-selection in grids and lists. This is the standard patt
 
 | Device | Enter Selection Mode | Select Items | Exit Mode |
 |--------|---------------------|--------------|-----------|
-| Touch | Long-press (500ms) OR tap "Select" button | Tap to toggle | Tap "Done" |
-| Desktop | Click "Select" button OR use modifiers | Shift+click (range), Ctrl+click (toggle) | Click "Done" |
+| Touch | Long-press (500ms) OR tap "Select" button | Tap to toggle, drag across multiple | Tap "Done" |
+| Desktop | Click "Select" button OR use modifiers | Shift+click (range), Ctrl+click (toggle), drag across | Click "Done" |
 
 ### Hooks
 
 - **`useLongPress`** (`/src/hooks/useLongPress.ts`): Generic long-press detection for touch and mouse
 - **`useSelectionMode`** (`/src/hooks/character-editor/useSelectionMode.ts`): Selection mode state management
+- **`useDragSelect`** (`/src/hooks/useDragSelect.ts`): iOS Photos-style drag-select across multiple items
 
 ### Components
 
@@ -897,8 +898,44 @@ function MyGrid({ items, selectedIndex, batchSelection, onSelect }) {
 1. **Long-press** (500ms) enters selection mode with that item selected
 2. **"Select" button** toggles selection mode on/off
 3. **In selection mode**: Single tap toggles item in/out of selection
-4. **Outside selection mode**: Shift+click for range, Ctrl+click for toggle
-5. **Exit mode**: Tap "Done" or explicitly exit; clears batch selection
+4. **Drag-select** (in selection mode): Drag finger/mouse across items to toggle multiple at once (like iOS Photos)
+5. **Outside selection mode**: Shift+click for range, Ctrl+click for toggle
+6. **Exit mode**: Tap "Done" or explicitly exit; clears batch selection
+
+### Drag-Select Implementation
+
+For grids that support drag-select, use the `useDragSelect` hook:
+
+```typescript
+const getIndexFromPoint = useCallback((clientX, clientY) => {
+  // Calculate which grid cell is at these coordinates
+  const grid = gridRef.current;
+  if (!grid) return null;
+  const rect = grid.getBoundingClientRect();
+  // ... calculate column/row from position
+  return index;
+}, [/* deps */]);
+
+const dragSelect = useDragSelect({
+  enabled: isSelectionMode,
+  onItemTouched: (index) => toggleSelection(index),
+  getIndexFromPoint,
+});
+
+// Attach to grid container (onClickCapture prevents click after drag)
+<div
+  ref={gridRef}
+  onTouchStart={dragSelect.onTouchStart}
+  onTouchMove={dragSelect.onTouchMove}
+  onTouchEnd={dragSelect.onTouchEnd}
+  onMouseDown={dragSelect.onMouseDown}
+  onMouseMove={dragSelect.onMouseMove}
+  onMouseUp={dragSelect.onMouseUp}
+  onClickCapture={dragSelect.onClickCapture}
+>
+  {items}
+</div>
+```
 
 ## Key Files Reference
 
@@ -911,6 +948,7 @@ function MyGrid({ items, selectedIndex, batchSelection, onSelect }) {
 | `/src/components/ui/ToggleSwitch.tsx`          | Use instead of checkboxes            |
 | `/src/components/ui/SelectionModeBar.tsx`      | Selection mode floating action bar   |
 | `/src/hooks/useLongPress.ts`                   | Long-press detection hook            |
+| `/src/hooks/useDragSelect.ts`                  | Drag-select gesture detection hook   |
 | `/src/hooks/character-editor/useSelectionMode.ts` | Selection mode state management   |
 | `/src/lib/character-editor/types.ts`           | Core character editor types          |
 | `/src/lib/character-editor/storage/keys.ts`    | All storage keys                     |
