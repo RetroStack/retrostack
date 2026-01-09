@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { LibraryCardCompact } from "@/components/character-editor/library/LibraryCard";
 import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import {
   SerializedCharacterSet,
   CharacterSetConfig,

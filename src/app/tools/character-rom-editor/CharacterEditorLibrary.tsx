@@ -13,9 +13,9 @@ import { MetadataEditModal } from "./edit/modals/MetadataEditModal";
 import { LibraryFilters, type SortField, type SortDirection } from "@/components/character-editor/library/LibraryFilters";
 import { OnboardingTour } from "@/components/character-editor/help/OnboardingTour";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { useToast } from "@/hooks/useToast";
-import { useOnboarding, CHARACTER_EDITOR_ONBOARDING_STEPS } from "@/hooks";
+import { useOnboarding, CHARACTER_EDITOR_ONBOARDING_STEPS } from "@/hooks/useOnboarding";
 import { getCharacterCount } from "@/lib/character-editor/types";
 import {
   CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD,

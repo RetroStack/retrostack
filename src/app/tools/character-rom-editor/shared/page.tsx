@@ -15,7 +15,7 @@ import {
   CharacterSet,
   generateId,
 } from "@/lib/character-editor/types";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 
 interface DecodedSet {
   name: string;

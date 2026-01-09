@@ -14,7 +14,7 @@ import { ColorPresetSelector } from "@/components/character-editor/selectors/Col
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
 import { CustomColors } from "@/lib/character-editor/data/colorPresets";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { CharacterSet, PaddingDirection, BitDirection, bytesPerCharacter } from "@/lib/character-editor/types";
 import { createDownloadBlob, downloadBlob } from "@/lib/character-editor/import/binary";
 import { getSuggestedFilename, formatFileSize } from "@/lib/character-editor/utils";

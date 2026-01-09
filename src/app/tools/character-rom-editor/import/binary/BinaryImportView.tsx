@@ -15,7 +15,7 @@ import { SizePresetDropdown } from "@/components/character-editor/selectors/Size
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import {
   CharacterSetConfig,
   PaddingDirection,

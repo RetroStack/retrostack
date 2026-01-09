@@ -107,11 +107,9 @@ export function useDragSelect({
 
   const startDrag = useCallback(
     (clientX: number, clientY: number) => {
-      console.log('[useDragSelect] startDrag called, enabled:', enabled);
       if (!enabled) return;
 
       const index = getIndexFromPoint(clientX, clientY);
-      console.log('[useDragSelect] startDrag index:', index);
 
       stateRef.current = {
         startPos: { x: clientX, y: clientY },
@@ -132,7 +130,6 @@ export function useDragSelect({
   const moveDrag = useCallback(
     (clientX: number, clientY: number) => {
       const state = stateRef.current;
-      console.log('[useDragSelect] moveDrag called, enabled:', enabled, 'isActive:', state.isActive, 'hasStartPos:', !!state.startPos);
       if (!enabled || !state.isActive || !state.startPos) return;
 
       // Check if we've moved enough to be considered a drag

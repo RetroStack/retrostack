@@ -14,7 +14,7 @@ import { MetadataStep } from "@/components/character-editor/import/MetadataStep"
 import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import {
   TextImportOptions,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import { HistoryEntry } from "@/hooks/character-editor";
+import type { HistoryEntry } from "@/hooks/character-editor/useUndoRedo";
 
 interface HistorySliderProps<T> {
   /** Full history timeline */

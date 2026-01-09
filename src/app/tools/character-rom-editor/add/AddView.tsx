@@ -13,7 +13,7 @@ import { MetadataStep } from "@/components/character-editor/import/MetadataStep"
 import { LibraryCardCompact } from "@/components/character-editor/library/LibraryCard";
 import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
 import { CharacterCountPresetDropdown } from "@/components/character-editor/selectors/CharacterCountPresetDropdown";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import {
   CharacterSetConfig,
   AnchorPoint,

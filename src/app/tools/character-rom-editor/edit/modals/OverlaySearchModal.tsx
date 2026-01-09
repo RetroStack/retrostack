@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { CharacterSet, SerializedCharacterSet } from "@/lib/character-editor/types";
 import { deserializeCharacterSet } from "@/lib/character-editor/import/binary";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 
 export interface OverlaySearchModalProps {
   /** Whether the modal is open */

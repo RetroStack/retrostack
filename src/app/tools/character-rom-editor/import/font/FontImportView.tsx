@@ -13,7 +13,7 @@ import { CharacterPreview } from "@/components/character-editor/character/Charac
 import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
 import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import {
   FontImportOptions,

@@ -16,7 +16,7 @@ import { SizePresetDropdown } from "@/components/character-editor/selectors/Size
 import { ImportFromImageModal } from "./modals/ImportFromImageModal";
 import { ImportFromFontModal } from "./modals/ImportFromFontModal";
 import { ImportFromTextModal } from "./modals/ImportFromTextModal";
-import { useCharacterLibrary } from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import {
   CharacterSetConfig,
   PaddingDirection,

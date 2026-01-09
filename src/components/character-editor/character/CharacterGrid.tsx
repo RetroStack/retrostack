@@ -432,9 +432,6 @@ export function InteractiveCharacterGrid({
     getIndexFromPoint,
   });
 
-  // Debug: log when selection mode changes
-  console.log('[CharacterGrid] isSelectionMode:', isSelectionMode, 'isDragging:', dragSelect.isDragging);
-
   return (
     <div
       ref={containerRef}

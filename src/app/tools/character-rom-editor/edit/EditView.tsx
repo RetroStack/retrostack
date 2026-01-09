@@ -27,13 +27,10 @@ import { SnapshotsModal } from "./modals/SnapshotsModal";
 import { ShareModal } from "./modals/ShareModal";
 import { OverlaySearchModal } from "./modals/OverlaySearchModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import {
-  useCharacterLibrary,
-  useAutoSave,
-  useKeyboardShortcuts,
-  createEditorShortcuts,
-  useSnapshots,
-} from "@/hooks/character-editor";
+import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useAutoSave } from "@/hooks/character-editor/useAutoSave";
+import { useKeyboardShortcuts, createEditorShortcuts } from "@/hooks/character-editor/useKeyboardShortcuts";
+import { useSnapshots } from "@/hooks/character-editor/useSnapshots";
 import { useCharacterEditor } from "@/hooks/character-editor/useCharacterEditor";
 import { CharacterSet, AnchorPoint } from "@/lib/character-editor/types";
 import { getActiveColors, CustomColors } from "@/lib/character-editor/data/colorPresets";
