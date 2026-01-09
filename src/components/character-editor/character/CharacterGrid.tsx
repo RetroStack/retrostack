@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useCallback } from "react";
 import { CharacterDisplay, EmptyCharacterDisplay } from "./CharacterDisplay";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
+import { useLongPress } from "@/hooks/useLongPress";
 
 export interface CharacterGridProps {
   /** Array of characters to display */
@@ -40,6 +41,10 @@ export interface CharacterGridProps {
   smallScale?: number;
   /** Callback for right-click context menu */
   onContextMenu?: (x: number, y: number, index: number) => void;
+  /** Whether selection mode is active (touch-friendly multi-select) */
+  isSelectionMode?: boolean;
+  /** Callback when long press is detected on an item */
+  onLongPress?: (index: number) => void;
 }
 
 /**
@@ -216,7 +221,143 @@ export function CharacterPreviewGrid({
 }
 
 /**
+ * Individual character item with long-press support
+ */
+function CharacterGridItem({
+  character,
+  index,
+  selectedIndex,
+  batchSelection,
+  onSelect,
+  onContextMenu,
+  onLongPress,
+  isSelectionMode,
+  smallScale,
+  foregroundColor,
+  backgroundColor,
+  showIndices,
+}: {
+  character: Character;
+  index: number;
+  selectedIndex?: number;
+  batchSelection?: Set<number>;
+  onSelect?: (index: number, shiftKey: boolean, metaOrCtrlKey?: boolean) => void;
+  onContextMenu?: (x: number, y: number, index: number) => void;
+  onLongPress?: (index: number) => void;
+  isSelectionMode?: boolean;
+  smallScale: number;
+  foregroundColor: string;
+  backgroundColor: string;
+  showIndices: boolean;
+}) {
+  const isSelected = selectedIndex === index || batchSelection?.has(index);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Prevent click if this was a long press
+      onSelect?.(index, e.shiftKey, e.metaKey || e.ctrlKey);
+    },
+    [index, onSelect],
+  );
+
+  const handleLongPress = useCallback(() => {
+    onLongPress?.(index);
+  }, [index, onLongPress]);
+
+  const longPressHandlers = useLongPress({
+    onLongPress: handleLongPress,
+    disabled: !onLongPress,
+  });
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      if (onContextMenu) {
+        e.preventDefault();
+        // Select the character on right-click if not already selected
+        if (selectedIndex !== index && !batchSelection?.has(index)) {
+          onSelect?.(index, false, false);
+        }
+        onContextMenu(e.clientX, e.clientY, index);
+      }
+    },
+    [index, selectedIndex, batchSelection, onSelect, onContextMenu],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onSelect?.(index, e.shiftKey, e.metaKey || e.ctrlKey);
+      }
+    },
+    [index, onSelect],
+  );
+
+  // Merge context menu handlers - our custom handler should take precedence
+  const mergedContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      // First, handle long press context menu prevention
+      longPressHandlers.onContextMenu(e as React.MouseEvent & React.TouchEvent);
+      // Then handle our custom context menu if not prevented
+      if (!e.defaultPrevented) {
+        handleContextMenu(e);
+      }
+    },
+    [longPressHandlers, handleContextMenu],
+  );
+
+  return (
+    <div
+      onClick={handleClick}
+      onContextMenu={mergedContextMenu}
+      onKeyDown={handleKeyDown}
+      onMouseDown={longPressHandlers.onMouseDown}
+      onMouseUp={longPressHandlers.onMouseUp}
+      onMouseLeave={longPressHandlers.onMouseLeave}
+      onTouchStart={longPressHandlers.onTouchStart}
+      onTouchEnd={longPressHandlers.onTouchEnd}
+      onTouchMove={longPressHandlers.onTouchMove}
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={0}
+      className="focus:outline-none focus-visible:ring-1 focus-visible:ring-retro-cyan rounded relative touch-manipulation"
+      style={{ touchAction: "manipulation" }}
+    >
+      <CharacterDisplay
+        character={character}
+        mode="small"
+        smallScale={smallScale}
+        selected={selectedIndex === index}
+        batchSelected={batchSelection?.has(index) && selectedIndex !== index}
+        foregroundColor={foregroundColor}
+        backgroundColor={backgroundColor}
+        interactive={false}
+        index={index}
+        showIndex={showIndices}
+      />
+      {/* Checkmark overlay for selection mode */}
+      {isSelectionMode && isSelected && (
+        <div className="absolute top-0 right-0 w-3 h-3 bg-retro-cyan rounded-bl flex items-center justify-center">
+          <svg className="w-2 h-2 text-retro-dark" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Grid with clickable characters that captures shift key properly
+ *
+ * Features:
+ * - Touch-friendly selection mode with long-press to enter
+ * - Desktop shift+click and ctrl+click support
+ * - Checkmark overlay on selected items in selection mode
  */
 export function InteractiveCharacterGrid({
   characters,
@@ -235,6 +376,8 @@ export function InteractiveCharacterGrid({
   className = "",
   smallScale = 2,
   onContextMenu,
+  isSelectionMode = false,
+  onLongPress,
 }: CharacterGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { size } = useResizeObserver<HTMLDivElement>();
@@ -255,7 +398,7 @@ export function InteractiveCharacterGrid({
   return (
     <div
       ref={containerRef}
-      className={`overflow-auto p-2 ${className}`}
+      className={`overflow-auto p-2 ${className} ${isSelectionMode ? "ring-1 ring-retro-cyan/30 rounded" : ""}`}
       role="listbox"
       aria-label="Character selection grid"
     >
@@ -267,43 +410,21 @@ export function InteractiveCharacterGrid({
         }}
       >
         {characters.map((character, index) => (
-          <div
+          <CharacterGridItem
             key={index}
-            onClick={(e) => onSelect?.(index, e.shiftKey, e.metaKey || e.ctrlKey)}
-            onContextMenu={(e) => {
-              if (onContextMenu) {
-                e.preventDefault();
-                // Select the character on right-click if not already selected
-                if (selectedIndex !== index && !batchSelection?.has(index)) {
-                  onSelect?.(index, false, false);
-                }
-                onContextMenu(e.clientX, e.clientY, index);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSelect?.(index, e.shiftKey, e.metaKey || e.ctrlKey);
-              }
-            }}
-            role="option"
-            aria-selected={selectedIndex === index || batchSelection?.has(index)}
-            tabIndex={0}
-            className="focus:outline-none focus-visible:ring-1 focus-visible:ring-retro-cyan rounded"
-          >
-            <CharacterDisplay
-              character={character}
-              mode="small"
-              smallScale={smallScale}
-              selected={selectedIndex === index}
-              batchSelected={batchSelection?.has(index) && selectedIndex !== index}
-              foregroundColor={foregroundColor}
-              backgroundColor={backgroundColor}
-              interactive={false}
-              index={index}
-              showIndex={showIndices}
-            />
-          </div>
+            character={character}
+            index={index}
+            selectedIndex={selectedIndex}
+            batchSelection={batchSelection}
+            onSelect={onSelect}
+            onContextMenu={onContextMenu}
+            onLongPress={onLongPress}
+            isSelectionMode={isSelectionMode}
+            smallScale={smallScale}
+            foregroundColor={foregroundColor}
+            backgroundColor={backgroundColor}
+            showIndices={showIndices}
+          />
         ))}
 
         {showAddButton && (

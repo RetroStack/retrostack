@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import { InteractiveCharacterGrid } from "../character/CharacterGrid";
 import { CharacterSetOverview } from "../character/CharacterSetOverview";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
+import { useSelectionMode } from "@/hooks/character-editor/useSelectionMode";
+import { SelectionModeBar } from "@/components/ui/SelectionModeBar";
 
 export interface EditorSidebarProps {
   /** Array of characters */
@@ -59,6 +61,14 @@ export function EditorSidebar({
   const hasMultipleSelected = totalSelected > 1;
   const [gridCollapsed, setGridCollapsed] = useState(false);
 
+  // Selection mode hook for touch-friendly multi-select
+  const selectionMode = useSelectionMode({
+    itemCount: characters.length,
+    selectedIndex,
+    batchSelection,
+    onSelect,
+  });
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const charCount = characters.length;
@@ -99,7 +109,7 @@ export function EditorSidebar({
   );
 
   return (
-    <div className={`flex flex-col ${className}`} onKeyDown={handleKeyDown}>
+    <div className={`flex flex-col relative ${className}`} onKeyDown={handleKeyDown}>
       {/* Header */}
       <div className="p-3 border-b border-retro-grid/30">
         <div className="flex items-center justify-between">
@@ -107,8 +117,38 @@ export function EditorSidebar({
             <span className="text-sm font-medium text-gray-300">Characters</span>
             <span className="text-xs text-gray-500">({characters.length})</span>
           </div>
+          {/* Selection mode toggle button */}
+          <button
+            onClick={selectionMode.toggleSelectionMode}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+              selectionMode.isSelectionMode
+                ? "bg-retro-cyan/20 text-retro-cyan"
+                : "text-gray-400 hover:text-retro-cyan hover:bg-retro-cyan/10"
+            }`}
+            title={selectionMode.isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
+          >
+            {selectionMode.isSelectionMode ? (
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            )}
+            <span className="hidden sm:inline">Select</span>
+          </button>
         </div>
-        {hasMultipleSelected && (
+        {hasMultipleSelected && !selectionMode.isSelectionMode && (
           <div className="mt-1 text-xs text-retro-pink">{totalSelected} characters selected</div>
         )}
       </div>
@@ -122,13 +162,16 @@ export function EditorSidebar({
             config={config}
             selectedIndex={selectedIndex}
             batchSelection={batchSelection}
-            onSelect={(index) => onSelect(index, false)}
+            onSelect={(index) => selectionMode.handleItemInteraction(index, false, false)}
             foregroundColor={foregroundColor}
             backgroundColor={backgroundColor}
             maxWidth={200}
             pixelScale={1}
             collapsible
             defaultCollapsed={false}
+            isSelectionMode={selectionMode.isSelectionMode}
+            onLongPress={selectionMode.handleLongPress}
+            onToggleSelection={selectionMode.toggleItem}
           />
         </div>
 
@@ -137,7 +180,8 @@ export function EditorSidebar({
           <div className="flex items-center justify-between p-2">
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm text-gray-300">Characters</span>
-              {onSelectAll && (
+              {/* Hide All/None buttons when in selection mode - they're in the SelectionModeBar */}
+              {!selectionMode.isSelectionMode && onSelectAll && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -148,7 +192,7 @@ export function EditorSidebar({
                   All
                 </button>
               )}
-              {onSelectNone && hasMultipleSelected && (
+              {!selectionMode.isSelectionMode && onSelectNone && hasMultipleSelected && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -177,14 +221,14 @@ export function EditorSidebar({
           </div>
 
           {!gridCollapsed && (
-            <div className="p-2">
+            <div className="p-2 pb-14">
               <InteractiveCharacterGrid
                 characters={characters}
                 config={config}
                 selectedIndex={selectedIndex}
                 batchSelection={batchSelection}
-                onSelect={onSelect}
-                showAddButton={showAddButton && !!onAddCharacter}
+                onSelect={selectionMode.handleItemInteraction}
+                showAddButton={showAddButton && !!onAddCharacter && !selectionMode.isSelectionMode}
                 onAdd={onAddCharacter}
                 foregroundColor={foregroundColor}
                 backgroundColor={backgroundColor}
@@ -193,12 +237,49 @@ export function EditorSidebar({
                 minColumns={8}
                 maxColumns={10}
                 gap={4}
-                onContextMenu={onContextMenu}
+                onContextMenu={selectionMode.isSelectionMode ? undefined : onContextMenu}
+                isSelectionMode={selectionMode.isSelectionMode}
+                onLongPress={selectionMode.handleLongPress}
               />
             </div>
           )}
         </div>
       </div>
+
+      {/* Selection mode action bar */}
+      <SelectionModeBar
+        isVisible={selectionMode.isSelectionMode}
+        selectionCount={selectionMode.selectionCount}
+        totalItems={characters.length}
+        onSelectAll={selectionMode.selectAll}
+        onClearSelection={selectionMode.clearSelection}
+        onExitMode={selectionMode.exitSelectionMode}
+        actions={
+          onDeleteSelected
+            ? [
+                {
+                  id: "delete",
+                  label: "Delete",
+                  icon: (
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  ),
+                  onClick: () => {
+                    onDeleteSelected();
+                    selectionMode.exitSelectionMode();
+                  },
+                  variant: "danger",
+                },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }

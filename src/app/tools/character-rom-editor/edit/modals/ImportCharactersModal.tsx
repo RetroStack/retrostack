@@ -13,6 +13,8 @@ import {
 import { deserializeCharacterSet } from "@/lib/character-editor/import/binary";
 import { resizeCharacter } from "@/lib/character-editor/transforms";
 import { formatSize } from "@/lib/character-editor/utils";
+import { useLongPress } from "@/hooks/useLongPress";
+import { SelectionModeBar } from "@/components/ui/SelectionModeBar";
 
 // 3x3 anchor grid
 const ANCHOR_POSITIONS: AnchorPoint[] = [
@@ -34,6 +36,80 @@ function getAnchorLabel(anchor: AnchorPoint): string {
     br: "Bottom Right",
   };
   return labels[anchor];
+}
+
+/**
+ * Character button with long-press support for selection mode
+ */
+function CharacterButton({
+  character,
+  index,
+  isSelected,
+  isSelectionMode,
+  onClick,
+  onLongPress,
+}: {
+  character: Character;
+  index: number;
+  isSelected: boolean;
+  isSelectionMode: boolean;
+  onClick: (index: number, shiftKey: boolean, ctrlKey: boolean) => void;
+  onLongPress: (index: number) => void;
+}) {
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      onClick(index, e.shiftKey, e.ctrlKey || e.metaKey);
+    },
+    [index, onClick]
+  );
+
+  const handleLongPressCallback = useCallback(() => {
+    onLongPress(index);
+  }, [index, onLongPress]);
+
+  const longPressHandlers = useLongPress({
+    onLongPress: handleLongPressCallback,
+  });
+
+  return (
+    <button
+      onClick={handleClick}
+      onMouseDown={longPressHandlers.onMouseDown}
+      onMouseUp={longPressHandlers.onMouseUp}
+      onMouseLeave={longPressHandlers.onMouseLeave}
+      onTouchStart={longPressHandlers.onTouchStart}
+      onTouchEnd={longPressHandlers.onTouchEnd}
+      onTouchMove={longPressHandlers.onTouchMove}
+      onContextMenu={longPressHandlers.onContextMenu}
+      className={`
+        p-1 rounded border-2 transition-all relative touch-manipulation
+        ${isSelected
+          ? "border-retro-cyan bg-retro-cyan/20"
+          : "border-transparent hover:border-retro-grid/50"
+        }
+      `}
+      style={{ touchAction: "manipulation" }}
+      title={`Character ${index}`}
+    >
+      <CharacterDisplay
+        character={character}
+        mode="small"
+        smallScale={3}
+      />
+      {/* Checkmark overlay for selection mode */}
+      {isSelectionMode && isSelected && (
+        <div className="absolute top-0 right-0 w-3 h-3 bg-retro-cyan rounded-bl flex items-center justify-center">
+          <svg className="w-2 h-2 text-retro-dark" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      )}
+    </button>
+  );
 }
 
 export interface ImportCharactersModalProps {
@@ -74,6 +150,9 @@ export function ImportCharactersModal({
   // Step 3: Anchor point
   const [anchor, setAnchor] = useState<AnchorPoint>("tl");
 
+  // Selection mode for touch-friendly multi-select
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
@@ -84,6 +163,7 @@ export function ImportCharactersModal({
       setSelectedIndices(new Set());
       setLastClickedIndex(null);
       setAnchor("tl");
+      setIsSelectionMode(false);
     }
   }, [isOpen]);
 
@@ -130,35 +210,57 @@ export function ImportCharactersModal({
 
   const handleCharacterClick = useCallback(
     (index: number, shiftKey: boolean, ctrlKey: boolean) => {
-      setSelectedIndices((prev) => {
-        const next = new Set(prev);
-
-        if (shiftKey && lastClickedIndex !== null) {
-          // Range select
-          const start = Math.min(lastClickedIndex, index);
-          const end = Math.max(lastClickedIndex, index);
-          for (let i = start; i <= end; i++) {
-            next.add(i);
-          }
-        } else if (ctrlKey) {
-          // Toggle single
+      if (isSelectionMode) {
+        // In selection mode, always toggle
+        setSelectedIndices((prev) => {
+          const next = new Set(prev);
           if (next.has(index)) {
             next.delete(index);
           } else {
             next.add(index);
           }
-        } else {
-          // Single select (clear others)
-          next.clear();
-          next.add(index);
-        }
+          return next;
+        });
+      } else {
+        setSelectedIndices((prev) => {
+          const next = new Set(prev);
 
-        return next;
-      });
-      setLastClickedIndex(index);
+          if (shiftKey && lastClickedIndex !== null) {
+            // Range select
+            const start = Math.min(lastClickedIndex, index);
+            const end = Math.max(lastClickedIndex, index);
+            for (let i = start; i <= end; i++) {
+              next.add(i);
+            }
+          } else if (ctrlKey) {
+            // Toggle single
+            if (next.has(index)) {
+              next.delete(index);
+            } else {
+              next.add(index);
+            }
+          } else {
+            // Single select (clear others)
+            next.clear();
+            next.add(index);
+          }
+
+          return next;
+        });
+        setLastClickedIndex(index);
+      }
     },
-    [lastClickedIndex]
+    [lastClickedIndex, isSelectionMode]
   );
+
+  const handleLongPress = useCallback((index: number) => {
+    setIsSelectionMode(true);
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
+  }, []);
 
   const handleSelectAll = useCallback(() => {
     setSelectedIndices(new Set(sourceCharacters.map((_, i) => i)));
@@ -166,6 +268,10 @@ export function ImportCharactersModal({
 
   const handleSelectNone = useCallback(() => {
     setSelectedIndices(new Set());
+  }, []);
+
+  const handleExitSelectionMode = useCallback(() => {
+    setIsSelectionMode(false);
   }, []);
 
   const handleBack = useCallback(() => {
@@ -307,61 +413,99 @@ export function ImportCharactersModal({
 
           {/* Step 2: Select Characters */}
           {step === "select-chars" && selectedSet && (
-            <div className="flex flex-col flex-1 min-h-0 gap-4">
+            <div className="flex flex-col flex-1 min-h-0 gap-4 relative">
               {/* Selection controls */}
               <div className="flex items-center justify-between flex-shrink-0">
                 <div className="text-xs text-gray-500">
-                  Click to select, Shift+click for range, Ctrl+click to toggle
+                  {isSelectionMode
+                    ? "Tap to toggle selection"
+                    : "Click to select, Shift+click for range, Ctrl+click to toggle"}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  {/* Selection mode toggle button */}
                   <button
-                    onClick={handleSelectAll}
-                    className="text-xs text-retro-cyan hover:underline"
+                    onClick={() => setIsSelectionMode(!isSelectionMode)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                      isSelectionMode
+                        ? "bg-retro-cyan/20 text-retro-cyan"
+                        : "text-gray-400 hover:text-retro-cyan hover:bg-retro-cyan/10"
+                    }`}
+                    title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
                   >
-                    Select All
+                    {isSelectionMode ? (
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                    )}
+                    <span>Select</span>
                   </button>
-                  <button
-                    onClick={handleSelectNone}
-                    className="text-xs text-gray-400 hover:underline"
-                  >
-                    Clear
-                  </button>
+                  {!isSelectionMode && (
+                    <>
+                      <button
+                        onClick={handleSelectAll}
+                        className="text-xs text-retro-cyan hover:underline"
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={handleSelectNone}
+                        className="text-xs text-gray-400 hover:underline"
+                      >
+                        Clear
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Character grid */}
-              <div className="bg-black/30 rounded-lg p-3 flex-1 overflow-y-auto min-h-0">
+              <div
+                className={`bg-black/30 rounded-lg p-3 flex-1 overflow-y-auto min-h-0 ${
+                  isSelectionMode ? "pb-16 ring-1 ring-retro-cyan/30" : ""
+                }`}
+              >
                 <div
                   className="grid gap-1"
                   style={{
                     gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(selectedSet.config.width * 3, 24) + 8}px, 1fr))`,
                   }}
                 >
-                  {sourceCharacters.map((char, index) => {
-                    const isSelected = selectedIndices.has(index);
-                    return (
-                      <button
-                        key={index}
-                        onClick={(e) => handleCharacterClick(index, e.shiftKey, e.ctrlKey || e.metaKey)}
-                        className={`
-                          p-1 rounded border-2 transition-all
-                          ${isSelected
-                            ? "border-retro-cyan bg-retro-cyan/20"
-                            : "border-transparent hover:border-retro-grid/50"
-                          }
-                        `}
-                        title={`Character ${index}`}
-                      >
-                        <CharacterDisplay
-                          character={char}
-                          mode="small"
-                          smallScale={3}
-                        />
-                      </button>
-                    );
-                  })}
+                  {sourceCharacters.map((char, index) => (
+                    <CharacterButton
+                      key={index}
+                      character={char}
+                      index={index}
+                      isSelected={selectedIndices.has(index)}
+                      isSelectionMode={isSelectionMode}
+                      onClick={handleCharacterClick}
+                      onLongPress={handleLongPress}
+                    />
+                  ))}
                 </div>
               </div>
+
+              {/* Selection mode bar */}
+              <SelectionModeBar
+                isVisible={isSelectionMode}
+                selectionCount={selectedIndices.size}
+                totalItems={sourceCharacters.length}
+                onSelectAll={handleSelectAll}
+                onClearSelection={handleSelectNone}
+                onExitMode={handleExitSelectionMode}
+              />
             </div>
           )}
 

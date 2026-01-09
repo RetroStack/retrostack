@@ -3,6 +3,11 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 
+/** Long press detection threshold in milliseconds */
+const LONG_PRESS_THRESHOLD = 500;
+/** Movement threshold to cancel long press in pixels */
+const MOVE_THRESHOLD = 10;
+
 export interface CharacterSetOverviewProps {
   /** Array of characters to display */
   characters: Character[];
@@ -34,6 +39,12 @@ export interface CharacterSetOverviewProps {
   defaultCollapsed?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Whether selection mode is active */
+  isSelectionMode?: boolean;
+  /** Callback when long press is detected */
+  onLongPress?: (index: number) => void;
+  /** Callback when item is toggled in selection mode */
+  onToggleSelection?: (index: number) => void;
 }
 
 /**
@@ -56,11 +67,19 @@ export function CharacterSetOverview({
   collapsible = true,
   defaultCollapsed = false,
   className = "",
+  isSelectionMode = false,
+  onLongPress,
+  onToggleSelection,
 }: CharacterSetOverviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Long press tracking refs
+  const touchStartRef = useRef<{ x: number; y: number; time: number; index: number } | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
 
   // Calculate layout
   const charWidth = config.width * pixelScale;
@@ -137,6 +156,35 @@ export function CharacterSetOverview({
         ctx.strokeRect(x + 0.5, y + 0.5, charWidth - 1, charHeight - 1);
         ctx.globalAlpha = 1;
       }
+
+      // Draw checkmark overlay for selection mode
+      const isSelected = index === selectedIndex || batchSelection?.has(index);
+      if (isSelectionMode && isSelected) {
+        // Draw small checkmark in top-right corner
+        const checkSize = Math.max(3, Math.min(6, charWidth / 3));
+        const checkX = x + charWidth - checkSize;
+        const checkY = y;
+
+        // Checkmark background
+        ctx.fillStyle = selectionColor;
+        ctx.beginPath();
+        ctx.moveTo(checkX + checkSize, checkY);
+        ctx.lineTo(checkX + checkSize, checkY + checkSize);
+        ctx.lineTo(checkX, checkY + checkSize);
+        ctx.closePath();
+        ctx.fill();
+
+        // Checkmark icon (simple V shape)
+        ctx.strokeStyle = backgroundColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const centerX = checkX + checkSize * 0.65;
+        const centerY = checkY + checkSize * 0.55;
+        ctx.moveTo(centerX - checkSize * 0.25, centerY);
+        ctx.lineTo(centerX, centerY + checkSize * 0.2);
+        ctx.lineTo(centerX + checkSize * 0.25, centerY - checkSize * 0.2);
+        ctx.stroke();
+      }
     });
   }, [
     characters,
@@ -158,6 +206,7 @@ export function CharacterSetOverview({
     cellWidth,
     cellHeight,
     collapsed,
+    isSelectionMode,
   ]);
 
   // Handle click
@@ -222,6 +271,128 @@ export function CharacterSetOverview({
     setHoveredIndex(null);
   }, []);
 
+  // Helper function to get character index from coordinates
+  const getIndexFromCoords = useCallback(
+    (clientX: number, clientY: number): number | null => {
+      const canvas = canvasRef.current;
+      if (!canvas) return null;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const scaledX = x * scaleX;
+      const scaledY = y * scaleY;
+
+      const col = Math.floor(scaledX / cellWidth);
+      const row = Math.floor(scaledY / cellHeight);
+      const index = row * columns + col;
+
+      if (index >= 0 && index < characters.length) {
+        return index;
+      }
+      return null;
+    },
+    [cellWidth, cellHeight, columns, characters.length],
+  );
+
+  // Clear long press timer
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  // Handle touch start
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1) {
+        clearLongPressTimer();
+        return;
+      }
+
+      const touch = e.touches[0];
+      const index = getIndexFromCoords(touch.clientX, touch.clientY);
+
+      if (index === null) return;
+
+      isLongPressRef.current = false;
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now(),
+        index,
+      };
+
+      // Start long press timer
+      if (onLongPress) {
+        clearLongPressTimer();
+        longPressTimerRef.current = setTimeout(() => {
+          isLongPressRef.current = true;
+          onLongPress(index);
+        }, LONG_PRESS_THRESHOLD);
+      }
+    },
+    [getIndexFromCoords, onLongPress, clearLongPressTimer],
+  );
+
+  // Handle touch move
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1 || !touchStartRef.current) {
+        clearLongPressTimer();
+        return;
+      }
+
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x);
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+
+      // Cancel long press if moved too far
+      if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
+        clearLongPressTimer();
+      }
+    },
+    [clearLongPressTimer],
+  );
+
+  // Handle touch end
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      clearLongPressTimer();
+
+      if (!touchStartRef.current) return;
+
+      const startData = touchStartRef.current;
+      touchStartRef.current = null;
+
+      // If it was a long press, don't handle as tap
+      if (isLongPressRef.current) {
+        e.preventDefault();
+        return;
+      }
+
+      // Handle as tap
+      if (isSelectionMode && onToggleSelection) {
+        e.preventDefault();
+        onToggleSelection(startData.index);
+      } else if (onSelect) {
+        onSelect(startData.index);
+      }
+    },
+    [isSelectionMode, onToggleSelection, onSelect, clearLongPressTimer],
+  );
+
+  // Handle context menu (prevent on touch devices during long press)
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isLongPressRef.current) {
+      e.preventDefault();
+    }
+  }, []);
+
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => !prev);
   }, []);
@@ -254,7 +425,7 @@ export function CharacterSetOverview({
       {/* Canvas container */}
       {!collapsed && (
         <div
-          className="p-2 bg-black/30 rounded overflow-auto"
+          className={`p-2 bg-black/30 rounded overflow-auto ${isSelectionMode ? "ring-1 ring-retro-cyan/30" : ""}`}
           style={{ maxHeight: "150px" }}
         >
           <canvas
@@ -262,11 +433,16 @@ export function CharacterSetOverview({
             onClick={handleClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onContextMenu={handleContextMenu}
             className="cursor-pointer"
             style={{
               width: canvasWidth,
               height: canvasHeight,
               imageRendering: "pixelated",
+              touchAction: "manipulation",
             }}
           />
         </div>

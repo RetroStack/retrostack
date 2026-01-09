@@ -591,6 +591,22 @@ body {
   }
 }
 
+/* Slide Up Animation (for selection mode bar, toasts, etc.) */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.2s ease-out forwards;
+}
+
 /* Gradient Overlays */
 .gradient-overlay {
   background: linear-gradient(
