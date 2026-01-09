@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
 import {
   TextImportOptions,
@@ -94,30 +95,16 @@ export function ImportFromTextModal({ isOpen, onClose, onImport }: ImportFromTex
     setOptions((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  if (!isOpen) return null;
-
   const hasText = textInput.trim().length > 0;
   const hasCharacters = parseResult && parseResult.characters.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" maxHeight="90vh" className="bg-retro-dark">
+      <ModalHeader onClose={onClose} showCloseButton>
+        <h2 className="text-lg font-display text-gray-200">Import from Code</h2>
+      </ModalHeader>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden bg-retro-dark border border-retro-grid/50 rounded-lg shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-retro-grid/30">
-          <h2 className="text-lg font-display text-gray-200">Import from Code</h2>
-          <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col min-h-0">
+      <ModalContent scrollable className="p-4 flex flex-col min-h-0">
           <div className="flex flex-col lg:flex-row gap-6 min-h-0 flex-1">
             {/* Left: Text input and settings */}
             <div className="space-y-4 lg:w-80 lg:flex-shrink-0">
@@ -287,18 +274,16 @@ Examples:
               )}
             </div>
           </div>
-        </div>
+      </ModalContent>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-retro-grid/30">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="cyan" onClick={handleImport} disabled={!hasCharacters}>
-            Import {parseResult?.characters.length || 0} Characters
-          </Button>
-        </div>
-      </div>
-    </div>
+      <ModalFooter className="flex items-center justify-end gap-3">
+        <Button variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="cyan" onClick={handleImport} disabled={!hasCharacters}>
+          Import {parseResult?.characters.length || 0} Characters
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }

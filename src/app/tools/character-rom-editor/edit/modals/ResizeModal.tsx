@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { AnchorPoint } from "@/lib/character-editor/types";
 import { AnchorPositionGrid } from "@/components/character-editor/selectors/AnchorPositionGrid";
+import { Modal, ModalContent, ModalActions } from "@/components/ui/Modal";
 
 export interface ResizeModalProps {
   /** Whether the modal is open */
@@ -39,35 +40,17 @@ export function ResizeModal({
     }
   }, [width, height, anchor, onResize, onClose]);
 
-  // Handle keyboard
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "Enter") {
-        handleApply();
-      }
-    },
-    [onClose, handleApply]
-  );
-
-  if (!isOpen) return null;
-
   const hasChanges = width !== currentWidth || height !== currentHeight;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleApply}
+      confirmOnEnter
+      size="sm"
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-sm bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
+      <ModalContent>
         <h2 className="text-lg font-medium text-white mb-4">Resize Characters</h2>
 
         {/* Dimension inputs */}
@@ -116,24 +99,13 @@ export function ResizeModal({
             ? "Some pixels will be cropped"
             : "No changes"}
         </p>
+      </ModalContent>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleApply}
-            disabled={!hasChanges || width < 1 || height < 1}
-            className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
+      <ModalActions
+        onCancel={onClose}
+        onConfirm={handleApply}
+        confirmDisabled={!hasChanges || width < 1 || height < 1}
+      />
+    </Modal>
   );
 }

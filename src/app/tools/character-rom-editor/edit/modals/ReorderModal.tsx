@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
 import { Character } from "@/lib/character-editor/types";
+import { Modal, ModalHeader, ModalContent, ModalActions } from "@/components/ui/Modal";
 
 export interface ReorderModalProps {
   /** Whether the modal is open */
@@ -162,93 +163,57 @@ export function ReorderModal({
     onClose();
   }, [localCharacters, onReorder, onClose]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   // Check if order has changed
   const hasChanges = useMemo(() => {
     if (localCharacters.length !== characters.length) return true;
     return localCharacters.some((char, index) => char !== characters[index]);
   }, [localCharacters, characters]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
+    <Modal isOpen={isOpen} onClose={onClose} onConfirm={handleApply} confirmOnEnter size="3xl" maxHeight="80vh">
+      <ModalHeader>
+        <h2 className="text-lg font-medium text-white">Reorder Characters</h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Drag and drop characters to reorder them
+        </p>
+      </ModalHeader>
+
+      <ModalContent scrollable className="p-4">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={characterIds} strategy={rectSortingStrategy}>
+            <div
+              className="grid gap-2 bg-black/30 rounded-lg p-3"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(50px, 1fr))" }}
+            >
+              {localCharacters.map((char, index) => (
+                <SortableCharacter
+                  key={characterIds[index]}
+                  id={characterIds[index]}
+                  character={char}
+                  index={index}
+                />
+              ))}
+            </div>
+          </SortableContext>
+
+          <DragOverlay>
+            {activeCharacter && (
+              <DragOverlayCharacter character={activeCharacter} />
+            )}
+          </DragOverlay>
+        </DndContext>
+      </ModalContent>
+
+      <ModalActions
+        onCancel={onClose}
+        onConfirm={handleApply}
+        confirmDisabled={!hasChanges}
       />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-3xl max-h-[80vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-retro-grid/30">
-          <h2 className="text-lg font-medium text-white">Reorder Characters</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Drag and drop characters to reorder them
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={characterIds} strategy={rectSortingStrategy}>
-              <div
-                className="grid gap-2 bg-black/30 rounded-lg p-3"
-                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(50px, 1fr))" }}
-              >
-                {localCharacters.map((char, index) => (
-                  <SortableCharacter
-                    key={characterIds[index]}
-                    id={characterIds[index]}
-                    character={char}
-                    index={index}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-
-            <DragOverlay>
-              {activeCharacter && (
-                <DragOverlayCharacter character={activeCharacter} />
-              )}
-            </DragOverlay>
-          </DndContext>
-        </div>
-
-        {/* Footer */}
-        <div className="flex-shrink-0 p-4 border-t border-retro-grid/30 flex justify-between">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleApply}
-            disabled={!hasChanges}
-            className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

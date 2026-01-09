@@ -16,6 +16,7 @@ import { formatSize } from "@/lib/character-editor/utils";
 import { useLongPress } from "@/hooks/useLongPress";
 import { useDragSelect } from "@/hooks/useDragSelect";
 import { SelectionModeBar } from "@/components/ui/SelectionModeBar";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 // 3x3 anchor grid
 const ANCHOR_POSITIONS: AnchorPoint[] = [
@@ -363,42 +364,18 @@ export function ImportCharactersModal({
     onClose();
   }, [selectedIndices, sourceCharacters, dimensionsDiffer, currentConfig, anchor, onImport, onClose]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" maxHeight="80vh">
+      <ModalHeader>
+        <h2 className="text-lg font-medium text-white">Import Characters</h2>
+        <p className="text-xs text-gray-500 mt-1">
+          {step === "select-set" && "Select a character set to import from"}
+          {step === "select-chars" && `Select characters to import (${selectedIndices.size} selected)`}
+          {step === "resize" && "Configure resize settings"}
+        </p>
+      </ModalHeader>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[80vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-retro-grid/30">
-          <h2 className="text-lg font-medium text-white">Import Characters</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            {step === "select-set" && "Select a character set to import from"}
-            {step === "select-chars" && `Select characters to import (${selectedIndices.size} selected)`}
-            {step === "resize" && "Configure resize settings"}
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden p-4 flex flex-col min-h-0">
+      <ModalContent className="p-4 flex flex-col min-h-0 overflow-hidden">
           {/* Step 1: Select Set */}
           {step === "select-set" && (
             <div className="flex flex-col flex-1 min-h-0 gap-4">
@@ -620,49 +597,47 @@ export function ImportCharactersModal({
               </p>
             </div>
           )}
-        </div>
+      </ModalContent>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 p-4 border-t border-retro-grid/30 flex justify-between">
-          {step === "select-set" ? (
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
-          ) : (
-            <button
-              onClick={handleBack}
-              className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-            >
-              Back
-            </button>
-          )}
+      <ModalFooter className="flex justify-between">
+        {step === "select-set" ? (
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            onClick={handleBack}
+            className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
+          >
+            Back
+          </button>
+        )}
 
-          {step === "resize" ? (
-            <button
-              onClick={handleImport}
-              className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors"
-            >
-              Import ({selectedIndices.size})
-            </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              disabled={
-                (step === "select-set" && !selectedSetId) ||
-                (step === "select-chars" && selectedIndices.size === 0)
-              }
-              className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {step === "select-chars" && !dimensionsDiffer
-                ? `Import (${selectedIndices.size})`
-                : "Next"}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+        {step === "resize" ? (
+          <button
+            onClick={handleImport}
+            className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors"
+          >
+            Import ({selectedIndices.size})
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            disabled={
+              (step === "select-set" && !selectedSetId) ||
+              (step === "select-chars" && selectedIndices.size === 0)
+            }
+            className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {step === "select-chars" && !dimensionsDiffer
+              ? `Import (${selectedIndices.size})`
+              : "Next"}
+          </button>
+        )}
+      </ModalFooter>
+    </Modal>
   );
 }

@@ -9,6 +9,7 @@ import {
   canShare,
   getUrlLengthStatus,
 } from "@/lib/character-editor/storage/sharing";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 export interface ShareModalProps {
   isOpen: boolean;
@@ -77,34 +78,18 @@ export function ShareModal({
     }
   }, [shareUrl]);
 
-  if (!isOpen) return null;
-
   const urlStatus = shareUrl ? getUrlLengthStatus(shareUrl) : "error";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-retro-grid/30">
-          <div>
-            <h2 className="text-lg font-medium text-white">Share Character Set</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Share via URL - no account needed
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <ModalHeader onClose={onClose} showCloseButton>
+        <h2 className="text-lg font-medium text-white">Share Character Set</h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Share via URL - no account needed
+        </p>
+      </ModalHeader>
 
-        {/* Content */}
-        <div className="p-4">
+      <ModalContent className="p-4">
           {/* Character set info */}
           <div className="mb-4 p-3 bg-retro-dark/50 rounded border border-retro-grid/30">
             <div className="flex items-center gap-3">
@@ -212,15 +197,13 @@ export function ShareModal({
               </li>
             </ul>
           </div>
-        </div>
+      </ModalContent>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t border-retro-grid/30 bg-retro-dark/30">
-          <Button onClick={onClose} variant="ghost" size="sm">
-            Close
-          </Button>
-        </div>
-      </div>
-    </div>
+      <ModalFooter className="flex justify-end gap-2 bg-retro-dark/30">
+        <Button onClick={onClose} variant="ghost" size="sm">
+          Close
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }

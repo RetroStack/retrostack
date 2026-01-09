@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { formatTimestamp } from "@/lib/character-editor/utils";
 import { Snapshot } from "@/lib/character-editor/storage/snapshots";
@@ -146,32 +147,18 @@ export function SnapshotsModal({
     setEditingName("");
   }, [editingId, editingName, onRename]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-retro-grid/30">
-          <div>
-            <h2 className="text-lg font-medium text-white">Snapshots</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Save and restore character set states ({snapshots.length}/{maxSnapshots})
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" maxHeight="90vh">
+      <ModalHeader onClose={onClose} showCloseButton>
+        <div>
+          <h2 className="text-lg font-medium text-white">Snapshots</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Save and restore character set states ({snapshots.length}/{maxSnapshots})
+          </p>
         </div>
+      </ModalHeader>
 
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+      <ModalContent className="p-0 flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* Snapshots list */}
           <div className="flex-1 overflow-y-auto p-4 border-r border-retro-grid/30">
             {/* New snapshot form */}
@@ -401,29 +388,27 @@ export function SnapshotsModal({
               </div>
             )}
           </div>
-        </div>
+      </ModalContent>
 
-        {/* Current state preview */}
-        <div className="p-4 border-t border-retro-grid/30 bg-retro-dark/30">
-          <div className="flex items-center gap-4">
-            <div>
-              <h4 className="text-xs text-gray-400 mb-1">Current State</h4>
-              <CharacterPreviewGrid
-                characters={currentCharacters.slice(0, 16)}
-                config={currentConfig}
-                foregroundColor={foregroundColor}
-                backgroundColor={backgroundColor}
-                smallScale={2}
-                maxCharacters={16}
-              />
-            </div>
-            <div className="text-xs text-gray-500">
-              <p>{currentCharacters.length} characters</p>
-              <p>{currentConfig.width}x{currentConfig.height} px</p>
-            </div>
+      <ModalFooter className="bg-retro-dark/30">
+        <div className="flex items-center gap-4">
+          <div>
+            <h4 className="text-xs text-gray-400 mb-1">Current State</h4>
+            <CharacterPreviewGrid
+              characters={currentCharacters.slice(0, 16)}
+              config={currentConfig}
+              foregroundColor={foregroundColor}
+              backgroundColor={backgroundColor}
+              smallScale={2}
+              maxCharacters={16}
+            />
+          </div>
+          <div className="text-xs text-gray-500">
+            <p>{currentCharacters.length} characters</p>
+            <p>{currentConfig.width}x{currentConfig.height} px</p>
           </div>
         </div>
-      </div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }

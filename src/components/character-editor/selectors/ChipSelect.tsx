@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { ROM_CHIPS, RomChipInfo } from "@/lib/character-editor/data/manufacturers";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 export interface ChipSelectProps {
   /** Currently selected chip (part number) */
@@ -35,7 +36,7 @@ function getChipsByManufacturer(): Record<string, RomChipInfo[]> {
  */
 export function ChipSelect({ chip, onChipChange, system, disabled = false, className = "" }: ChipSelectProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useOutsideClick<HTMLDivElement>(() => setIsDropdownOpen(false), isDropdownOpen);
 
   // Get chips grouped by manufacturer, sorted alphabetically
   const chipsByManufacturer = useMemo(() => {
@@ -50,17 +51,6 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
       ROM_CHIPS.filter((c) => c.usedIn.some((s) => s.toLowerCase() === system.toLowerCase())).map((c) => c.id),
     );
   }, [system]);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleChipClick = (partNumber: string, chipManufacturer: string) => {
     onChipChange(`${chipManufacturer} ${partNumber}`);

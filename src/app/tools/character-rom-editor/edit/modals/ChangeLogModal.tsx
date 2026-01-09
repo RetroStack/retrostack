@@ -8,6 +8,7 @@ import {
   getOperationColor,
   getOperationIcon,
 } from "@/hooks/character-editor/useChangeLog";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 export interface ChangeLogModalProps {
   isOpen: boolean;
@@ -78,8 +79,6 @@ export function ChangeLogModal({
     setShowConfirmClear(false);
   }, [onClear]);
 
-  if (!isOpen) return null;
-
   // Group entries by date
   const groupedEntries = entries.reduce<Record<string, ChangeLogEntry[]>>((acc, entry) => {
     const date = new Date(entry.timestamp).toLocaleDateString();
@@ -91,64 +90,52 @@ export function ChangeLogModal({
   }, {});
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl max-h-[80vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-retro-grid/30">
-          <div>
-            <h2 className="text-lg font-medium text-white">Change Log</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {entries.length} {entries.length === 1 ? "entry" : "entries"} in this session
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" maxHeight="80vh">
+      <ModalHeader onClose={onClose} showCloseButton className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium text-white">Change Log</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {entries.length} {entries.length === 1 ? "entry" : "entries"} in this session
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mr-2">
+          <Button
+            onClick={handleExport}
+            variant="ghost"
+            size="sm"
+            disabled={entries.length === 0}
+          >
+            {copied ? "Copied!" : "Copy Log"}
+          </Button>
+          {showConfirmClear ? (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleClear}
+                className="px-2 py-1 text-xs bg-red-500/20 border border-red-500 rounded text-red-400 hover:bg-red-500/30"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setShowConfirmClear(false)}
+                className="px-2 py-1 text-xs border border-retro-grid/50 rounded text-gray-400 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
             <Button
-              onClick={handleExport}
+              onClick={() => setShowConfirmClear(true)}
               variant="ghost"
               size="sm"
               disabled={entries.length === 0}
             >
-              {copied ? "Copied!" : "Copy Log"}
+              Clear
             </Button>
-            {showConfirmClear ? (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleClear}
-                  className="px-2 py-1 text-xs bg-red-500/20 border border-red-500 rounded text-red-400 hover:bg-red-500/30"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setShowConfirmClear(false)}
-                  className="px-2 py-1 text-xs border border-retro-grid/50 rounded text-gray-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <Button
-                onClick={() => setShowConfirmClear(true)}
-                variant="ghost"
-                size="sm"
-                disabled={entries.length === 0}
-              >
-                Clear
-              </Button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          )}
         </div>
+      </ModalHeader>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+      <ModalContent scrollable className="p-4">
           {entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-500">
               <svg
@@ -260,26 +247,22 @@ export function ChangeLogModal({
               ))}
             </div>
           )}
-        </div>
+      </ModalContent>
 
-        {/* Footer with stats */}
-        {entries.length > 0 && (
-          <div className="p-3 border-t border-retro-grid/30 bg-retro-dark/30">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>
-                Session started:{" "}
-                {entries.length > 0
-                  ? new Date(entries[entries.length - 1].timestamp).toLocaleTimeString()
-                  : "N/A"}
-              </span>
-              <span>
-                Last change:{" "}
-                {entries.length > 0 ? formatRelativeTime(entries[0].timestamp) : "N/A"}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      {entries.length > 0 && (
+        <ModalFooter className="bg-retro-dark/30 flex items-center justify-between text-xs text-gray-500">
+          <span>
+            Session started:{" "}
+            {entries.length > 0
+              ? new Date(entries[entries.length - 1].timestamp).toLocaleTimeString()
+              : "N/A"}
+          </span>
+          <span>
+            Last change:{" "}
+            {entries.length > 0 ? formatRelativeTime(entries[0].timestamp) : "N/A"}
+          </span>
+        </ModalFooter>
+      )}
+    </Modal>
   );
 }

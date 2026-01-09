@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
 import { Character } from "@/lib/character-editor/types";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 export interface CopyCharacterModalProps {
   /** Whether the modal is open */
@@ -48,106 +49,85 @@ export function CopyCharacterModal({
     }
   }, [selectedIndex, onCopy, onClose]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "Enter" && selectedIndex !== null) {
-        handleCopy();
-      }
-    },
-    [onClose, selectedIndex, handleCopy]
-  );
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleCopy}
+      confirmOnEnter
+      size="lg"
+      maxHeight="70vh"
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <ModalHeader>
+        <h2 className="text-lg font-medium text-white">Copy Character</h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Select a character to copy. It will replace the currently selected character(s).
+        </p>
+      </ModalHeader>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg max-h-[70vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-retro-grid/30">
-          <h2 className="text-lg font-medium text-white">Copy Character</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            Select a character to copy. It will replace the currently selected character(s).
-          </p>
-        </div>
+      <ModalContent scrollable>
+        <div className="bg-black/30 rounded-lg p-3">
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))" }}>
+            {characters.map((char, index) => {
+              const isSelected = selectedIndex === index;
+              const isCurrent = index === currentIndex;
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="bg-black/30 rounded-lg p-3">
-            <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))" }}>
-              {characters.map((char, index) => {
-                const isSelected = selectedIndex === index;
-                const isCurrent = index === currentIndex;
-
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleSelect(index)}
-                    disabled={isCurrent}
-                    className={`
-                      p-1.5 rounded border-2 transition-all relative
-                      ${isSelected
-                        ? "border-retro-cyan bg-retro-cyan/20"
-                        : isCurrent
-                        ? "border-retro-pink/30 bg-retro-pink/10 opacity-50 cursor-not-allowed"
-                        : "border-transparent hover:border-retro-grid/50"
-                      }
-                    `}
-                    title={isCurrent ? "Current selection" : `Character ${index}`}
-                  >
-                    <CharacterDisplay
-                      character={char}
-                      mode="small"
-                      smallScale={3}
-                    />
-                    {isCurrent && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[8px] text-retro-pink bg-retro-dark/80 px-1 rounded">
-                          current
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(index)}
+                  disabled={isCurrent}
+                  className={`
+                    p-1.5 rounded border-2 transition-all relative
+                    ${isSelected
+                      ? "border-retro-cyan bg-retro-cyan/20"
+                      : isCurrent
+                      ? "border-retro-pink/30 bg-retro-pink/10 opacity-50 cursor-not-allowed"
+                      : "border-transparent hover:border-retro-grid/50"
+                    }
+                  `}
+                  title={isCurrent ? "Current selection" : `Character ${index}`}
+                >
+                  <CharacterDisplay
+                    character={char}
+                    mode="small"
+                    smallScale={3}
+                  />
+                  {isCurrent && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[8px] text-retro-pink bg-retro-dark/80 px-1 rounded">
+                        current
+                      </span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
-
-          {selectedIndex !== null && (
-            <div className="text-xs text-gray-500 text-center mt-3">
-              Character {selectedIndex} selected
-            </div>
-          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 p-4 border-t border-retro-grid/30 flex justify-between">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleCopy}
-            disabled={selectedIndex === null}
-            className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Copy
-          </button>
-        </div>
-      </div>
-    </div>
+        {selectedIndex !== null && (
+          <div className="text-xs text-gray-500 text-center mt-3">
+            Character {selectedIndex} selected
+          </div>
+        )}
+      </ModalContent>
+
+      <ModalFooter className="flex justify-between">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleCopy}
+          disabled={selectedIndex === null}
+          className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Copy
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }

@@ -5,6 +5,7 @@ import { AnchorPoint, Character, CharacterSetConfig } from "@/lib/character-edit
 import { scaleCharacter, ScaleAlgorithm } from "@/lib/character-editor/transforms";
 import { CharacterDisplay } from "@/components/character-editor/character/CharacterDisplay";
 import { AnchorPositionGrid } from "@/components/character-editor/selectors/AnchorPositionGrid";
+import { Modal, ModalContent, ModalActions } from "@/components/ui/Modal";
 
 export interface ScaleModalProps {
   /** Whether the modal is open */
@@ -80,31 +81,19 @@ export function ScaleModal({
     onClose();
   }, [scale, anchor, algorithm, onScale, onClose]);
 
-  // Handle keyboard
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "Enter") {
-        handleApply();
-      }
-    },
-    [onClose, handleApply],
-  );
-
-  if (!isOpen) return null;
-
   // Calculate preview grid dimensions
   const previewColumns = Math.min(4, selectedCharacters.length);
   const previewScale = 2; // Scale for preview thumbnails
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onKeyDown={handleKeyDown}>
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-lg bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleApply}
+      confirmOnEnter
+      size="lg"
+    >
+      <ModalContent>
         <h2 className="text-lg font-medium text-white mb-4">Scale Characters</h2>
 
         {/* Preview section */}
@@ -252,24 +241,13 @@ export function ScaleModal({
             ? "Content will be reduced"
             : "No scaling applied"}
         </p>
+      </ModalContent>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleApply}
-            disabled={scale === 1 || scale <= 0 || scale > 10}
-            className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </div>
+      <ModalActions
+        onCancel={onClose}
+        onConfirm={handleApply}
+        confirmDisabled={scale === 1 || scale <= 0 || scale > 10}
+      />
+    </Modal>
   );
 }

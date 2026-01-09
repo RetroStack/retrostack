@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { CustomColors } from "@/lib/character-editor/data/colorPresets";
 import { ColorPresetSelector } from "@/components/character-editor/selectors/ColorPresetSelector";
+import { Modal, ModalHeader, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 export interface TextPreviewModalProps {
   /** Whether the modal is open */
@@ -121,21 +122,6 @@ export function TextPreviewModal({
     }
   }, [isOpen]);
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
   // Convert text to character indices
   const renderedLines = useMemo(() => {
     const lines = text.split("\n");
@@ -156,35 +142,14 @@ export function TextPreviewModal({
     });
   }, [text, characters]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" maxHeight="90vh">
+      <ModalHeader onClose={onClose} showCloseButton>
+        <h2 className="text-lg font-medium text-white">Text Preview</h2>
+      </ModalHeader>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-retro-grid/30">
-          <h2 className="text-lg font-medium text-white">Text Preview</h2>
-          <button
-            onClick={onClose}
-            className="p-1 text-gray-400 hover:text-white transition-colors"
-            aria-label="Close"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <ModalContent scrollable className="p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left side - Input */}
             <div className="space-y-4">
               {/* Text input */}
@@ -292,34 +257,32 @@ export function TextPreviewModal({
               </div>
             </div>
           </div>
-        </div>
+      </ModalContent>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3 p-4 border-t border-retro-grid/30">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Colors:</span>
-            <ColorPresetSelector
-              colors={localColors}
-              onColorsChange={setLocalColors}
-              dropUp
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setText("")}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Clear
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+      <ModalFooter className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-400">Colors:</span>
+          <ColorPresetSelector
+            colors={localColors}
+            onColorsChange={setLocalColors}
+            dropUp
+          />
         </div>
-      </div>
-    </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setText("")}
+            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            Clear
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </ModalFooter>
+    </Modal>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { isPrintableAscii, getControlCharInfo } from "@/lib/character-editor/data/ascii";
+import { Modal, ModalContent, ModalActions } from "@/components/ui/Modal";
 
 export interface GoToCharacterModalProps {
   /** Whether the modal is open */
@@ -77,37 +78,19 @@ export function GoToCharacterModal({
     }
   }, [isValid, parsedIndex, onGoTo, onClose]);
 
-  // Handle keyboard
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      } else if (e.key === "Enter") {
-        handleGoTo();
-      }
-    },
-    [onClose, handleGoTo]
-  );
-
-  if (!isOpen) return null;
-
   // Get character info for preview
   const isPrintable = parsedIndex !== null && isPrintableAscii(parsedIndex);
   const controlCharInfo = parsedIndex !== null ? getControlCharInfo(parsedIndex) : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onKeyDown={handleKeyDown}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleGoTo}
+      confirmOnEnter
+      size="xs"
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-xs bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
+      <ModalContent>
         <h2 className="text-lg font-medium text-white mb-4">Go to Character</h2>
 
         {/* Input */}
@@ -168,24 +151,14 @@ export function GoToCharacterModal({
             </p>
           )}
         </div>
+      </ModalContent>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleGoTo}
-            disabled={!isValid}
-            className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Go
-          </button>
-        </div>
-      </div>
-    </div>
+      <ModalActions
+        onCancel={onClose}
+        onConfirm={handleGoTo}
+        confirmLabel="Go"
+        confirmDisabled={!isValid}
+      />
+    </Modal>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { KNOWN_MANUFACTURERS, getSystemsForManufacturer } from "@/lib/character-editor/data/manufacturers";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 export interface ManufacturerSystemSelectProps {
   /** Currently selected manufacturer */
@@ -30,27 +31,13 @@ export function ManufacturerSystemSelect({
   className = "",
 }: ManufacturerSystemSelectProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useOutsideClick<HTMLDivElement>(() => setIsDropdownOpen(false), isDropdownOpen);
 
   // Sort manufacturers alphabetically
   const sortedManufacturers = useMemo(() => {
     return [...KNOWN_MANUFACTURERS].sort((a, b) =>
       a.manufacturer.localeCompare(b.manufacturer)
     );
-  }, []);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleManufacturerClick = (mfr: string) => {
