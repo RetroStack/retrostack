@@ -43,6 +43,7 @@ src/
 │   ├── layout/          # Global layout: Header, Footer, Navigation, MobileMenu, ToolLayout
 │   ├── sections/        # Page sections: Hero, Features, SystemsPreview, ToolsPreview
 │   ├── ui/              # Reusable primitives: Button, Card, Container, ToggleSwitch, Toast
+│   │   └── icons/       # Centralized icon components (ArrowIcons, TransformIcons, ActionIcons)
 │   ├── effects/         # Visual effects: GridBackground, NeonText, NeonFlicker
 │   └── character-editor/# Tool-specific components organized by feature
 │       ├── character/   # Character display & grid
@@ -53,6 +54,9 @@ src/
 │       └── help/        # Tutorials & help
 ├── hooks/               # Custom React hooks
 │   ├── useOutsideClick.ts
+│   ├── useDropdown.ts   # Dropdown state + outside click
+│   ├── useTimer.ts      # Timer management with cleanup
+│   ├── useModalManager.ts # Multi-modal state management
 │   ├── useMediaQuery.ts
 │   ├── useResizeObserver.ts
 │   └── character-editor/# Tool-specific hooks
@@ -773,6 +777,71 @@ const { theme, toggleTheme } = useTheme();
 // theme: "light" | "dark"
 ```
 
+### useDropdown
+
+Combines dropdown open/close state with outside click handling:
+
+```typescript
+import { useDropdown } from "@/hooks/useDropdown";
+
+function MyDropdown() {
+  const dropdown = useDropdown<HTMLDivElement>();
+
+  return (
+    <div ref={dropdown.ref}>
+      <button onClick={dropdown.toggle}>Toggle</button>
+      {dropdown.isOpen && <div className="dropdown-panel">Content</div>}
+    </div>
+  );
+}
+// Also provides: dropdown.open(), dropdown.close()
+```
+
+### useTimer
+
+Timer management with automatic cleanup:
+
+```typescript
+import { useTimer } from "@/hooks/useTimer";
+
+function MyComponent() {
+  const timer = useTimer();
+
+  const startTimer = () => {
+    timer.set(() => console.log("Done!"), 1000);
+  };
+
+  const cancelTimer = () => {
+    timer.clear();
+  };
+
+  // timer.isActive - check if timer is running
+}
+```
+
+### useModalManager
+
+Manage multiple modal states with single-modal enforcement:
+
+```typescript
+import { useModalManager } from "@/hooks/useModalManager";
+
+type ModalKey = "edit" | "delete" | "share";
+
+function MyComponent() {
+  const modals = useModalManager<ModalKey>();
+
+  return (
+    <>
+      <button onClick={() => modals.open("edit")}>Edit</button>
+      {modals.isOpen("edit") && <EditModal onClose={() => modals.close("edit")} />}
+      {/* Only one modal can be open at a time */}
+    </>
+  );
+}
+// Also provides: modals.closeAll(), modals.activeModal
+```
+
 ## Adding New Features
 
 ### Adding a New Tool Page
@@ -947,6 +1016,10 @@ const dragSelect = useDragSelect({
 | `/src/components/layout/ToolLayout.tsx`        | Tool page wrapper                    |
 | `/src/components/ui/ToggleSwitch.tsx`          | Use instead of checkboxes            |
 | `/src/components/ui/SelectionModeBar.tsx`      | Selection mode floating action bar   |
+| `/src/components/ui/icons/`                    | Centralized icon components          |
+| `/src/hooks/useDropdown.ts`                    | Dropdown state + outside click       |
+| `/src/hooks/useTimer.ts`                       | Timer management with cleanup        |
+| `/src/hooks/useModalManager.ts`                | Multi-modal state management         |
 | `/src/hooks/useLongPress.ts`                   | Long-press detection hook            |
 | `/src/hooks/useDragSelect.ts`                  | Drag-select gesture detection hook   |
 | `/src/hooks/character-editor/useSelectionMode.ts` | Selection mode state management   |

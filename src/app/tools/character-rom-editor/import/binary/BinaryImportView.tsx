@@ -11,7 +11,7 @@ import { NeonText } from "@/components/effects/NeonText";
 import { ImportDropZone } from "@/components/character-editor/import/ImportDropZone";
 import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
 import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
-import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
+import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
@@ -494,7 +494,7 @@ export function BinaryImportView() {
 
                     {/* Quick presets */}
                     <div className="mt-3">
-                      <SizePresetDropdown
+                      <DimensionPresetSelector
                         currentWidth={config.width}
                         currentHeight={config.height}
                         onSelect={handlePresetClick}

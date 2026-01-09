@@ -12,7 +12,7 @@ import { ImportDropZone } from "@/components/character-editor/import/ImportDropZ
 import { CharacterPreview } from "@/components/character-editor/character/CharacterPreview";
 import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
-import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
+import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
 import { ImportFromImageModal } from "./modals/ImportFromImageModal";
 import { ImportFromFontModal } from "./modals/ImportFromFontModal";
 import { ImportFromTextModal } from "./modals/ImportFromTextModal";
@@ -687,7 +687,7 @@ export function ImportView() {
 
                     {/* Quick presets */}
                     <div className="mt-3">
-                      <SizePresetDropdown
+                      <DimensionPresetSelector
                         currentWidth={config.width}
                         currentHeight={config.height}
                         onSelect={handlePresetClick}

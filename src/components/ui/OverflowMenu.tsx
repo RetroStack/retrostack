@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useDropdown } from "@/hooks/useDropdown";
 
 export interface OverflowMenuItem {
   id: string;
@@ -29,22 +28,12 @@ export function OverflowMenu({
   className = "",
   label = "More options",
 }: OverflowMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const menuRef = useOutsideClick<HTMLDivElement>(handleClose, isOpen);
-
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
-  };
+  const dropdown = useDropdown<HTMLDivElement>();
 
   const handleItemClick = (item: OverflowMenuItem) => {
     if (item.disabled) return;
     item.onClick?.();
-    setIsOpen(false);
+    dropdown.close();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent, item: OverflowMenuItem) => {
@@ -57,13 +46,13 @@ export function OverflowMenu({
   if (items.length === 0) return null;
 
   return (
-    <div ref={menuRef} className={`relative ${className}`}>
+    <div ref={dropdown.ref} className={`relative ${className}`}>
       {/* Trigger Button */}
       <button
-        onClick={handleToggle}
+        onClick={dropdown.toggle}
         className="touch-target flex items-center justify-center p-2 text-gray-400 hover:text-white bg-retro-dark/50 hover:bg-retro-dark rounded-md transition-colors"
         aria-label={label}
-        aria-expanded={isOpen}
+        aria-expanded={dropdown.isOpen}
         aria-haspopup="menu"
       >
         {trigger || (
@@ -78,7 +67,7 @@ export function OverflowMenu({
       </button>
 
       {/* Dropdown Menu */}
-      {isOpen && (
+      {dropdown.isOpen && (
         <div
           className={`absolute top-full mt-2 z-50 min-w-[180px] bg-retro-navy/95 backdrop-blur-md border border-retro-grid/50 rounded-lg py-1 shadow-xl shadow-black/50 ${
             align === "right" ? "right-0" : "left-0"
@@ -106,7 +95,7 @@ export function OverflowMenu({
                   href={item.href}
                   className={itemClasses}
                   role="menuitem"
-                  onClick={() => setIsOpen(false)}
+                  onClick={dropdown.close}
                 >
                   {item.icon && (
                     <span className="w-5 h-5 flex-shrink-0">{item.icon}</span>

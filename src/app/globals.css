@@ -910,3 +910,80 @@ body:has(.viewport-locked) {
     max-width: 1800px;
   }
 }
+
+/* ============================================================================
+   Component Utility Classes
+   ============================================================================ */
+
+/* Panel - standard container for grouped content */
+.panel {
+  background-color: var(--retro-navy);
+  border: 1px solid rgba(42, 42, 90, 0.5);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Section header - cyan uppercase label for content sections */
+.section-header {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--retro-cyan);
+  background-color: rgba(0, 245, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Preset button styles - for option chips/pills */
+.preset-button {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.preset-button-default {
+  background-color: rgba(255, 184, 0, 0.15);
+  color: var(--retro-amber);
+}
+
+.preset-button-default:hover {
+  background-color: rgba(255, 184, 0, 0.3);
+  color: white;
+}
+
+.preset-button-selected {
+  background-color: rgba(255, 184, 0, 0.4);
+  color: var(--retro-amber);
+  box-shadow: 0 0 0 1px var(--retro-amber);
+}
+
+/* Dropdown trigger - 3D raised button style */
+.dropdown-trigger {
+  color: var(--retro-cyan);
+  border-radius: 0.25rem;
+  background: linear-gradient(to bottom, rgba(75, 85, 99, 0.5), rgba(55, 65, 81, 0.5));
+  border: 1px solid rgba(0, 245, 255, 0.5);
+  border-top-color: rgba(0, 245, 255, 0.7);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
+}
+
+.dropdown-trigger:hover {
+  background: linear-gradient(to bottom, rgba(107, 114, 128, 0.5), rgba(75, 85, 99, 0.5));
+  border-color: var(--retro-cyan);
+}
+
+.dropdown-trigger:active {
+  background: linear-gradient(to bottom, rgba(55, 65, 81, 0.5), rgba(31, 41, 55, 0.5));
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Dropdown panel - floating menu container */
+.dropdown-panel {
+  background-color: var(--retro-navy);
+  border: 1px solid rgba(42, 42, 90, 0.5);
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}

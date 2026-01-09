@@ -4,6 +4,7 @@ import { useEffect, useCallback, useRef, useState } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { serializeCharacterRom, binaryToBase64 } from "@/lib/character-editor/import/binary";
 import { CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE } from "@/lib/character-editor/storage/keys";
+import { useTimer } from "@/hooks/useTimer";
 
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
@@ -61,7 +62,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
 
   const [recoveryData, setRecoveryData] = useState<AutoSaveData | null>(null);
   const lastSaveRef = useRef<number>(0);
-  const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimer = useTimer();
 
   // Check for recovery data on mount
   useEffect(() => {
@@ -105,27 +106,17 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
 
   // Auto-save on interval when dirty
   useEffect(() => {
-    if (!enabled || !isDirty || !characterSetId) return;
-
-    // Clear any pending save
-    if (pendingSaveRef.current) {
-      clearTimeout(pendingSaveRef.current);
+    if (!enabled || !isDirty || !characterSetId) {
+      saveTimer.clear();
+      return;
     }
 
     // Schedule next save
     const timeSinceLastSave = Date.now() - lastSaveRef.current;
     const delay = Math.max(0, AUTO_SAVE_INTERVAL - timeSinceLastSave);
 
-    pendingSaveRef.current = setTimeout(() => {
-      saveNow();
-    }, delay);
-
-    return () => {
-      if (pendingSaveRef.current) {
-        clearTimeout(pendingSaveRef.current);
-      }
-    };
-  }, [enabled, isDirty, characterSetId, saveNow]);
+    saveTimer.set(saveNow, delay);
+  }, [enabled, isDirty, characterSetId, saveNow, saveTimer]);
 
   // Save before unload
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { useTimer } from "@/hooks/useTimer";
 
 export interface UseLongPressOptions {
   /** Threshold in milliseconds before long press triggers (default: 500) */
@@ -51,17 +52,10 @@ export function useLongPress({
   disabled = false,
   moveThreshold = 10,
 }: UseLongPressOptions): UseLongPressResult {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timer = useTimer();
   const isLongPressRef = useRef(false);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const preventContextMenuRef = useRef(false);
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
 
   const start = useCallback(
     (x: number, y: number) => {
@@ -71,31 +65,29 @@ export function useLongPress({
       startPosRef.current = { x, y };
       preventContextMenuRef.current = false;
 
-      clearTimer();
-
-      timerRef.current = setTimeout(() => {
+      timer.set(() => {
         isLongPressRef.current = true;
         preventContextMenuRef.current = true;
         onLongPress();
       }, threshold);
     },
-    [disabled, threshold, onLongPress, clearTimer],
+    [disabled, threshold, onLongPress, timer],
   );
 
   const end = useCallback(() => {
-    clearTimer();
+    timer.clear();
 
     if (!isLongPressRef.current && onPress && startPosRef.current) {
       onPress();
     }
 
     startPosRef.current = null;
-  }, [clearTimer, onPress]);
+  }, [timer, onPress]);
 
   const cancel = useCallback(() => {
-    clearTimer();
+    timer.clear();
     startPosRef.current = null;
-  }, [clearTimer]);
+  }, [timer]);
 
   const checkMove = useCallback(
     (x: number, y: number) => {

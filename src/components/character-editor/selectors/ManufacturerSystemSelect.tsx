@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { KNOWN_MANUFACTURERS, getSystemsForManufacturer } from "@/lib/character-editor/data/manufacturers";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useDropdown } from "@/hooks/useDropdown";
 
 export interface ManufacturerSystemSelectProps {
   /** Currently selected manufacturer */
@@ -30,8 +30,7 @@ export function ManufacturerSystemSelect({
   disabled = false,
   className = "",
 }: ManufacturerSystemSelectProps) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useOutsideClick<HTMLDivElement>(() => setIsDropdownOpen(false), isDropdownOpen);
+  const dropdown = useDropdown<HTMLDivElement>();
 
   // Sort manufacturers alphabetically
   const sortedManufacturers = useMemo(() => {
@@ -43,19 +42,19 @@ export function ManufacturerSystemSelect({
   const handleManufacturerClick = (mfr: string) => {
     onManufacturerChange(mfr);
     onSystemChange("");
-    setIsDropdownOpen(false);
+    dropdown.close();
   };
 
   const handleSystemClick = (mfr: string, sys: string) => {
     onManufacturerChange(mfr);
     onSystemChange(sys);
-    setIsDropdownOpen(false);
+    dropdown.close();
   };
 
   const handleClear = () => {
     onManufacturerChange("");
     onSystemChange("");
-    setIsDropdownOpen(false);
+    dropdown.close();
   };
 
   const inputClasses = `
@@ -87,10 +86,10 @@ export function ManufacturerSystemSelect({
       />
 
       {/* Picker dropdown */}
-      <div ref={dropdownRef} className="relative flex-shrink-0">
+      <div ref={dropdown.ref} className="relative flex-shrink-0">
         <button
           type="button"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onClick={dropdown.toggle}
           disabled={disabled}
           className="px-3 py-2 bg-gradient-to-b from-gray-600/50 to-gray-700/50 border border-retro-cyan/50 border-t-retro-cyan/70 hover:from-gray-500/50 hover:to-gray-600/50 hover:border-retro-cyan active:from-gray-700/50 active:to-gray-800/50 shadow-md shadow-black/30 active:shadow-sm rounded text-sm text-retro-cyan transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           title="Select manufacturer and system"
@@ -99,7 +98,7 @@ export function ManufacturerSystemSelect({
         </button>
 
         {/* Dropdown panel */}
-        {isDropdownOpen && (
+        {dropdown.isOpen && (
           <div
             className="absolute z-50 top-full mt-1 max-h-80 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl"
             style={{ width: '240px', right: 0 }}

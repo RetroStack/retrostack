@@ -35,7 +35,6 @@ export interface CharacterCountPresetSelectorProps {
  *
  * Used in:
  * - AddView (new character set wizard)
- * - CharacterCountPresetDropdown
  */
 export function CharacterCountPresetSelector({
   currentCount,

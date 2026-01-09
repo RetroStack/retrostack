@@ -11,8 +11,8 @@ import { NeonText } from "@/components/effects/NeonText";
 import { ImportStepIndicator } from "@/components/character-editor/import/ImportStepIndicator";
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
 import { LibraryCardCompact } from "@/components/character-editor/library/LibraryCard";
-import { SizePresetDropdown } from "@/components/character-editor/selectors/SizePresetDropdown";
-import { CharacterCountPresetDropdown } from "@/components/character-editor/selectors/CharacterCountPresetDropdown";
+import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
+import { CharacterCountPresetSelector } from "@/components/character-editor/selectors/CharacterCountPresetSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import {
   CharacterSetConfig,
@@ -570,7 +570,7 @@ export function AddView() {
 
                     {/* Quick presets */}
                     <div className="mt-3">
-                      <SizePresetDropdown
+                      <DimensionPresetSelector
                         currentWidth={config.width}
                         currentHeight={config.height}
                         onSelect={handlePresetClick}
@@ -637,7 +637,7 @@ export function AddView() {
                           onChange={handleCharacterCountChange}
                           className="w-full px-3 py-2 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white focus:outline-none focus:border-retro-cyan mb-3"
                         />
-                        <CharacterCountPresetDropdown
+                        <CharacterCountPresetSelector
                           currentCount={characterCount}
                           onSelect={(count) => setCharacterCount(count)}
                         />

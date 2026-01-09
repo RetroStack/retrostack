@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { ROM_CHIPS, RomChipInfo } from "@/lib/character-editor/data/manufacturers";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useDropdown } from "@/hooks/useDropdown";
 
 export interface ChipSelectProps {
   /** Currently selected chip (part number) */
@@ -35,8 +35,7 @@ function getChipsByManufacturer(): Record<string, RomChipInfo[]> {
  * Display chip as editable input with a picker dropdown
  */
 export function ChipSelect({ chip, onChipChange, system, disabled = false, className = "" }: ChipSelectProps) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useOutsideClick<HTMLDivElement>(() => setIsDropdownOpen(false), isDropdownOpen);
+  const dropdown = useDropdown<HTMLDivElement>();
 
   // Get chips grouped by manufacturer, sorted alphabetically
   const chipsByManufacturer = useMemo(() => {
@@ -54,12 +53,12 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
 
   const handleChipClick = (partNumber: string, chipManufacturer: string) => {
     onChipChange(`${chipManufacturer} ${partNumber}`);
-    setIsDropdownOpen(false);
+    dropdown.close();
   };
 
   const handleClear = () => {
     onChipChange("");
-    setIsDropdownOpen(false);
+    dropdown.close();
   };
 
   const isSelected = (partNumber: string, chipManufacturer: string) =>
@@ -78,10 +77,10 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
       />
 
       {/* Picker dropdown */}
-      <div ref={dropdownRef} className="relative flex-shrink-0">
+      <div ref={dropdown.ref} className="relative flex-shrink-0">
         <button
           type="button"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onClick={dropdown.toggle}
           disabled={disabled}
           className="px-3 py-2 bg-gradient-to-b from-gray-600/50 to-gray-700/50 border border-retro-cyan/50 border-t-retro-cyan/70 hover:from-gray-500/50 hover:to-gray-600/50 hover:border-retro-cyan active:from-gray-700/50 active:to-gray-800/50 shadow-md shadow-black/30 active:shadow-sm rounded text-sm text-retro-cyan transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           title="Select ROM chip"
@@ -90,7 +89,7 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
         </button>
 
         {/* Dropdown panel */}
-        {isDropdownOpen && (
+        {dropdown.isOpen && (
           <div
             className="absolute z-50 top-full mt-1 max-h-80 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl"
             style={{ width: "240px", right: 0 }}

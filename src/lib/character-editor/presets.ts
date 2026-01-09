@@ -33,7 +33,7 @@ export interface DimensionPresetWithExamples {
  * These presets are used across:
  * - ImportFromTextModal (character import from code)
  * - ImportFromFontModal (character import from fonts)
- * - SizePresetDropdown (quick size selection)
+ * - DimensionPresetSelector (quick size selection)
  * - ResizeModal (character resize)
  *
  * Based on historical character generator ROM specifications.

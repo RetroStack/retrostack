@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useCallback } from "react";
+import { useDropdown } from "@/hooks/useDropdown";
 
 export interface MultiSelectDropdownProps<T extends string | number> {
   /** Label for the dropdown */
@@ -36,8 +36,7 @@ export function MultiSelectDropdown<T extends string | number>({
   showAllOption = true,
   allOptionLabel = "All",
 }: MultiSelectDropdownProps<T>) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useOutsideClick<HTMLDivElement>(() => setIsOpen(false), isOpen);
+  const dropdown = useDropdown<HTMLDivElement>();
 
   const toggleOption = useCallback(
     (value: T) => {
@@ -70,29 +69,29 @@ export function MultiSelectDropdown<T extends string | number>({
   const hasSelection = selected.length > 0;
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative ${className}`} ref={dropdown.ref}>
       {/* Trigger button */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={dropdown.toggle}
         className={`
           flex items-center justify-between gap-2 w-full px-3 py-1.5
           bg-retro-navy/50 border rounded text-sm text-left
           transition-colors
-          ${isOpen
+          ${dropdown.isOpen
             ? "border-retro-cyan"
             : "border-retro-grid/50 hover:border-retro-grid"
           }
           ${hasSelection ? "text-gray-200" : "text-gray-400"}
         `}
-        aria-expanded={isOpen}
+        aria-expanded={dropdown.isOpen}
         aria-haspopup="listbox"
       >
         <span className="truncate">
           {hasSelection ? `${label} (${selected.length})` : placeholder}
         </span>
         <svg
-          className={`w-4 h-4 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 flex-shrink-0 transition-transform ${dropdown.isOpen ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -126,7 +125,7 @@ export function MultiSelectDropdown<T extends string | number>({
       )}
 
       {/* Dropdown */}
-      {isOpen && (
+      {dropdown.isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl overflow-hidden">
           <div className="max-h-60 overflow-y-auto py-1">
             {/* All option */}
