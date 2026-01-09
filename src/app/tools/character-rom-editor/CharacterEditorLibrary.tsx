@@ -16,7 +16,17 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { useToast } from "@/hooks/useToast";
 import { useOnboarding, CHARACTER_EDITOR_ONBOARDING_STEPS } from "@/hooks/useOnboarding";
-import { getCharacterCount } from "@/lib/character-editor/types";
+import {
+  filterAndSortCharacterSets,
+  hasActiveFilters as checkActiveFilters,
+  getAvailableManufacturers,
+  getAvailableSystems,
+  getAvailableChips,
+  getAvailableLocales,
+  getAvailableCharacterCounts,
+  filterInvalidSystems,
+  type LibraryFilterState,
+} from "@/lib/character-editor/library/filters";
 import {
   CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD,
   CHARACTER_EDITOR_STORAGE_KEY_SORT_DIRECTION,
@@ -83,50 +93,31 @@ export function CharacterEditorLibrary() {
     }
   }, []);
 
-  // Get available manufacturers and systems from character sets
-  const availableManufacturers = useMemo(() => {
-    const manufacturers = new Set<string>();
-    characterSets.forEach((set) => {
-      if (set.metadata.manufacturer) manufacturers.add(set.metadata.manufacturer);
-    });
-    return Array.from(manufacturers).sort();
-  }, [characterSets]);
+  // Get available filter options from character sets using pure functions
+  const availableManufacturers = useMemo(
+    () => getAvailableManufacturers(characterSets),
+    [characterSets]
+  );
 
-  const availableSystems = useMemo(() => {
-    const systems = new Set<string>();
-    // If manufacturer filters are selected, only show systems for those manufacturers
-    const setsToCheck = manufacturerFilters.length > 0
-      ? characterSets.filter((set) => set.metadata.manufacturer && manufacturerFilters.includes(set.metadata.manufacturer))
-      : characterSets;
-    setsToCheck.forEach((set) => {
-      if (set.metadata.system) systems.add(set.metadata.system);
-    });
-    return Array.from(systems).sort();
-  }, [characterSets, manufacturerFilters]);
+  const availableSystems = useMemo(
+    () => getAvailableSystems(characterSets, manufacturerFilters),
+    [characterSets, manufacturerFilters]
+  );
 
-  const availableChips = useMemo(() => {
-    const chips = new Set<string>();
-    characterSets.forEach((set) => {
-      if (set.metadata.chip) chips.add(set.metadata.chip);
-    });
-    return Array.from(chips).sort();
-  }, [characterSets]);
+  const availableChips = useMemo(
+    () => getAvailableChips(characterSets),
+    [characterSets]
+  );
 
-  const availableLocales = useMemo(() => {
-    const locales = new Set<string>();
-    characterSets.forEach((set) => {
-      if (set.metadata.locale) locales.add(set.metadata.locale);
-    });
-    return Array.from(locales).sort();
-  }, [characterSets]);
+  const availableLocales = useMemo(
+    () => getAvailableLocales(characterSets),
+    [characterSets]
+  );
 
-  const availableCharacterCounts = useMemo(() => {
-    const counts = new Set<number>();
-    characterSets.forEach((set) => {
-      counts.add(getCharacterCount(set));
-    });
-    return Array.from(counts).sort((a, b) => a - b);
-  }, [characterSets]);
+  const availableCharacterCounts = useMemo(
+    () => getAvailableCharacterCounts(characterSets),
+    [characterSets]
+  );
 
   // Delete confirmation state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -140,125 +131,26 @@ export function CharacterEditorLibrary() {
   // Edit metadata state
   const [editMetadataId, setEditMetadataId] = useState<string | null>(null);
 
-  // Filter character sets
-  const filteredSets = useMemo(() => {
-    let result = characterSets;
+  // Build filter state object for pure functions
+  const filterState: LibraryFilterState = useMemo(
+    () => ({
+      searchQuery,
+      widthFilters,
+      heightFilters,
+      characterCountFilters,
+      manufacturerFilters,
+      systemFilters,
+      chipFilters,
+      localeFilters,
+    }),
+    [searchQuery, widthFilters, heightFilters, characterCountFilters, manufacturerFilters, systemFilters, chipFilters, localeFilters]
+  );
 
-    // Apply search filter (full-text search across all fields)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (set) =>
-          set.metadata.name.toLowerCase().includes(query) ||
-          set.metadata.description.toLowerCase().includes(query) ||
-          set.metadata.source.toLowerCase().includes(query) ||
-          (set.metadata.manufacturer && set.metadata.manufacturer.toLowerCase().includes(query)) ||
-          (set.metadata.system && set.metadata.system.toLowerCase().includes(query)) ||
-          (set.metadata.chip && set.metadata.chip.toLowerCase().includes(query)) ||
-          (set.metadata.locale && set.metadata.locale.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply size filters (OR logic - match any selected)
-    if (widthFilters.length > 0) {
-      result = result.filter((set) => widthFilters.includes(set.config.width));
-    }
-    if (heightFilters.length > 0) {
-      result = result.filter((set) => heightFilters.includes(set.config.height));
-    }
-
-    // Apply manufacturer filter (OR logic)
-    if (manufacturerFilters.length > 0) {
-      result = result.filter(
-        (set) => set.metadata.manufacturer && manufacturerFilters.includes(set.metadata.manufacturer)
-      );
-    }
-
-    // Apply system filter (OR logic)
-    if (systemFilters.length > 0) {
-      result = result.filter(
-        (set) => set.metadata.system && systemFilters.includes(set.metadata.system)
-      );
-    }
-
-    // Apply chip filter (OR logic)
-    if (chipFilters.length > 0) {
-      result = result.filter(
-        (set) => set.metadata.chip && chipFilters.includes(set.metadata.chip)
-      );
-    }
-
-    // Apply locale filter (OR logic)
-    if (localeFilters.length > 0) {
-      result = result.filter(
-        (set) => set.metadata.locale && localeFilters.includes(set.metadata.locale)
-      );
-    }
-
-    // Apply character count filter (OR logic)
-    if (characterCountFilters.length > 0) {
-      result = result.filter(
-        (set) => characterCountFilters.includes(getCharacterCount(set))
-      );
-    }
-
-    // Sort with pinned items first, then by selected sort field
-    return [...result].sort((a, b) => {
-      // Pinned items always come first
-      const aPinned = a.metadata.isPinned ? 1 : 0;
-      const bPinned = b.metadata.isPinned ? 1 : 0;
-      if (aPinned !== bPinned) return bPinned - aPinned;
-
-      // Apply selected sort
-      let comparison = 0;
-      switch (sortField) {
-        case "name":
-          comparison = a.metadata.name.localeCompare(b.metadata.name);
-          break;
-        case "description":
-          comparison = (a.metadata.description || "").localeCompare(b.metadata.description || "");
-          break;
-        case "source":
-          comparison = (a.metadata.source || "").localeCompare(b.metadata.source || "");
-          break;
-        case "updatedAt":
-          comparison = a.metadata.updatedAt - b.metadata.updatedAt;
-          break;
-        case "createdAt":
-          comparison = a.metadata.createdAt - b.metadata.createdAt;
-          break;
-        case "width":
-          comparison = a.config.width - b.config.width;
-          break;
-        case "height":
-          comparison = a.config.height - b.config.height;
-          break;
-        case "size": {
-          const aSize = a.config.width * a.config.height;
-          const bSize = b.config.width * b.config.height;
-          comparison = aSize - bSize;
-          break;
-        }
-        case "characters":
-          comparison = getCharacterCount(a) - getCharacterCount(b);
-          break;
-        case "manufacturer":
-          comparison = (a.metadata.manufacturer || "").localeCompare(b.metadata.manufacturer || "");
-          break;
-        case "system":
-          comparison = (a.metadata.system || "").localeCompare(b.metadata.system || "");
-          break;
-        case "chip":
-          comparison = (a.metadata.chip || "").localeCompare(b.metadata.chip || "");
-          break;
-        case "locale":
-          comparison = (a.metadata.locale || "").localeCompare(b.metadata.locale || "");
-          break;
-      }
-
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
-  }, [characterSets, searchQuery, widthFilters, heightFilters, characterCountFilters, manufacturerFilters, systemFilters, chipFilters, localeFilters, sortField, sortDirection]);
+  // Filter and sort character sets using pure function
+  const filteredSets = useMemo(
+    () => filterAndSortCharacterSets(characterSets, filterState, sortField, sortDirection),
+    [characterSets, filterState, sortField, sortDirection]
+  );
 
   // Handlers
   const handleEdit = useCallback(
@@ -382,13 +274,7 @@ export function CharacterEditorLibrary() {
     setManufacturerFilters(manufacturers);
     // Clear system filters that are no longer valid for the selected manufacturers
     if (manufacturers.length > 0) {
-      const validSystems = new Set<string>();
-      characterSets
-        .filter((set) => set.metadata.manufacturer && manufacturers.includes(set.metadata.manufacturer))
-        .forEach((set) => {
-          if (set.metadata.system) validSystems.add(set.metadata.system);
-        });
-      setSystemFilters((prev) => prev.filter((s) => validSystems.has(s)));
+      setSystemFilters((prev) => filterInvalidSystems(prev, characterSets, manufacturers));
     }
   }, [characterSets]);
 
@@ -440,15 +326,8 @@ export function CharacterEditorLibrary() {
     setLocaleFilters([]);
   }, []);
 
-  const hasActiveFilters =
-    searchQuery.length > 0 ||
-    widthFilters.length > 0 ||
-    heightFilters.length > 0 ||
-    characterCountFilters.length > 0 ||
-    manufacturerFilters.length > 0 ||
-    systemFilters.length > 0 ||
-    chipFilters.length > 0 ||
-    localeFilters.length > 0;
+  // Use pure function to check if filters are active
+  const hasActiveFilters = checkActiveFilters(filterState);
 
   // Find the set being deleted for confirmation
   const setToDelete = deleteId

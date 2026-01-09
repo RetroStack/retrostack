@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState, useMemo } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import { serializeCharacterRom, binaryToBase64 } from "@/lib/character-editor/import/binary";
 import { CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE } from "@/lib/character-editor/storage/keys";
+import { createLocalStorageWrapper, type IKeyValueStorage } from "@/lib/character-editor/storage/storage";
 import { useTimer } from "@/hooks/useTimer";
 
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
@@ -30,6 +31,12 @@ export interface UseAutoSaveOptions {
   isDirty: boolean;
   /** Whether auto-save is enabled */
   enabled?: boolean;
+  /**
+   * Key-value storage implementation.
+   * Defaults to localStorage wrapper.
+   * Pass a mock implementation for testing.
+   */
+  kvStorage?: IKeyValueStorage;
 }
 
 export interface UseAutoSaveResult {
@@ -58,7 +65,14 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
     selectedIndex,
     isDirty,
     enabled = true,
+    kvStorage,
   } = options;
+
+  // Use injected storage or default to localStorage wrapper
+  const storage = useMemo(
+    () => kvStorage ?? createLocalStorageWrapper(),
+    [kvStorage]
+  );
 
   const [recoveryData, setRecoveryData] = useState<AutoSaveData | null>(null);
   const lastSaveRef = useRef<number>(0);
@@ -69,7 +83,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
     if (!characterSetId) return;
 
     try {
-      const saved = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
+      const saved = storage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
       if (saved) {
         const data: AutoSaveData = JSON.parse(saved);
         // Only offer recovery if it's for the same character set and is dirty
@@ -81,7 +95,7 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
     } catch {
       // Ignore errors reading auto-save
     }
-  }, [characterSetId]);
+  }, [characterSetId, storage]);
 
   // Save function
   const saveNow = useCallback(() => {
@@ -97,12 +111,12 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
         timestamp: Date.now(),
         isDirty,
       };
-      localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
+      storage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
       lastSaveRef.current = Date.now();
     } catch (e) {
       console.error("Auto-save failed:", e);
     }
-  }, [characterSetId, characters, config, selectedIndex, isDirty, enabled]);
+  }, [characterSetId, characters, config, selectedIndex, isDirty, enabled, storage]);
 
   // Auto-save on interval when dirty
   useEffect(() => {
@@ -141,19 +155,19 @@ export function useAutoSave(options: UseAutoSaveOptions): UseAutoSaveResult {
   const discard = useCallback(() => {
     setRecoveryData(null);
     try {
-      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
+      storage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     } catch {
       // Ignore errors
     }
-  }, []);
+  }, [storage]);
 
   const clearAutoSave = useCallback(() => {
     try {
-      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
+      storage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     } catch {
       // Ignore errors
     }
-  }, []);
+  }, [storage]);
 
   return {
     hasRecoveryData: recoveryData !== null,

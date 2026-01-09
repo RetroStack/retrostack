@@ -293,7 +293,18 @@ export function useUndoRedo<T>(
 
 /**
  * Deep clone helper for state snapshots
+ *
+ * Uses structuredClone when available (modern browsers/Node 17+),
+ * falls back to JSON parse/stringify for older environments.
+ *
+ * structuredClone is faster and handles more types (Date, Map, Set, etc.)
+ * but JSON fallback ensures compatibility.
  */
 export function deepClone<T>(obj: T): T {
+  // Use structuredClone for better performance in modern environments
+  if (typeof structuredClone === "function") {
+    return structuredClone(obj);
+  }
+  // Fallback for older environments
   return JSON.parse(JSON.stringify(obj));
 }

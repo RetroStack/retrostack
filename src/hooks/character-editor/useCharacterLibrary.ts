@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { SerializedCharacterSet, CharacterSet, CharacterSetMetadata, generateId } from "@/lib/character-editor/types";
-import { characterStorage } from "@/lib/character-editor/storage/storage";
+import { characterStorage, type ICharacterSetStorage } from "@/lib/character-editor/storage/storage";
 import { deserializeCharacterSet, serializeCharacterSet } from "@/lib/character-editor/import/binary";
 import {
   getBuiltInIds,
@@ -10,6 +10,18 @@ import {
   getExternalIds,
   getExternalCharacterSetById,
 } from "@/lib/character-editor/defaults";
+
+/**
+ * Options for useCharacterLibrary hook
+ */
+export interface UseCharacterLibraryOptions {
+  /**
+   * Storage implementation to use.
+   * Defaults to the real IndexedDB storage singleton.
+   * Pass a mock implementation for testing.
+   */
+  storage?: ICharacterSetStorage;
+}
 
 export interface UseCharacterLibraryResult {
   /** All character sets in the library */
@@ -49,8 +61,16 @@ export interface UseCharacterLibraryResult {
  *
  * Handles CRUD operations, search, filtering, and initialization
  * of default character sets.
+ *
+ * @param options - Optional configuration including storage dependency injection
  */
-export function useCharacterLibrary(): UseCharacterLibraryResult {
+export function useCharacterLibrary(options?: UseCharacterLibraryOptions): UseCharacterLibraryResult {
+  // Use injected storage or default to singleton
+  const storage = useMemo(
+    () => options?.storage ?? characterStorage,
+    [options?.storage]
+  );
+
   const [characterSets, setCharacterSets] = useState<SerializedCharacterSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +83,10 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
       setError(null);
 
       // Initialize storage
-      await characterStorage.initialize();
+      await storage.initialize();
 
       // Get all existing character set IDs from the database
-      const existingSets = await characterStorage.getAll();
+      const existingSets = await storage.getAll();
       const existingIds = new Set(existingSets.map((set) => set.metadata.id));
 
       // Get all built-in IDs and find which ones are missing
@@ -78,7 +98,7 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
         for (const id of missingBuiltInIds) {
           const builtInSet = getBuiltInCharacterSetById(id);
           if (builtInSet) {
-            await characterStorage.save(builtInSet);
+            await storage.save(builtInSet);
           }
         }
       }
@@ -91,25 +111,25 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
         for (const id of missingExternalIds) {
           const externalSet = await getExternalCharacterSetById(id);
           if (externalSet) {
-            await characterStorage.save(externalSet);
+            await storage.save(externalSet);
           }
         }
       }
 
       // Load all character sets (including newly added ones)
       const hasNewSets = missingBuiltInIds.length > 0 || missingExternalIds.length > 0;
-      const sets = hasNewSets ? await characterStorage.getAll() : existingSets;
+      const sets = hasNewSets ? await storage.getAll() : existingSets;
       setCharacterSets(sets);
 
       // Get available sizes for filtering
-      const sizes = await characterStorage.getAvailableSizes();
+      const sizes = await storage.getAvailableSizes();
       setAvailableSizes(sizes);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load library");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [storage]);
 
   useEffect(() => {
     loadLibrary();
@@ -123,26 +143,26 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
   // Get character set by ID
   const getById = useCallback(async (id: string): Promise<CharacterSet | null> => {
     try {
-      const serialized = await characterStorage.getById(id);
+      const serialized = await storage.getById(id);
       if (!serialized) return null;
       return deserializeCharacterSet(serialized);
     } catch (e) {
       console.error("Failed to get character set:", e);
       return null;
     }
-  }, []);
+  }, [storage]);
 
   // Save character set
   const save = useCallback(async (characterSet: CharacterSet): Promise<string> => {
     try {
       const serialized = serializeCharacterSet(characterSet);
-      const id = await characterStorage.save(serialized);
+      const id = await storage.save(serialized);
       await refresh();
       return id;
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to save character set");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Save as new character set
   const saveAs = useCallback(async (characterSet: CharacterSet, newName: string): Promise<string> => {
@@ -160,18 +180,18 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
         },
       };
       const serialized = serializeCharacterSet(newSet);
-      const id = await characterStorage.save(serialized);
+      const id = await storage.save(serialized);
       await refresh();
       return id;
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to save character set");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Rename character set
   const rename = useCallback(async (id: string, newName: string): Promise<void> => {
     try {
-      const serialized = await characterStorage.getById(id);
+      const serialized = await storage.getById(id);
       if (!serialized) {
         throw new Error("Character set not found");
       }
@@ -183,17 +203,17 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
           updatedAt: Date.now(),
         },
       };
-      await characterStorage.save(updated);
+      await storage.save(updated);
       await refresh();
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to rename character set");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Update metadata
   const updateMetadata = useCallback(async (id: string, metadata: Partial<CharacterSetMetadata>): Promise<void> => {
     try {
-      const serialized = await characterStorage.getById(id);
+      const serialized = await storage.getById(id);
       if (!serialized) {
         throw new Error("Character set not found");
       }
@@ -205,40 +225,40 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
           updatedAt: Date.now(),
         },
       };
-      await characterStorage.save(updated);
+      await storage.save(updated);
       await refresh();
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to update metadata");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Delete character set
   const deleteSet = useCallback(async (id: string): Promise<void> => {
     try {
-      await characterStorage.delete(id);
+      await storage.delete(id);
       await refresh();
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to delete character set");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Toggle pinned state
   const togglePinned = useCallback(async (id: string): Promise<void> => {
     try {
-      await characterStorage.togglePinned(id);
+      await storage.togglePinned(id);
       await refresh();
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : "Failed to toggle pinned state");
     }
-  }, [refresh]);
+  }, [storage, refresh]);
 
   // Search character sets
   const searchSets = useCallback(async (query: string): Promise<SerializedCharacterSet[]> => {
     if (!query.trim()) {
       return characterSets;
     }
-    return characterStorage.search(query);
-  }, [characterSets]);
+    return storage.search(query);
+  }, [storage, characterSets]);
 
   // Filter by size
   const filterBySize = useCallback(
@@ -246,17 +266,17 @@ export function useCharacterLibrary(): UseCharacterLibraryResult {
       if (width === null && height === null) {
         return characterSets;
       }
-      return characterStorage.filterBySize(width, height);
+      return storage.filterBySize(width, height);
     },
-    [characterSets]
+    [storage, characterSets]
   );
 
   // Check if name exists
   const nameExists = useCallback(
     async (name: string, excludeId?: string): Promise<boolean> => {
-      return characterStorage.nameExists(name, excludeId);
+      return storage.nameExists(name, excludeId);
     },
-    []
+    [storage]
   );
 
   return {

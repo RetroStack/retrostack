@@ -14,6 +14,7 @@ import {
   CHARACTER_EDITOR_STORAGE_KEY_FALLBACK,
   CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE,
 } from "./keys";
+import type { ICharacterSetStorage, IKeyValueStorage, AutoSaveData } from "./interfaces";
 
 /**
  * Check if IndexedDB is available
@@ -28,12 +29,55 @@ function isIndexedDBAvailable(): boolean {
 }
 
 /**
- * Character storage class with IndexedDB and localStorage fallback
+ * Create a localStorage wrapper that implements IKeyValueStorage
+ * Returns a safe wrapper that handles SSR (no window) gracefully
  */
-class CharacterStorage {
+function createLocalStorageWrapper(): IKeyValueStorage {
+  return {
+    getItem(key: string): string | null {
+      if (typeof window === "undefined") return null;
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
+    setItem(key: string, value: string): void {
+      if (typeof window === "undefined") return;
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.error("Failed to write to localStorage:", e);
+      }
+    },
+    removeItem(key: string): void {
+      if (typeof window === "undefined") return;
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Ignore errors
+      }
+    },
+  };
+}
+
+/**
+ * Character storage class with IndexedDB and localStorage fallback
+ * Implements ICharacterSetStorage for dependency injection
+ */
+class CharacterStorage implements ICharacterSetStorage {
   private db: IDBDatabase | null = null;
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private kvStorage: IKeyValueStorage;
+
+  /**
+   * Create a new CharacterStorage instance
+   * @param kvStorage Optional key-value storage for fallback (defaults to localStorage)
+   */
+  constructor(kvStorage?: IKeyValueStorage) {
+    this.kvStorage = kvStorage ?? createLocalStorageWrapper();
+  }
 
   /**
    * Initialize the storage (opens IndexedDB or sets up fallback)
@@ -188,7 +232,7 @@ class CharacterStorage {
    */
   private fallbackGetAll(): SerializedCharacterSet[] {
     try {
-      const data = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
+      const data = this.kvStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
       if (!data) return [];
       const sets = JSON.parse(data) as SerializedCharacterSet[];
       // Ensure manufacturer/system/locale/isPinned fields exist for migrated data
@@ -212,9 +256,9 @@ class CharacterStorage {
    */
   private fallbackSaveAll(sets: SerializedCharacterSet[]): void {
     try {
-      localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK, JSON.stringify(sets));
+      this.kvStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK, JSON.stringify(sets));
     } catch (e) {
-      console.error("Failed to save to localStorage:", e);
+      console.error("Failed to save to fallback storage:", e);
       throw new Error("Storage quota exceeded");
     }
   }
@@ -550,7 +594,7 @@ class CharacterStorage {
     await this.initialize();
 
     if (this.useFallback()) {
-      localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
+      this.kvStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
       return;
     }
 
@@ -608,37 +652,29 @@ export async function getSharedDatabase(): Promise<IDBDatabase | null> {
 
 // Auto-save utilities
 
-export interface AutoSaveData {
-  characterSetId: string;
-  binaryData: string;
-  config: {
-    width: number;
-    height: number;
-    padding: string;
-    bitDirection: string;
-  };
-  selectedIndex: number;
-  timestamp: number;
-  isDirty: boolean;
-}
+// Default key-value storage wrapper (uses localStorage)
+const defaultKvStorage = createLocalStorageWrapper();
 
 /**
- * Save auto-save data to localStorage
+ * Save auto-save data to storage
+ * @param data The auto-save data to save
+ * @param storage Optional key-value storage (defaults to localStorage wrapper)
  */
-export function saveAutoSave(data: AutoSaveData): void {
+export function saveAutoSave(data: AutoSaveData, storage: IKeyValueStorage = defaultKvStorage): void {
   try {
-    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
+    storage.setItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE, JSON.stringify(data));
   } catch (e) {
     console.error("Failed to auto-save:", e);
   }
 }
 
 /**
- * Get auto-save data from localStorage
+ * Get auto-save data from storage
+ * @param storage Optional key-value storage (defaults to localStorage wrapper)
  */
-export function getAutoSave(): AutoSaveData | null {
+export function getAutoSave(storage: IKeyValueStorage = defaultKvStorage): AutoSaveData | null {
   try {
-    const data = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
+    const data = storage.getItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
     if (!data) return null;
     return JSON.parse(data);
   } catch {
@@ -648,23 +684,29 @@ export function getAutoSave(): AutoSaveData | null {
 
 /**
  * Clear auto-save data
+ * @param storage Optional key-value storage (defaults to localStorage wrapper)
  */
-export function clearAutoSave(): void {
-  localStorage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
+export function clearAutoSave(storage: IKeyValueStorage = defaultKvStorage): void {
+  storage.removeItem(CHARACTER_EDITOR_STORAGE_KEY_AUTOSAVE);
 }
 
 /**
  * Check if auto-save data exists and is newer than library version
+ * @param characterSetId The character set ID to check
+ * @param storage Optional key-value storage (defaults to localStorage wrapper)
+ * @param charStorage Optional character set storage (defaults to singleton)
  */
 export async function hasNewerAutoSave(
-  characterSetId: string
+  characterSetId: string,
+  storage: IKeyValueStorage = defaultKvStorage,
+  charStorage: ICharacterSetStorage = characterStorage
 ): Promise<boolean> {
-  const autoSave = getAutoSave();
+  const autoSave = getAutoSave(storage);
   if (!autoSave || autoSave.characterSetId !== characterSetId) {
     return false;
   }
 
-  const stored = await characterStorage.getById(characterSetId);
+  const stored = await charStorage.getById(characterSetId);
   if (!stored) {
     // Original doesn't exist anymore, auto-save is orphaned
     return autoSave.isDirty;
@@ -672,3 +714,9 @@ export async function hasNewerAutoSave(
 
   return autoSave.timestamp > stored.metadata.updatedAt && autoSave.isDirty;
 }
+
+// Re-export types from interfaces for convenience
+export type { AutoSaveData, IKeyValueStorage, ICharacterSetStorage } from "./interfaces";
+
+// Export the localStorage wrapper factory for use in other modules
+export { createLocalStorageWrapper };

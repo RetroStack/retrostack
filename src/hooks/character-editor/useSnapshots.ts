@@ -1,23 +1,61 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Character, CharacterSetConfig } from "@/lib/character-editor/types";
 import {
-  Snapshot,
   createSnapshot,
   restoreSnapshot,
-  saveSnapshot,
+  saveSnapshot as saveSnapshotToDb,
   getSnapshotsForCharacterSet,
-  deleteSnapshot,
-  renameSnapshot,
+  deleteSnapshot as deleteSnapshotFromDb,
+  renameSnapshot as renameSnapshotInDb,
   getMaxSnapshots,
 } from "@/lib/character-editor/storage/snapshots";
+import type { ISnapshotStorage, Snapshot } from "@/lib/character-editor/storage/interfaces";
 
 export interface UseSnapshotsOptions {
   /** Character set ID to manage snapshots for */
   characterSetId: string | null;
   /** Whether snapshots are enabled */
   enabled?: boolean;
+  /**
+   * Snapshot storage implementation.
+   * Defaults to the real IndexedDB storage.
+   * Pass a mock implementation for testing.
+   */
+  storage?: ISnapshotStorage;
+}
+
+/**
+ * Create a default adapter that wraps the existing IndexedDB functions
+ */
+function createDefaultSnapshotStorage(): ISnapshotStorage {
+  return {
+    save: saveSnapshotToDb,
+    getForCharacterSet: getSnapshotsForCharacterSet,
+    getById: async (id: string) => {
+      // Not directly available, would need to search through all
+      const allSets = await getSnapshotsForCharacterSet("");
+      return allSets.find((s) => s.id === id) ?? null;
+    },
+    delete: deleteSnapshotFromDb,
+    deleteAllForCharacterSet: async (characterSetId: string) => {
+      const snapshots = await getSnapshotsForCharacterSet(characterSetId);
+      for (const snapshot of snapshots) {
+        await deleteSnapshotFromDb(snapshot.id);
+      }
+    },
+    rename: renameSnapshotInDb,
+    getCount: async (characterSetId: string) => {
+      const snapshots = await getSnapshotsForCharacterSet(characterSetId);
+      return snapshots.length;
+    },
+    isAtCapacity: async (characterSetId: string) => {
+      const count = (await getSnapshotsForCharacterSet(characterSetId)).length;
+      return count >= getMaxSnapshots();
+    },
+    getMaxSnapshots,
+  };
 }
 
 export interface UseSnapshotsResult {
@@ -51,13 +89,19 @@ export interface UseSnapshotsResult {
  * Hook for managing snapshots of character sets
  */
 export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
-  const { characterSetId, enabled = true } = options;
+  const { characterSetId, enabled = true, storage: providedStorage } = options;
+
+  // Use injected storage or default adapter
+  const storage = useMemo(
+    () => providedStorage ?? createDefaultSnapshotStorage(),
+    [providedStorage]
+  );
 
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const maxSnapshots = getMaxSnapshots();
+  const maxSnapshots = storage.getMaxSnapshots();
 
   // Load snapshots when character set changes
   const refresh = useCallback(async () => {
@@ -70,7 +114,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
     setError(null);
 
     try {
-      const loaded = await getSnapshotsForCharacterSet(characterSetId);
+      const loaded = await storage.getForCharacterSet(characterSetId);
       setSnapshots(loaded);
     } catch (e) {
       console.error("Failed to load snapshots:", e);
@@ -79,7 +123,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
     } finally {
       setLoading(false);
     }
-  }, [characterSetId, enabled]);
+  }, [characterSetId, enabled, storage]);
 
   // Load snapshots on mount and when character set changes
   useEffect(() => {
@@ -100,7 +144,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
 
       try {
         const snapshot = createSnapshot(characterSetId, name, characters, config);
-        await saveSnapshot(snapshot);
+        await storage.save(snapshot);
         await refresh();
         return true;
       } catch (e) {
@@ -109,7 +153,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
         return false;
       }
     },
-    [characterSetId, refresh]
+    [characterSetId, refresh, storage]
   );
 
   // Restore a snapshot
@@ -134,7 +178,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
   const remove = useCallback(
     async (snapshotId: string): Promise<boolean> => {
       try {
-        await deleteSnapshot(snapshotId);
+        await storage.delete(snapshotId);
         await refresh();
         return true;
       } catch (e) {
@@ -143,14 +187,14 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
         return false;
       }
     },
-    [refresh]
+    [refresh, storage]
   );
 
   // Rename a snapshot
   const rename = useCallback(
     async (snapshotId: string, newName: string): Promise<boolean> => {
       try {
-        await renameSnapshot(snapshotId, newName);
+        await storage.rename(snapshotId, newName);
         await refresh();
         return true;
       } catch (e) {
@@ -159,7 +203,7 @@ export function useSnapshots(options: UseSnapshotsOptions): UseSnapshotsResult {
         return false;
       }
     },
-    [refresh]
+    [refresh, storage]
   );
 
   return {

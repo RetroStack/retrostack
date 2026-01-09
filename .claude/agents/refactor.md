@@ -144,6 +144,106 @@ import { useCallback } from "react";
 import { useState, useEffect, useCallback } from "react";
 ```
 
+## Business Logic Extraction Patterns
+
+When refactoring for testability, apply these patterns:
+
+### Extract Pure Functions from Components
+
+Move complex logic from components/hooks to pure functions in `/lib/`:
+
+```typescript
+// Before: Logic in component
+function LibraryView() {
+  const filtered = useMemo(() => {
+    return sets.filter(set => {
+      if (filters.manufacturer && set.manufacturer !== filters.manufacturer) return false;
+      if (filters.minSize && set.size < filters.minSize) return false;
+      return true;
+    });
+  }, [sets, filters]);
+}
+
+// After: Pure function in /lib/
+// /src/lib/character-editor/library/filters.ts
+export function filterCharacterSets(
+  sets: SerializedCharacterSet[],
+  filters: LibraryFilter
+): SerializedCharacterSet[] {
+  return sets.filter(set => matchesAllFilters(set, filters));
+}
+
+// Component just calls the function
+function LibraryView() {
+  const filtered = useMemo(
+    () => filterCharacterSets(sets, filters),
+    [sets, filters]
+  );
+}
+```
+
+### Storage Dependency Injection
+
+When hooks access storage directly, refactor to accept injectable storage:
+
+```typescript
+// Before: Direct storage access
+export function useCharacterLibrary() {
+  useEffect(() => {
+    characterStorage.getAll().then(setCharacterSets);
+  }, []);
+}
+
+// After: Injectable storage with default
+export interface UseCharacterLibraryOptions {
+  storage?: ICharacterSetStorage;
+}
+
+export function useCharacterLibrary(options?: UseCharacterLibraryOptions) {
+  const storage = useMemo(
+    () => options?.storage ?? characterStorage,
+    [options?.storage]
+  );
+
+  useEffect(() => {
+    storage.getAll().then(setCharacterSets);
+  }, [storage]);
+}
+```
+
+### Interface-First Storage
+
+All new storage needs should define interface first:
+
+```typescript
+// 1. Define interface in /storage/interfaces.ts
+interface IMyStorage {
+  get(key: string): Promise<Data | null>;
+  set(key: string, data: Data): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
+// 2. Create real implementation
+class MyStorage implements IMyStorage { ... }
+
+// 3. Create in-memory implementation for tests
+class InMemoryMyStorage implements IMyStorage { ... }
+
+// 4. Hook accepts interface
+function useMyFeature(options?: { storage?: IMyStorage }) { ... }
+```
+
+## Testability Checklist
+
+When refactoring, ensure:
+
+- [ ] Complex logic extracted to pure functions in `/lib/`
+- [ ] Storage accessed via interfaces, not direct browser APIs
+- [ ] Hooks accept optional dependencies for injection
+- [ ] No direct `localStorage`/`indexedDB` calls in hooks (use interfaces)
+- [ ] Filter/sort/search logic in separate pure function modules
+- [ ] State derivation logic (like `hasActiveFilters`) in pure functions
+
 ## Unsafe Refactorings (AVOID)
 
 These change behavior and should NOT be done:

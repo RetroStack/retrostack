@@ -1035,3 +1035,121 @@ const dragSelect = useDragSelect({
 - **Batch Updates**: Use `startBatch()`/`endBatch()` for grouped undo entries
 - **Storage**: IndexedDB for large datasets, localStorage for small settings
 - **Caching**: External data sources cached in memory
+
+## Business Logic & Testing Patterns
+
+### Pure Function Extraction
+
+Business logic should be extracted to pure functions in `/lib/` for testability:
+
+```typescript
+// ✓ Good - pure function, no dependencies
+// /src/lib/character-editor/library/filters.ts
+import { filterCharacterSets } from "@/lib/character-editor/library/filters";
+
+const filtered = filterCharacterSets(sets, filters);
+
+// ✗ Avoid - logic embedded in component
+function MyComponent() {
+  const filtered = useMemo(() => {
+    return sets.filter(set => /* complex logic */);
+  }, [sets, filters]);
+}
+```
+
+### Storage Abstraction
+
+All storage operations use interfaces for dependency injection:
+
+```typescript
+// Interfaces in /src/lib/character-editor/storage/interfaces.ts
+interface IKeyValueStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+interface ICharacterSetStorage {
+  initialize(): Promise<void>;
+  getAll(): Promise<SerializedCharacterSet[]>;
+  save(set: SerializedCharacterSet): Promise<string>;
+  delete(id: string): Promise<void>;
+  // ... other operations
+}
+```
+
+### Dependency Injection in Hooks
+
+Hooks accept optional storage dependencies for testing:
+
+```typescript
+// Hook with injectable storage
+export interface UseCharacterLibraryOptions {
+  storage?: ICharacterSetStorage;  // defaults to real implementation
+}
+
+export function useCharacterLibrary(
+  options?: UseCharacterLibraryOptions
+): UseCharacterLibraryResult {
+  const storage = options?.storage ?? characterStorage;
+  // ...
+}
+
+// In tests - use mock storage
+import { createMockCharacterSetStorage } from "@/lib/character-editor/__tests__/testUtils";
+
+test('loads character sets', async () => {
+  const mockStorage = createMockCharacterSetStorage();
+  mockStorage.sets.push(sampleCharacterSet);
+
+  const { result } = renderHook(() =>
+    useCharacterLibrary({ storage: mockStorage })
+  );
+
+  await waitFor(() => {
+    expect(result.current.characterSets).toHaveLength(1);
+  });
+});
+```
+
+### Test Utilities Location
+
+```
+src/lib/character-editor/__tests__/
+├── testUtils.ts    # Mock factories and storage mocks
+├── fixtures.ts     # Sample data for tests
+```
+
+### Testing Pure Functions
+
+```typescript
+import { filterCharacterSets, hasActiveFilters } from "@/lib/character-editor/library/filters";
+import { sampleCharacterSets, commodoreFilter } from "@/lib/character-editor/__tests__/fixtures";
+
+test('filters by manufacturer', () => {
+  const result = filterCharacterSets(sampleCharacterSets, commodoreFilter);
+
+  expect(result.every(s => s.metadata.manufacturer === 'Commodore')).toBe(true);
+});
+
+test('detects active filters', () => {
+  expect(hasActiveFilters(commodoreFilter)).toBe(true);
+  expect(hasActiveFilters(emptyFilter)).toBe(false);
+});
+```
+
+### In-Memory Storage for Tests
+
+```typescript
+import { InMemoryCharacterSetStorage } from "@/lib/character-editor/storage/memoryStorage";
+
+test('saves and retrieves character set', async () => {
+  const storage = new InMemoryCharacterSetStorage();
+  await storage.initialize();
+
+  const id = await storage.save(sampleCharacterSet);
+  const retrieved = await storage.getById(id);
+
+  expect(retrieved?.metadata.name).toBe(sampleCharacterSet.metadata.name);
+});
+```
