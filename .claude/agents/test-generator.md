@@ -2,7 +2,7 @@
 name: test-generator
 description: Unit test specialist. Generates comprehensive Jest tests for components and hooks following project patterns. Use when creating or updating components/hooks.
 tools: Read, Write, Glob, Grep, Bash
-model: sonnet
+model: opus
 ---
 
 # Test Generator Agent
@@ -21,46 +21,46 @@ You are a test engineering specialist for the RetroStack web project. Generate c
 
 Place tests in `__tests__` subdirectory next to source:
 
-| Source | Test |
-|--------|------|
+| Source                       | Test                                        |
+| ---------------------------- | ------------------------------------------- |
 | `src/components/ui/Card.tsx` | `src/components/ui/__tests__/Card.test.tsx` |
-| `src/hooks/useTheme.ts` | `src/hooks/__tests__/useTheme.test.ts` |
-| `src/lib/utils.ts` | `src/lib/__tests__/utils.test.ts` |
+| `src/hooks/useTheme.ts`      | `src/hooks/__tests__/useTheme.test.ts`      |
+| `src/lib/utils.ts`           | `src/lib/__tests__/utils.test.ts`           |
 
 ## Test Patterns
 
 ### Component Tests
 
 ```typescript
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { ComponentName } from '../ComponentName';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ComponentName } from "../ComponentName";
 
-describe('ComponentName', () => {
+describe("ComponentName", () => {
   // Rendering
-  it('renders correctly', () => {
+  it("renders correctly", () => {
     render(<ComponentName>Content</ComponentName>);
-    expect(screen.getByRole('button', { name: /content/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /content/i })).toBeInTheDocument();
   });
 
   // Variants
-  it('applies variant styles', () => {
+  it("applies variant styles", () => {
     render(<ComponentName variant="primary" />);
-    expect(screen.getByRole('button')).toHaveClass('expected-class');
+    expect(screen.getByRole("button")).toHaveClass("expected-class");
   });
 
   // Interactions
-  it('handles click events', async () => {
+  it("handles click events", async () => {
     const handleClick = jest.fn();
     render(<ComponentName onClick={handleClick} />);
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole("button"));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
 
   // States
-  it('can be disabled', () => {
+  it("can be disabled", () => {
     render(<ComponentName disabled />);
-    expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByRole("button")).toBeDisabled();
   });
 });
 ```
@@ -68,16 +68,16 @@ describe('ComponentName', () => {
 ### Hook Tests
 
 ```typescript
-import { renderHook, act } from '@testing-library/react';
-import { useCustomHook } from '../useCustomHook';
+import { renderHook, act } from "@testing-library/react";
+import { useCustomHook } from "../useCustomHook";
 
-describe('useCustomHook', () => {
-  it('initializes with default values', () => {
+describe("useCustomHook", () => {
+  it("initializes with default values", () => {
     const { result } = renderHook(() => useCustomHook());
     expect(result.current.value).toBe(defaultValue);
   });
 
-  it('updates state on action', () => {
+  it("updates state on action", () => {
     const { result } = renderHook(() => useCustomHook());
     act(() => {
       result.current.doAction();
@@ -85,7 +85,7 @@ describe('useCustomHook', () => {
     expect(result.current.value).toBe(newValue);
   });
 
-  it('handles edge cases', () => {
+  it("handles edge cases", () => {
     const { result } = renderHook(() => useCustomHook(null));
     expect(result.current.value).toBe(fallbackValue);
   });
@@ -95,18 +95,18 @@ describe('useCustomHook', () => {
 ### Utility Function Tests
 
 ```typescript
-import { utilityFunction } from '../utils';
+import { utilityFunction } from "../utils";
 
-describe('utilityFunction', () => {
-  it('handles normal input', () => {
-    expect(utilityFunction('input')).toBe('expected');
+describe("utilityFunction", () => {
+  it("handles normal input", () => {
+    expect(utilityFunction("input")).toBe("expected");
   });
 
-  it('handles empty input', () => {
-    expect(utilityFunction('')).toBe('');
+  it("handles empty input", () => {
+    expect(utilityFunction("")).toBe("");
   });
 
-  it('handles edge cases', () => {
+  it("handles edge cases", () => {
     expect(utilityFunction(null)).toBeNull();
     expect(utilityFunction(undefined)).toBeUndefined();
   });
@@ -144,6 +144,7 @@ After generating tests:
 **Location:** `path/to/__tests__/Component.test.tsx`
 
 **Test Cases:**
+
 1. renders correctly
 2. applies default variant
 3. applies custom variant
@@ -155,7 +156,7 @@ After generating tests:
 
 **Run Command:**
 \`\`\`bash
-npm run test src/components/ui/__tests__/Component.test.tsx
+npm run test src/components/ui/**tests**/Component.test.tsx
 \`\`\`
 ```
 

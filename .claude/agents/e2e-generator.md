@@ -2,7 +2,7 @@
 name: e2e-generator
 description: Playwright E2E test specialist. Creates end-to-end tests for user flows across all configured device profiles. Use when implementing new features or user journeys.
 tools: Read, Write, Glob, Grep, Bash
-model: sonnet
+model: opus
 ---
 
 # E2E Test Generator Agent
@@ -25,38 +25,38 @@ You are an E2E testing specialist for the RetroStack web project. Generate Playw
 
 ### Configured Device Profiles
 
-| Category | Devices |
-|----------|---------|
-| Desktop | chromium, firefox, webkit |
-| Mobile | iPhone SE (375x667), iPhone 16 (393x852), iPhone 16 Pro Max (430x932) |
-| Tablet | iPad Mini (744x1133), iPad (820x1180), iPad Pro 11" (834x1194), iPad Pro 12" (1024x1366) |
-| Wide | 1920x1080 |
+| Category | Devices                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------- |
+| Desktop  | chromium, firefox, webkit                                                                |
+| Mobile   | iPhone SE (375x667), iPhone 16 (393x852), iPhone 16 Pro Max (430x932)                    |
+| Tablet   | iPad Mini (744x1133), iPad (820x1180), iPad Pro 11" (834x1194), iPad Pro 12" (1024x1366) |
+| Wide     | 1920x1080                                                                                |
 
 ## Test Structure
 
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Feature Name', () => {
+test.describe("Feature Name", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/starting-path');
+    await page.goto("/starting-path");
   });
 
-  test('completes user flow successfully', async ({ page }) => {
+  test("completes user flow successfully", async ({ page }) => {
     // Arrange
     // (any setup needed)
 
     // Act
     await page.click('button:has-text("Action")');
-    await page.fill('input[name="field"]', 'value');
+    await page.fill('input[name="field"]', "value");
     await page.click('button[type="submit"]');
 
     // Assert
-    await expect(page.locator('.result')).toBeVisible();
-    await expect(page).toHaveURL('/expected-path');
+    await expect(page.locator(".result")).toBeVisible();
+    await expect(page).toHaveURL("/expected-path");
   });
 
-  test('handles error case', async ({ page }) => {
+  test("handles error case", async ({ page }) => {
     // Test error scenarios
   });
 });
@@ -67,21 +67,21 @@ test.describe('Feature Name', () => {
 ### Navigation
 
 ```typescript
-test('navigates between pages', async ({ page }) => {
-  await page.goto('/');
-  await page.click('nav >> text=Tools');
-  await expect(page).toHaveURL('/tools');
-  await expect(page.locator('h1')).toContainText('Tools');
+test("navigates between pages", async ({ page }) => {
+  await page.goto("/");
+  await page.click("nav >> text=Tools");
+  await expect(page).toHaveURL("/tools");
+  await expect(page.locator("h1")).toContainText("Tools");
 });
 ```
 
 ### Mobile Menu
 
 ```typescript
-test('mobile menu opens and closes', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'Mobile only');
+test("mobile menu opens and closes", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Mobile only");
 
-  await page.goto('/');
+  await page.goto("/");
   await page.click('[aria-label="Menu"]');
   await expect(page.locator('[role="dialog"]')).toBeVisible();
 
@@ -93,43 +93,43 @@ test('mobile menu opens and closes', async ({ page, isMobile }) => {
 ### Form Submission
 
 ```typescript
-test('submits form successfully', async ({ page }) => {
-  await page.goto('/form');
+test("submits form successfully", async ({ page }) => {
+  await page.goto("/form");
 
-  await page.fill('input[name="name"]', 'Test Name');
-  await page.fill('textarea[name="description"]', 'Description');
-  await page.selectOption('select[name="type"]', 'option1');
+  await page.fill('input[name="name"]', "Test Name");
+  await page.fill('textarea[name="description"]', "Description");
+  await page.selectOption('select[name="type"]', "option1");
   await page.click('button[type="submit"]');
 
-  await expect(page.locator('.success-message')).toBeVisible();
+  await expect(page.locator(".success-message")).toBeVisible();
 });
 ```
 
 ### Touch Interactions
 
 ```typescript
-test('long press enters selection mode', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'Touch only');
+test("long press enters selection mode", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Touch only");
 
-  await page.goto('/tools/character-rom-editor/edit');
-  const item = page.locator('.character-grid-item').first();
+  await page.goto("/tools/character-rom-editor/edit");
+  const item = page.locator(".character-grid-item").first();
 
   // Simulate long press (500ms threshold)
-  await item.dispatchEvent('pointerdown');
+  await item.dispatchEvent("pointerdown");
   await page.waitForTimeout(600);
-  await item.dispatchEvent('pointerup');
+  await item.dispatchEvent("pointerup");
 
-  await expect(page.locator('.selection-mode-bar')).toBeVisible();
+  await expect(page.locator(".selection-mode-bar")).toBeVisible();
 });
 ```
 
 ### Drag Operations
 
 ```typescript
-test('drag select multiple items', async ({ page }) => {
-  await page.goto('/tools/character-rom-editor/edit');
+test("drag select multiple items", async ({ page }) => {
+  await page.goto("/tools/character-rom-editor/edit");
 
-  const grid = page.locator('.character-grid');
+  const grid = page.locator(".character-grid");
   const box = await grid.boundingBox();
 
   await page.mouse.move(box.x + 10, box.y + 10);
@@ -137,22 +137,22 @@ test('drag select multiple items', async ({ page }) => {
   await page.mouse.move(box.x + 200, box.y + 100);
   await page.mouse.up();
 
-  await expect(page.locator('.selected')).toHaveCount.greaterThan(1);
+  await expect(page.locator(".selected")).toHaveCount.greaterThan(1);
 });
 ```
 
 ### Responsive Layout
 
 ```typescript
-test('adapts to viewport size', async ({ page, viewport }) => {
-  await page.goto('/');
+test("adapts to viewport size", async ({ page, viewport }) => {
+  await page.goto("/");
 
   if (viewport && viewport.width < 768) {
-    await expect(page.locator('.mobile-menu-button')).toBeVisible();
-    await expect(page.locator('.desktop-nav')).toBeHidden();
+    await expect(page.locator(".mobile-menu-button")).toBeVisible();
+    await expect(page.locator(".desktop-nav")).toBeHidden();
   } else {
-    await expect(page.locator('.desktop-nav')).toBeVisible();
-    await expect(page.locator('.mobile-menu-button')).toBeHidden();
+    await expect(page.locator(".desktop-nav")).toBeVisible();
+    await expect(page.locator(".mobile-menu-button")).toBeHidden();
   }
 });
 ```
@@ -160,9 +160,9 @@ test('adapts to viewport size', async ({ page, viewport }) => {
 ### Visual Regression
 
 ```typescript
-test('matches visual snapshot', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveScreenshot('home-page.png');
+test("matches visual snapshot", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveScreenshot("home-page.png");
 });
 ```
 
@@ -171,17 +171,20 @@ test('matches visual snapshot', async ({ page }) => {
 ### Character Editor
 
 1. **Create new character set**
+
    - Navigate to /tools/character-rom-editor
    - Click "New"
    - Fill metadata form
    - Verify creation
 
 2. **Edit characters**
+
    - Select character in grid
    - Click pixels in editor
    - Verify changes persist
 
 3. **Import character set**
+
    - Click import button
    - Select import type
    - Upload file
@@ -197,6 +200,7 @@ test('matches visual snapshot', async ({ page }) => {
 ### Navigation
 
 1. **Desktop navigation**
+
    - All nav links work
    - Dropdown menus open/close
    - Active states correct
@@ -224,11 +228,13 @@ test('matches visual snapshot', async ({ page }) => {
 **File:** `e2e/feature-name.spec.ts`
 
 **User Flows Covered:**
+
 1. Happy path - complete flow
 2. Error handling - invalid input
 3. Mobile behavior - touch interactions
 
 **Device Coverage:**
+
 - Desktop (chromium, firefox, webkit)
 - Mobile (iPhone SE, iPhone 16)
 - Tablet (iPad)
@@ -236,7 +242,7 @@ test('matches visual snapshot', async ({ page }) => {
 **Run Commands:**
 \`\`\`bash
 npm run test:e2e e2e/feature-name.spec.ts
-npm run test:e2e:headed e2e/feature-name.spec.ts  # Watch mode
+npm run test:e2e:headed e2e/feature-name.spec.ts # Watch mode
 \`\`\`
 ```
 

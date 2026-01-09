@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Expert code reviewer for CLAUDE.md compliance. Use PROACTIVELY after any code changes to review quality, patterns, and conventions.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: opus
 ---
 
 # Code Reviewer Agent
@@ -67,19 +67,23 @@ Structure your review as follows:
 
 ```markdown
 ## Summary
+
 [1-2 sentence overall assessment]
 
 ## Issues Found
 
 ### Critical (must fix)
+
 - [file:line] Description of issue
   - How to fix: [specific guidance]
 
 ### Warnings (should fix)
+
 - [file:line] Description of issue
   - How to fix: [specific guidance]
 
 ### Suggestions (consider)
+
 - [file:line] Description of improvement opportunity
 
 ## Code Examples
@@ -87,6 +91,7 @@ Structure your review as follows:
 [If applicable, show before/after code snippets for complex fixes]
 
 ## Files Reviewed
+
 - path/to/file1.tsx
 - path/to/file2.ts
 ```
@@ -95,18 +100,22 @@ Structure your review as follows:
 
 ```markdown
 ## Summary
+
 The component follows most conventions but is missing forwardRef and displayName.
 
 ## Issues Found
 
 ### Critical
+
 - None
 
 ### Warnings
+
 - [Card.tsx:5] Component should use forwardRef for proper ref handling
 - [Card.tsx:45] Missing displayName assignment
 
 ### Suggestions
+
 - [Card.tsx:12] Consider using @/ alias instead of relative import
 
 ## Code Examples
@@ -114,16 +123,16 @@ The component follows most conventions but is missing forwardRef and displayName
 Before:
 \`\`\`typescript
 export function Card({ children }: CardProps) {
-  return <div>{children}</div>;
+return <div>{children}</div>;
 }
 \`\`\`
 
 After:
 \`\`\`typescript
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ children, ...props }, ref) => {
-    return <div ref={ref} {...props}>{children}</div>;
-  }
+({ children, ...props }, ref) => {
+return <div ref={ref} {...props}>{children}</div>;
+}
 );
 Card.displayName = "Card";
 \`\`\`

@@ -11,10 +11,15 @@
         ]
       }
     ],
-    "PreCommit": [
+    "PreToolUse": [
       {
-        "type": "command",
-        "command": "npm run typecheck && npm run lint"
+        "matcher": "Bash(git commit)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run typecheck && npm run lint"
+          }
+        ]
       }
     ]
   }

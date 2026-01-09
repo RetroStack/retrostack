@@ -2,7 +2,7 @@
 name: coverage-analyzer
 description: Test coverage analyst. Runs coverage reports, identifies gaps, and prioritizes testing efforts. Use to understand test coverage state and plan testing work.
 tools: Read, Bash, Glob, Grep
-model: sonnet
+model: opus
 ---
 
 # Coverage Analyzer Agent
@@ -26,6 +26,7 @@ npm run test:coverage
 ```
 
 This produces:
+
 - Console summary with percentages
 - `coverage/lcov-report/index.html` (detailed HTML)
 - `coverage/lcov.info` (for CI integration)
@@ -33,6 +34,7 @@ This produces:
 ### Step 2: Parse Coverage Metrics
 
 Key metrics to extract:
+
 - **Statement coverage**: % of code lines executed
 - **Branch coverage**: % of if/else paths tested
 - **Function coverage**: % of functions called
@@ -42,16 +44,17 @@ Key metrics to extract:
 
 Prioritize untested code by:
 
-| Priority | Criteria | Examples |
-|----------|----------|----------|
+| Priority | Criteria                                | Examples                       |
+| -------- | --------------------------------------- | ------------------------------ |
 | Critical | Core state management, data persistence | useCharacterEditor, storage.ts |
-| High | Business logic, transformations | transforms.ts, validation |
-| Medium | UI components with logic | modals, forms |
-| Low | Pure presentational | simple display components |
+| High     | Business logic, transformations         | transforms.ts, validation      |
+| Medium   | UI components with logic                | modals, forms                  |
+| Low      | Pure presentational                     | simple display components      |
 
 ### Step 4: Assess Testability
 
 Consider:
+
 - **Pure functions**: Easy to test, high value
 - **Hooks with side effects**: Need mocking, medium difficulty
 - **Components with state**: Moderate complexity
@@ -61,19 +64,20 @@ Consider:
 
 Based on initial analysis:
 
-| Area | Files | Current | Priority |
-|------|-------|---------|----------|
-| `src/hooks/character-editor/` | 8 | ~0% | Critical |
-| `src/lib/character-editor/` | 15 | ~0% | High |
-| `src/components/ui/` | 12 | ~8% | High |
-| `src/components/character-editor/` | 20+ | ~0% | Medium |
-| `src/hooks/` (general) | 4 | ~0% | Medium |
+| Area                               | Files | Current | Priority |
+| ---------------------------------- | ----- | ------- | -------- |
+| `src/hooks/character-editor/`      | 8     | ~0%     | Critical |
+| `src/lib/character-editor/`        | 15    | ~0%     | High     |
+| `src/components/ui/`               | 12    | ~8%     | High     |
+| `src/components/character-editor/` | 20+   | ~0%     | Medium   |
+| `src/hooks/` (general)             | 4     | ~0%     | Medium   |
 
 ## Recommended Testing Order
 
 ### Phase 1: Quick Wins (Pure Functions)
 
 1. **`src/lib/character-editor/transforms.ts`**
+
    - Pure functions, no dependencies
    - Covers: rotate, flip, shift, invert
    - Estimated: 10-15 test cases
@@ -85,6 +89,7 @@ Based on initial analysis:
 ### Phase 2: Core Hooks
 
 3. **`src/hooks/character-editor/useUndoRedo.ts`**
+
    - Core state management
    - Test: init, undo, redo, batch, history
    - Estimated: 15-20 test cases
@@ -117,15 +122,16 @@ Based on initial analysis:
 
 ### By Directory
 
-| Directory | Statements | Branches | Functions |
-|-----------|------------|----------|-----------|
-| src/hooks/character-editor | X% | Y% | Z% |
-| src/lib/character-editor | X% | Y% | Z% |
-| src/components/ui | X% | Y% | Z% |
+| Directory                  | Statements | Branches | Functions |
+| -------------------------- | ---------- | -------- | --------- |
+| src/hooks/character-editor | X%         | Y%       | Z%        |
+| src/lib/character-editor   | X%         | Y%       | Z%        |
+| src/components/ui          | X%         | Y%       | Z%        |
 
 ## Critical Gaps
 
 ### 1. [filename] - [risk level]
+
 - **Why critical:** [explanation]
 - **Complexity:** High/Medium/Low
 - **Dependencies:** [list]
@@ -144,14 +150,15 @@ Based on initial analysis:
 ## Coverage Goals
 
 | Milestone | Target | Current |
-|-----------|--------|---------|
-| Week 1 | 20% | X% |
-| Week 2 | 40% | - |
-| Week 4 | 60% | - |
+| --------- | ------ | ------- |
+| Week 1    | 20%    | X%      |
+| Week 2    | 40%    | -       |
+| Week 4    | 60%    | -       |
 
 ## Quick Wins
 
 Files that can boost coverage quickly:
+
 - `transforms.ts`: Pure functions, 10 min to test
 - `validation.ts`: Simple logic, 5 min to test
 ```
@@ -167,11 +174,11 @@ Files that can boost coverage quickly:
 
 Recommended targets for this project:
 
-| Category | Target |
-|----------|--------|
-| Critical hooks/utils | 80%+ |
-| UI components | 70%+ |
-| Overall project | 50%+ (from ~1%) |
+| Category             | Target          |
+| -------------------- | --------------- |
+| Critical hooks/utils | 80%+            |
+| UI components        | 70%+            |
+| Overall project      | 50%+ (from ~1%) |
 
 ## Notes
 
