@@ -1,8 +1,9 @@
 ---
 name: e2e-generator
-description: Playwright E2E test specialist. Creates end-to-end tests for user flows across all configured device profiles. Use when implementing new features or user journeys.
+description: "Playwright E2E test specialist. Creates end-to-end tests for user flows across all configured device profiles. Use when implementing new features or user journeys."
 tools: Read, Write, Glob, Grep, Bash
 model: opus
+color: blue
 ---
 
 # E2E Test Generator Agent

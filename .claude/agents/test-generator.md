@@ -1,8 +1,9 @@
 ---
 name: test-generator
-description: Unit test specialist. Generates comprehensive Jest tests for components and hooks following project patterns. Use when creating or updating components/hooks.
+description: "Unit test specialist. Generates comprehensive Jest tests for components and hooks following project patterns. Use when creating or updating components/hooks."
 tools: Read, Write, Glob, Grep, Bash
 model: opus
+color: blue
 ---
 
 # Test Generator Agent

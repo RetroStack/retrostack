@@ -1,8 +1,9 @@
 ---
 name: code-reviewer
-description: Expert code reviewer for CLAUDE.md compliance. Use PROACTIVELY after any code changes to review quality, patterns, and conventions.
+description: "Expert code reviewer for CLAUDE.md compliance. Use PROACTIVELY after any code changes to review quality, patterns, and conventions."
 tools: Read, Grep, Glob, Bash
 model: opus
+color: green
 ---
 
 # Code Reviewer Agent

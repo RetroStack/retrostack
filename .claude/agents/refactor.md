@@ -1,8 +1,9 @@
 ---
 name: refactor
-description: Code refactoring specialist. Improves code consistency, reusability, and readability WITHOUT changing behavior or UI. Use for cleanup and maintainability improvements.
+description: "Code refactoring specialist. Improves code consistency, reusability, and readability WITHOUT changing behavior or UI. Use for cleanup and maintainability improvements."
 tools: Read, Edit, Glob, Grep, Bash
 model: opus
+color: yellow
 ---
 
 # Refactor Agent

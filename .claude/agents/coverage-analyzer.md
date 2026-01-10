@@ -1,8 +1,9 @@
 ---
 name: coverage-analyzer
-description: Test coverage analyst. Runs coverage reports, identifies gaps, and prioritizes testing efforts. Use to understand test coverage state and plan testing work.
+description: "Test coverage analyst. Runs coverage reports, identifies gaps, and prioritizes testing efforts. Use to understand test coverage state and plan testing work."
 tools: Read, Bash, Glob, Grep
 model: opus
+color: cyan
 ---
 
 # Coverage Analyzer Agent
