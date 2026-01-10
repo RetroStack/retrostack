@@ -38,6 +38,8 @@ export interface EditorHeaderProps {
   zoomStep?: number;
   /** Callback when zoom changes */
   onZoomChange: (zoom: number) => void;
+  /** Callback when zoom to fit is requested */
+  onZoomToFit: () => void;
   /** Current colors */
   colors: CustomColors;
   /** Callback when colors change */
@@ -63,6 +65,7 @@ export function EditorHeader({
   maxZoom = 40,
   zoomStep = 4,
   onZoomChange,
+  onZoomToFit,
   colors,
   onColorsChange,
   onBack,
@@ -170,6 +173,26 @@ export function EditorHeader({
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </Tooltip>
+        <Tooltip content="Zoom to fit" shortcut="0">
+          <button
+            onClick={onZoomToFit}
+            className="p-1 text-gray-400 hover:text-white ml-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Frame corners with inner square - fit content to view */}
+              {/* Top-left corner */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4h4" />
+              {/* Top-right corner */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 4h4v4" />
+              {/* Bottom-left corner */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v4h4" />
+              {/* Bottom-right corner */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 16v4h-4" />
+              {/* Inner content square */}
+              <rect x="8" y="8" width="8" height="8" strokeWidth={2} rx="1" />
             </svg>
           </button>
         </Tooltip>

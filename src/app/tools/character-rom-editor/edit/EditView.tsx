@@ -19,7 +19,7 @@
  */
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ToolLayout, ToolContent } from "@/components/layout/ToolLayout";
@@ -81,6 +81,40 @@ export function EditView() {
 
   // Zoom state
   const [zoom, setZoom] = useState(20);
+  const minZoom = 8;
+  const maxZoom = 100;
+
+  // Canvas container ref for zoom-to-fit
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  // Zoom to fit handler - calculates optimal zoom based on container and character size
+  const handleZoomToFit = useCallback(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+
+    // Get current dimensions directly from the element
+    const rect = container.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+    const charWidth = editor.config.width;
+    const charHeight = editor.config.height;
+
+    if (containerWidth === 0 || containerHeight === 0) return;
+
+    // Account for padding and grid lines (add some margin for visual comfort)
+    const padding = 40;
+    const availableWidth = containerWidth - padding;
+    const availableHeight = containerHeight - padding;
+
+    // Calculate the maximum zoom that fits both dimensions
+    const maxZoomWidth = availableWidth / charWidth;
+    const maxZoomHeight = availableHeight / charHeight;
+    const optimalZoom = Math.floor(Math.min(maxZoomWidth, maxZoomHeight));
+
+    // Clamp to valid zoom range
+    const clampedZoom = Math.max(minZoom, Math.min(maxZoom, optimalZoom));
+    setZoom(clampedZoom);
+  }, [editor.config.width, editor.config.height]);
 
   // Hover coordinates state (for pixel coordinate display)
   const [hoverCoords, setHoverCoords] = useState<{ x: number; y: number } | null>(null);
@@ -541,12 +575,14 @@ export function EditView() {
         editMetadata: () => setShowMetadataModal(true),
         resetChanges: handleReset,
         reorderCharacters: () => setShowReorderModal(true),
+        zoomToFit: handleZoomToFit,
       }),
     [
       editor,
       handleSave,
       handleExport,
       handleReset,
+      handleZoomToFit,
       openSaveAsDialog,
       navigatePrev,
       navigateNext,
@@ -1056,6 +1092,7 @@ export function EditView() {
           batchMode={isBatchMode}
           zoom={zoom}
           onZoomChange={setZoom}
+          onZoomToFit={handleZoomToFit}
           colors={colors}
           onColorsChange={setColors}
           onBack={handleBack}
@@ -1151,60 +1188,94 @@ export function EditView() {
             rightSidebarWidth="120px"
             rightSidebarCollapsible={false}
           >
-            <div
-              className={`h-full ${
-                overlayMode === "side-by-side" && overlayCharacterSet ? "flex items-center justify-center gap-8" : ""
-              }`}
-            >
-              <EditorCanvas
-                character={selectedCharacter}
-                config={editor.config}
-                onPixelToggle={editor.toggleSelectedPixel}
-                onPixelSet={editor.setSelectedPixel}
-                onDragStart={editor.startBatch}
-                onDragEnd={() => editor.endBatch("Paint pixels")}
-                getPixelState={editor.getSelectedPixelState}
-                batchMode={isBatchMode}
-                foregroundColor={colors.foreground}
-                backgroundColor={colors.background}
-                gridColor={colors.gridColor}
-                zoom={zoom}
-                minZoom={8}
-                maxZoom={100}
-                onZoomChange={setZoom}
-                onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
-                onPixelLeave={() => setHoverCoords(null)}
-                overlayCharacter={overlayCharacterSet?.characters[editor.selectedIndex] || null}
-                overlayConfig={overlayCharacterSet?.config}
-                overlayMode={overlayMode}
-              />
-              {/* Side-by-side comparison panel */}
-              {overlayMode === "side-by-side" && overlayCharacterSet && (
-                <div className="flex flex-col items-center">
-                  <div className="text-xs text-gray-400 mb-2">
-                    {overlayCharacterSet.metadata.name} #{editor.selectedIndex}
-                  </div>
-                  <div className="border border-retro-amber/30 rounded p-1 bg-black/30">
-                    <CharacterDisplay
-                      character={
-                        overlayCharacterSet.characters[editor.selectedIndex] || {
-                          pixels: Array(overlayCharacterSet.config.height)
-                            .fill(null)
-                            .map(() => Array(overlayCharacterSet.config.width).fill(false)),
-                        }
-                      }
-                      mode="large"
-                      scale={zoom}
+            <div className="relative w-full h-full">
+              {/* Invisible div to measure available space for zoom-to-fit */}
+              <div ref={canvasContainerRef} className="absolute inset-0 pointer-events-none" />
+
+              {/* Side-by-side mode: two-column grid layout */}
+              {overlayMode === "side-by-side" && overlayCharacterSet ? (
+                <div className="w-full h-full grid grid-cols-2 gap-4">
+                  {/* Left column: Main editor */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="text-xs text-gray-400 mb-2">
+                      {characterSet?.metadata.name} #{editor.selectedIndex}
+                    </div>
+                    <EditorCanvas
+                      character={selectedCharacter}
+                      config={editor.config}
+                      onPixelToggle={editor.toggleSelectedPixel}
+                      onPixelSet={editor.setSelectedPixel}
+                      onDragStart={editor.startBatch}
+                      onDragEnd={() => editor.endBatch("Paint pixels")}
+                      getPixelState={editor.getSelectedPixelState}
+                      batchMode={isBatchMode}
                       foregroundColor={colors.foreground}
                       backgroundColor={colors.background}
                       gridColor={colors.gridColor}
-                      gridThickness={1}
-                      interactive={false}
+                      zoom={zoom}
+                      minZoom={8}
+                      maxZoom={100}
+                      onZoomChange={setZoom}
+                      onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
+                      onPixelLeave={() => setHoverCoords(null)}
+                      overlayCharacter={null}
+                      overlayConfig={undefined}
+                      overlayMode={overlayMode}
                     />
                   </div>
-                  {!overlayCharacterSet.characters[editor.selectedIndex] && (
-                    <div className="text-xs text-gray-500 mt-1">No character at this index</div>
-                  )}
+                  {/* Right column: Comparison view */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="text-xs text-gray-400 mb-2">
+                      {overlayCharacterSet.metadata.name} #{editor.selectedIndex}
+                    </div>
+                    <div className="border border-retro-amber/30 rounded p-1 bg-black/30">
+                      <CharacterDisplay
+                        character={
+                          overlayCharacterSet.characters[editor.selectedIndex] || {
+                            pixels: Array(overlayCharacterSet.config.height)
+                              .fill(null)
+                              .map(() => Array(overlayCharacterSet.config.width).fill(false)),
+                          }
+                        }
+                        mode="large"
+                        scale={zoom}
+                        foregroundColor={colors.foreground}
+                        backgroundColor={colors.background}
+                        gridColor={colors.gridColor}
+                        gridThickness={1}
+                        interactive={false}
+                      />
+                    </div>
+                    {!overlayCharacterSet.characters[editor.selectedIndex] && (
+                      <div className="text-xs text-gray-500 mt-1">No character at this index</div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Normal mode: single centered canvas */
+                <div className="w-full h-full">
+                  <EditorCanvas
+                    character={selectedCharacter}
+                    config={editor.config}
+                    onPixelToggle={editor.toggleSelectedPixel}
+                    onPixelSet={editor.setSelectedPixel}
+                    onDragStart={editor.startBatch}
+                    onDragEnd={() => editor.endBatch("Paint pixels")}
+                    getPixelState={editor.getSelectedPixelState}
+                    batchMode={isBatchMode}
+                    foregroundColor={colors.foreground}
+                    backgroundColor={colors.background}
+                    gridColor={colors.gridColor}
+                    zoom={zoom}
+                    minZoom={8}
+                    maxZoom={100}
+                    onZoomChange={setZoom}
+                    onPixelHover={(row, col) => setHoverCoords({ x: col, y: row })}
+                    onPixelLeave={() => setHoverCoords(null)}
+                    overlayCharacter={overlayCharacterSet?.characters[editor.selectedIndex] || null}
+                    overlayConfig={overlayCharacterSet?.config}
+                    overlayMode={overlayMode}
+                  />
                 </div>
               )}
             </div>

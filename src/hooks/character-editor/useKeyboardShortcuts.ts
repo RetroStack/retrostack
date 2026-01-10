@@ -155,6 +155,7 @@ export function createEditorShortcuts(actions: {
   editMetadata?: () => void;
   resetChanges?: () => void;
   reorderCharacters?: () => void;
+  zoomToFit?: () => void;
 }): KeyboardShortcut[] {
   return [
     // Undo/Redo
@@ -477,6 +478,16 @@ export function createEditorShortcuts(actions: {
             action: actions.reorderCharacters,
             description: "Reorder characters",
             context: "Editor",
+          },
+        ]
+      : []),
+    ...(actions.zoomToFit
+      ? [
+          {
+            key: "0",
+            action: actions.zoomToFit,
+            description: "Zoom to fit",
+            context: "View",
           },
         ]
       : []),
