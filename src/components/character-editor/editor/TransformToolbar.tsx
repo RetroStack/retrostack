@@ -404,12 +404,7 @@ export function TransformToolbar({
           >
             {/* Letter A with arrow pointing down */}
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 20l2.5-7h3L16 20M9.25 16h5.5"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20l2.5-7h3L16 20M9.25 16h5.5" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v8m0 0l-3-3m3 3l3-3" />
             </svg>
           </ToolbarButton>
