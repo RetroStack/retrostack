@@ -18,6 +18,10 @@ import {
 /**
  * Convert a Uint8Array of bytes to a Character object
  *
+ * Reverses the encoding from characterToBytes:
+ * - MSB first (ltr): pixel 0 from leftmost data position
+ * - LSB first (rtl): pixel 0 from rightmost data position
+ *
  * @param bytes - Raw binary data for one character
  * @param config - Character set configuration
  * @returns Character object with pixel data
@@ -31,36 +35,31 @@ export function bytesToCharacter(
   const pixels: boolean[][] = [];
 
   for (let row = 0; row < height; row++) {
-    const rowPixels: boolean[] = [];
     const rowStart = row * bpl;
-
-    // Collect all bits from the row's bytes
-    const allBits: boolean[] = [];
-    for (let byteIndex = 0; byteIndex < bpl; byteIndex++) {
-      const byte = bytes[rowStart + byteIndex] || 0;
-
-      for (let bit = 0; bit < 8; bit++) {
-        // Bit position based on direction
-        const bitPos = bitDirection === "ltr" ? 7 - bit : bit;
-        const isSet = (byte & (1 << bitPos)) !== 0;
-        allBits.push(isSet);
-      }
-    }
-
-    // Extract the actual pixels based on padding
     const totalBits = bpl * 8;
     const paddingBits = totalBits - width;
 
-    if (padding === "left") {
-      // Skip padding bits at the start
-      for (let i = paddingBits; i < totalBits; i++) {
-        rowPixels.push(allBits[i]);
+    // Convert bytes to allBits (allBits[0] = bit 7 of byte 0, etc.)
+    const allBits: boolean[] = [];
+    for (let byteIndex = 0; byteIndex < bpl; byteIndex++) {
+      const byte = bytes[rowStart + byteIndex] || 0;
+      for (let bit = 0; bit < 8; bit++) {
+        allBits.push((byte & (1 << (7 - bit))) !== 0);
       }
-    } else {
-      // Take first 'width' bits (padding is at the end)
-      for (let i = 0; i < width; i++) {
-        rowPixels.push(allBits[i]);
+    }
+
+    // Extract pixels from allBits
+    const rowPixels: boolean[] = [];
+    for (let i = 0; i < width; i++) {
+      let bitIndex: number;
+      if (bitDirection === "ltr") {
+        // MSB first: pixel 0 at first data position
+        bitIndex = (padding === "left" ? paddingBits : 0) + i;
+      } else {
+        // LSB first: pixel 0 at last data position
+        bitIndex = (padding === "left" ? paddingBits : 0) + (width - 1 - i);
       }
+      rowPixels.push(allBits[bitIndex]);
     }
 
     pixels.push(rowPixels);
@@ -71,6 +70,18 @@ export function bytesToCharacter(
 
 /**
  * Convert a Character object back to binary bytes
+ *
+ * Bit direction affects only the data bits:
+ * - MSB first (ltr): pixel 0 at leftmost data position
+ * - LSB first (rtl): pixel 0 at rightmost data position (pixels reversed)
+ *
+ * Padding is then added on the specified side.
+ *
+ * Example for 7-bit data `0001110`:
+ * - MSB first, left padding:  `00001110`
+ * - MSB first, right padding: `00011100`
+ * - LSB first, left padding:  `00111000`
+ * - LSB first, right padding: `01110000`
  *
  * @param character - Character with pixel data
  * @param config - Character set configuration
@@ -89,35 +100,34 @@ export function characterToBytes(
     const paddingBits = totalBits - width;
 
     // Build the full bit array for this row
+    // Index 0 = MSB (bit 7) of first byte, index 7 = LSB (bit 0) of first byte, etc.
     const allBits: boolean[] = new Array(totalBits).fill(false);
 
-    if (padding === "left") {
-      // Pixels start after padding
-      for (let i = 0; i < width; i++) {
-        allBits[paddingBits + i] = character.pixels[row]?.[i] || false;
+    for (let i = 0; i < width; i++) {
+      const pixel = character.pixels[row]?.[i] || false;
+
+      // Determine the position in allBits for this pixel
+      let bitIndex: number;
+      if (bitDirection === "ltr") {
+        // MSB first: pixel 0 at first data position, pixel (width-1) at last
+        bitIndex = (padding === "left" ? paddingBits : 0) + i;
+      } else {
+        // LSB first: pixel 0 at last data position, pixel (width-1) at first
+        bitIndex = (padding === "left" ? paddingBits : 0) + (width - 1 - i);
       }
-    } else {
-      // Pixels start at beginning
-      for (let i = 0; i < width; i++) {
-        allBits[i] = character.pixels[row]?.[i] || false;
-      }
+
+      allBits[bitIndex] = pixel;
     }
 
-    // Convert bits to bytes
+    // Convert allBits to bytes (allBits[0] = bit 7 of byte 0, etc.)
     for (let byteIndex = 0; byteIndex < bpl; byteIndex++) {
       let byte = 0;
-
       for (let bit = 0; bit < 8; bit++) {
         const bitArrayIndex = byteIndex * 8 + bit;
-        const isSet = allBits[bitArrayIndex];
-
-        if (isSet) {
-          // Bit position based on direction
-          const bitPos = bitDirection === "ltr" ? 7 - bit : bit;
-          byte |= 1 << bitPos;
+        if (allBits[bitArrayIndex]) {
+          byte |= 1 << (7 - bit);
         }
       }
-
       bytes[row * bpl + byteIndex] = byte;
     }
   }

@@ -20,7 +20,12 @@ import { jsPDF } from "jspdf";
 /**
  * Export format types
  */
-export type ExportFormat = "binary" | "c-header" | "assembly" | "png" | "reference-sheet" | "reference-sheet-pdf";
+export type ExportFormat = "binary" | "c-header" | "assembly" | "png" | "reference-sheet";
+
+/**
+ * Reference sheet output format (PNG or PDF)
+ */
+export type ReferenceSheetOutputFormat = "png" | "pdf";
 
 /**
  * Export format metadata
@@ -67,17 +72,10 @@ export const EXPORT_FORMATS: ExportFormatInfo[] = [
   },
   {
     id: "reference-sheet",
-    name: "Reference Sheet (PNG)",
+    name: "Reference Sheet",
     description: "Printable reference with character codes",
     extension: ".png",
     mimeType: "image/png",
-  },
-  {
-    id: "reference-sheet-pdf",
-    name: "Reference Sheet (PDF)",
-    description: "PDF reference for printing",
-    extension: ".pdf",
-    mimeType: "application/pdf",
   },
 ];
 
@@ -119,6 +117,7 @@ export interface PngOptions {
  * Reference sheet export options
  */
 export interface ReferenceSheetOptions {
+  outputFormat: ReferenceSheetOutputFormat;
   columns: number;
   scale: number;
   layout: "grid" | "table";
@@ -202,6 +201,7 @@ export function getDefaultPngOptions(): PngOptions {
  */
 export function getDefaultReferenceSheetOptions(name: string): ReferenceSheetOptions {
   return {
+    outputFormat: "png",
     columns: 16,
     scale: 4,
     layout: "grid",
@@ -981,6 +981,31 @@ export function getHexPreview(
   }
 
   return bytes.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+}
+
+/**
+ * Get hex preview with raw bytes for direct byte access
+ */
+export function getHexPreviewWithBytes(
+  characters: Character[],
+  config: CharacterSetConfig,
+  maxBytes: number = 16
+): { hex: string; bytes: number[] } {
+  if (characters.length === 0) return { hex: "", bytes: [] };
+
+  const bytes: number[] = [];
+  let charIndex = 0;
+
+  while (bytes.length < maxBytes && charIndex < characters.length) {
+    const charBytes = characterToBytes(characters[charIndex], config);
+    for (let i = 0; i < charBytes.length && bytes.length < maxBytes; i++) {
+      bytes.push(charBytes[i]);
+    }
+    charIndex++;
+  }
+
+  const hex = bytes.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join(" ");
+  return { hex, bytes };
 }
 
 /**
