@@ -1,3 +1,16 @@
+/**
+ * Transform Preview Components
+ *
+ * Mini character preview components for transform tooltips.
+ * Components:
+ * - MiniPreview: Single character preview at small scale
+ * - TransformPreviewContent: Before/after comparison layout
+ *
+ * Used in TransformToolbar to show the effect of transforms
+ * before applying them.
+ *
+ * @module components/character-editor/editor/TransformPreview
+ */
 "use client";
 
 /**

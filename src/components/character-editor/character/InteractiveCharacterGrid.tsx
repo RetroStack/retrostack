@@ -1,3 +1,20 @@
+/**
+ * Interactive Character Grid Component
+ *
+ * A fully interactive grid for character selection and editing.
+ * Features:
+ * - Responsive column count based on container width
+ * - Click selection with shift/meta modifiers
+ * - Long press for touch selection mode
+ * - Drag-to-select multiple characters
+ * - Right-click context menu
+ * - Optional "add new" button at end
+ * - Selection mode integration
+ *
+ * Used in EditorSidebar for the main character picker.
+ *
+ * @module components/character-editor/character/InteractiveCharacterGrid
+ */
 "use client";
 
 import { useRef, useMemo, useCallback } from "react";

@@ -1,3 +1,17 @@
+/**
+ * History Slider Component
+ *
+ * A visual timeline slider for navigating undo/redo history.
+ * Features:
+ * - Draggable slider to jump to any point in history
+ * - Tick marks showing each history entry
+ * - Tooltip showing action labels on hover
+ * - Click or drag to navigate
+ * - Shows grayed-out future entries when available
+ * - Clear history button
+ *
+ * @module components/character-editor/editor/HistorySlider
+ */
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";

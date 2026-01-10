@@ -1,3 +1,19 @@
+/**
+ * Transform Toolbar Component
+ *
+ * Vertical toolbar with character transformation tools.
+ * Provides before/after preview in tooltips.
+ * Actions grouped by category:
+ * - Rotate: Left/right 90°
+ * - Flip: Horizontal/vertical mirror
+ * - Shift: Move pixels in any direction
+ * - Fill operations: Clear, fill, invert, center
+ * - Clipboard: Copy, paste, delete
+ *
+ * Uses ResponsiveToolbar internally for adaptive layout.
+ *
+ * @module components/character-editor/editor/TransformToolbar
+ */
 "use client";
 
 import { useCallback, useMemo } from "react";

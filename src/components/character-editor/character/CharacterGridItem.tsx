@@ -1,3 +1,16 @@
+/**
+ * Character Grid Item Component
+ *
+ * Individual character cell for interactive grids with touch support.
+ * Features:
+ * - Click to select with shift/meta key modifiers
+ * - Long press for selection mode on touch devices
+ * - Right-click context menu support
+ * - Visual selection states (primary and batch)
+ * - Drag-to-select integration
+ *
+ * @module components/character-editor/character/CharacterGridItem
+ */
 "use client";
 
 import { useCallback } from "react";

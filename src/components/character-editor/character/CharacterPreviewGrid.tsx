@@ -1,3 +1,15 @@
+/**
+ * Character Preview Grid Component
+ *
+ * A simplified, non-interactive grid for displaying character previews.
+ * Used in dialogs and cards where interaction is not needed.
+ * Features:
+ * - Auto-calculated grid layout (roughly 4 rows)
+ * - Remaining count badge when truncated
+ * - Configurable colors and scale
+ *
+ * @module components/character-editor/character/CharacterPreviewGrid
+ */
 "use client";
 
 import { CharacterDisplay } from "./CharacterDisplay";

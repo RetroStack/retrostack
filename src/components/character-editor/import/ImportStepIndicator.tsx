@@ -1,3 +1,15 @@
+/**
+ * Import Step Indicator Component
+ *
+ * A visual step indicator for multi-step import wizards.
+ * Shows numbered circles connected by lines with:
+ * - Current step highlighted in cyan
+ * - Completed steps with checkmarks
+ * - Future steps grayed out
+ * - Step labels below each circle
+ *
+ * @module components/character-editor/import/ImportStepIndicator
+ */
 "use client";
 
 export interface ImportStepIndicatorProps {
