@@ -40,9 +40,7 @@ export function Navigation() {
               className="px-3 xl:px-4 py-2 font-ui text-xs xl:text-sm uppercase tracking-wider text-gray-300 hover:text-retro-cyan transition-colors duration-200 whitespace-nowrap"
             >
               {item.label}
-              {hasEnabledChildren && (
-                <span className="ml-1 text-xs">▼</span>
-              )}
+              {hasEnabledChildren && <span className="ml-1 text-xs">▼</span>}
             </Link>
 
             {hasEnabledChildren && openDropdown === item.label && (
@@ -54,12 +52,8 @@ export function Navigation() {
                       href={child.href}
                       className="block px-4 py-3 hover:bg-retro-purple/30 transition-colors duration-200 touch-target"
                     >
-                      <span className="block font-ui text-sm text-retro-cyan">
-                        {child.label}
-                      </span>
-                      <span className="block text-xs text-gray-400 mt-1">
-                        {child.description}
-                      </span>
+                      <span className="block font-ui text-sm text-retro-cyan">{child.label}</span>
+                      <span className="block text-xs text-gray-400 mt-1">{child.description}</span>
                     </Link>
                   ))}
                 </div>

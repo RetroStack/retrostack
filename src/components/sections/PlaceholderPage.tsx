@@ -46,14 +46,7 @@ interface PlaceholderPageProps {
   subPages?: SubPageLink[];
 }
 
-export function PlaceholderPage({
-  title,
-  description,
-  backLink,
-  backLabel,
-  icon,
-  subPages,
-}: PlaceholderPageProps) {
+export function PlaceholderPage({ title, description, backLink, backLabel, icon, subPages }: PlaceholderPageProps) {
   const hasSubPages = subPages && subPages.length > 0;
 
   return (
@@ -62,11 +55,7 @@ export function PlaceholderPage({
       <main className="min-h-screen pt-24 pb-20">
         <Container className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           {/* Icon */}
-          {icon && (
-            <div className="text-retro-violet mb-8">
-              {icon}
-            </div>
-          )}
+          {icon && <div className="text-retro-violet mb-8">{icon}</div>}
 
           {/* Title */}
           <NeonText as="h1" color="pink" className="font-display text-xl sm:text-2xl md:text-3xl mb-4">
@@ -74,13 +63,14 @@ export function PlaceholderPage({
           </NeonText>
 
           {/* Description */}
-          <p className="text-gray-400 max-w-lg mb-8">
-            {description}
-          </p>
+          <p className="text-gray-400 max-w-lg mb-8">{description}</p>
 
           {/* Sub-pages grid or Coming Soon Badge */}
           {hasSubPages ? (
-            <div className="grid gap-4 sm:gap-6 w-full max-w-2xl mb-12" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(250px, 100%), 1fr))" }}>
+            <div
+              className="grid gap-4 sm:gap-6 w-full max-w-2xl mb-12"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(250px, 100%), 1fr))" }}
+            >
               {subPages.map((page) => (
                 <Link
                   key={page.href}
@@ -97,9 +87,7 @@ export function PlaceholderPage({
           ) : (
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-retro-violet/50 bg-retro-purple/20 mb-12">
               <span className="w-2 h-2 rounded-full bg-retro-cyan animate-pulse" />
-              <span className="text-retro-cyan text-sm font-ui uppercase tracking-wider">
-                Coming Soon
-              </span>
+              <span className="text-retro-cyan text-sm font-ui uppercase tracking-wider">Coming Soon</span>
             </div>
           )}
 

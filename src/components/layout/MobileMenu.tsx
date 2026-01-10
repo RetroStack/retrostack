@@ -97,9 +97,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 {hasEnabledChildren ? (
                   <>
                     <button
-                      onClick={() =>
-                        setExpandedItem(expandedItem === item.label ? null : item.label)
-                      }
+                      onClick={() => setExpandedItem(expandedItem === item.label ? null : item.label)}
                       className="w-full flex items-center justify-between touch-target font-ui text-sm uppercase tracking-wider text-gray-300 hover:text-retro-cyan transition-colors"
                       aria-expanded={expandedItem === item.label}
                     >

@@ -47,7 +47,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/systems",
     enabled: false,
     children: [
-      { label: "Computers", href: "/systems/computers", description: "TRS-80, Sorcerer, Apple I, and more", enabled: false },
+      {
+        label: "Computers",
+        href: "/systems/computers",
+        description: "TRS-80, Sorcerer, Apple I, and more",
+        enabled: false,
+      },
       { label: "Game Consoles", href: "/systems/game-consoles", description: "Classic gaming systems", enabled: false },
       { label: "SDKs", href: "/systems/sdks", description: "System Development Kits", enabled: false },
       {
@@ -64,11 +69,26 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/tools",
     enabled: true,
     children: [
-      { label: "Character ROM Editor", href: "/tools/character-rom-editor", description: "Edit character ROM data", enabled: true },
-      { label: "Binary ROM Editor", href: "/tools/binary-rom-editor", description: "Binary ROM editing tools", enabled: false },
+      {
+        label: "Character ROM Editor",
+        href: "/tools/character-rom-editor",
+        description: "Edit character ROM data",
+        enabled: true,
+      },
+      {
+        label: "Binary ROM Editor",
+        href: "/tools/binary-rom-editor",
+        description: "Binary ROM editing tools",
+        enabled: false,
+      },
       { label: "Emulators", href: "/tools/emulators", description: "Z80, 6502 emulators", enabled: false },
       { label: "Assemblers", href: "/tools/assemblers", description: "Assembly language tools", enabled: false },
-      { label: "Schematic Viewer", href: "/tools/schematic-viewer", description: "View circuit schematics", enabled: false },
+      {
+        label: "Schematic Viewer",
+        href: "/tools/schematic-viewer",
+        description: "View circuit schematics",
+        enabled: false,
+      },
       { label: "PCB Viewer", href: "/tools/pcb-viewer", description: "PCB layout viewer", enabled: false },
     ],
   },

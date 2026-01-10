@@ -31,13 +31,9 @@ export function Footer() {
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
               <Link href="/" className="inline-block touch-target">
-                <span className="font-display text-base sm:text-lg text-retro-pink">
-                  {SITE_CONFIG.name}
-                </span>
+                <span className="font-display text-base sm:text-lg text-retro-pink">{SITE_CONFIG.name}</span>
               </Link>
-              <p className="mt-3 sm:mt-4 text-sm text-text-secondary max-w-xs">
-                {SITE_CONFIG.description}
-              </p>
+              <p className="mt-3 sm:mt-4 text-sm text-text-secondary max-w-xs">{SITE_CONFIG.description}</p>
             </div>
 
             {/* Navigation Links - only show enabled sections with enabled children */}
