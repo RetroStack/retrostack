@@ -2,10 +2,24 @@
 /* eslint-disable react-hooks/set-state-in-effect -- SSR-safe hydration from localStorage */
 
 import { useState, useEffect, useCallback } from "react";
+import { IKeyValueStorage } from "@/lib/character-editor/storage/interfaces";
 
 export type Theme = "dark" | "light" | "system";
 
 const THEME_STORAGE_KEY = "retrostack-theme";
+
+/**
+ * Default localStorage wrapper that implements IKeyValueStorage
+ */
+const defaultStorage: IKeyValueStorage = {
+  getItem: (key) => (typeof window !== "undefined" ? localStorage.getItem(key) : null),
+  setItem: (key, value) => {
+    if (typeof window !== "undefined") localStorage.setItem(key, value);
+  },
+  removeItem: (key) => {
+    if (typeof window !== "undefined") localStorage.removeItem(key);
+  },
+};
 
 /**
  * Get the system color scheme preference
@@ -42,11 +56,13 @@ function applyTheme(theme: "dark" | "light") {
   // Update meta theme-color for mobile browsers
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {
-    metaThemeColor.setAttribute(
-      "content",
-      theme === "dark" ? "#0a0a1a" : "#ffffff"
-    );
+    metaThemeColor.setAttribute("content", theme === "dark" ? "#0a0a1a" : "#ffffff");
   }
+}
+
+export interface UseThemeOptions {
+  /** Optional storage implementation for dependency injection (defaults to localStorage) */
+  storage?: IKeyValueStorage;
 }
 
 export interface UseThemeResult {
@@ -64,19 +80,23 @@ export interface UseThemeResult {
 
 /**
  * Hook for managing theme (dark/light mode)
+ *
+ * @param options - Optional configuration including storage implementation
  */
-export function useTheme(): UseThemeResult {
+export function useTheme(options?: UseThemeOptions): UseThemeResult {
+  const storage = options?.storage ?? defaultStorage;
+
   const [theme, setThemeState] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
-  // Initialize theme from localStorage on mount
+  // Initialize theme from storage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    const stored = storage.getItem(THEME_STORAGE_KEY) as Theme | null;
     const initialTheme = stored || "dark"; // Default to dark
     setThemeState(initialTheme);
     applyTheme(resolveTheme(initialTheme));
     setMounted(true);
-  }, []);
+  }, [storage]);
 
   // Listen for system theme changes when in system mode
   useEffect(() => {
@@ -92,12 +112,15 @@ export function useTheme(): UseThemeResult {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
-  // Set theme and persist to localStorage
-  const setTheme = useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    applyTheme(resolveTheme(newTheme));
-  }, []);
+  // Set theme and persist to storage
+  const setTheme = useCallback(
+    (newTheme: Theme) => {
+      setThemeState(newTheme);
+      storage.setItem(THEME_STORAGE_KEY, newTheme);
+      applyTheme(resolveTheme(newTheme));
+    },
+    [storage]
+  );
 
   // Toggle between dark and light
   const toggleTheme = useCallback(() => {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { CharacterSet, AnchorPoint, Character, CharacterSetConfig } from "@/lib/character-editor/types";
+import { CharacterSet, AnchorPoint } from "@/lib/character-editor/types";
 import { base64ToBinary, parseCharacterRom } from "@/lib/character-editor/import/binary";
 import { AutoSaveData } from "@/hooks/character-editor/useAutoSave";
 import { UseCharacterEditorResult } from "@/hooks/character-editor/useCharacterEditor";

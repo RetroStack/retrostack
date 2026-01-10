@@ -3,6 +3,14 @@
 import { useMemo } from "react";
 import { KNOWN_MANUFACTURERS, getSystemsForManufacturer } from "@/lib/character-editor/data/manufacturers";
 import { useDropdown } from "@/hooks/useDropdown";
+import {
+  DropdownPanel,
+  DropdownGroup,
+  DropdownChipButton,
+  DropdownClearButton,
+  Picker3DButton,
+  pickerInputClasses,
+} from "@/components/ui/DropdownPrimitives";
 
 export interface ManufacturerSystemSelectProps {
   /** Currently selected manufacturer */
@@ -34,9 +42,7 @@ export function ManufacturerSystemSelect({
 
   // Sort manufacturers alphabetically
   const sortedManufacturers = useMemo(() => {
-    return [...KNOWN_MANUFACTURERS].sort((a, b) =>
-      a.manufacturer.localeCompare(b.manufacturer)
-    );
+    return [...KNOWN_MANUFACTURERS].sort((a, b) => a.manufacturer.localeCompare(b.manufacturer));
   }, []);
 
   const handleManufacturerClick = (mfr: string) => {
@@ -57,12 +63,6 @@ export function ManufacturerSystemSelect({
     dropdown.close();
   };
 
-  const inputClasses = `
-    flex-1 min-w-0 px-3 py-2 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white
-    placeholder-gray-500 focus:outline-none focus:border-retro-cyan
-    disabled:opacity-50 disabled:cursor-not-allowed
-  `;
-
   return (
     <div className={`flex gap-2 ${className}`}>
       {/* Manufacturer input */}
@@ -72,7 +72,7 @@ export function ManufacturerSystemSelect({
         onChange={(e) => onManufacturerChange(e.target.value)}
         placeholder="Manufacturer"
         disabled={disabled}
-        className={inputClasses}
+        className={pickerInputClasses}
       />
 
       {/* System input */}
@@ -82,75 +82,40 @@ export function ManufacturerSystemSelect({
         onChange={(e) => onSystemChange(e.target.value)}
         placeholder="System"
         disabled={disabled}
-        className={inputClasses}
+        className={pickerInputClasses}
       />
 
       {/* Picker dropdown */}
       <div ref={dropdown.ref} className="relative flex-shrink-0">
-        <button
-          type="button"
-          onClick={dropdown.toggle}
-          disabled={disabled}
-          className="px-3 py-2 bg-gradient-to-b from-gray-600/50 to-gray-700/50 border border-retro-cyan/50 border-t-retro-cyan/70 hover:from-gray-500/50 hover:to-gray-600/50 hover:border-retro-cyan active:from-gray-700/50 active:to-gray-800/50 shadow-md shadow-black/30 active:shadow-sm rounded text-sm text-retro-cyan transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Select manufacturer and system"
-        >
-          ...
-        </button>
+        <Picker3DButton onClick={dropdown.toggle} disabled={disabled} title="Select manufacturer and system" />
 
         {/* Dropdown panel */}
         {dropdown.isOpen && (
-          <div
-            className="absolute z-50 top-full mt-1 max-h-80 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl"
-            style={{ width: '240px', right: 0 }}
-          >
+          <DropdownPanel>
             {/* Clear option */}
-            {(manufacturer || system) && (
-              <div className="p-2 border-b border-retro-grid/30">
-                <button
-                  onClick={handleClear}
-                  className="w-full text-left px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-retro-grid/20 rounded transition-colors"
-                >
-                  Clear selection
-                </button>
-              </div>
-            )}
+            {(manufacturer || system) && <DropdownClearButton onClick={handleClear} />}
 
             {/* Manufacturers and systems */}
             <div className="p-2">
               {sortedManufacturers.map((mfr) => (
-                <div key={mfr.manufacturer} className="mb-3 last:mb-0">
-                  {/* Manufacturer header - clickable */}
-                  <button
-                    onClick={() => handleManufacturerClick(mfr.manufacturer)}
-                    className={`w-full text-left px-2 py-1 text-xs font-medium rounded transition-all ${
-                      manufacturer === mfr.manufacturer && !system
-                        ? "text-retro-cyan bg-retro-cyan/30 ring-1 ring-retro-cyan"
-                        : "text-retro-cyan bg-retro-cyan/10 hover:bg-retro-cyan/20 hover:text-white"
-                    }`}
-                  >
-                    {mfr.manufacturer}
-                  </button>
-
-                  {/* Systems for this manufacturer */}
-                  <div className="ml-3 mt-1 flex flex-wrap gap-1">
-                    {mfr.systems.map((sys) => (
-                      <button
-                        key={sys}
-                        onClick={() => handleSystemClick(mfr.manufacturer, sys)}
-                        className={`px-2 py-0.5 text-xs rounded transition-all ${
-                          manufacturer === mfr.manufacturer && system === sys
-                            ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
-                            : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
-                        }`}
-                      >
-                        {sys}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <DropdownGroup
+                  key={mfr.manufacturer}
+                  label={mfr.manufacturer}
+                  onClick={() => handleManufacturerClick(mfr.manufacturer)}
+                  isSelected={manufacturer === mfr.manufacturer && !system}
+                >
+                  {mfr.systems.map((sys) => (
+                    <DropdownChipButton
+                      key={sys}
+                      label={sys}
+                      isSelected={manufacturer === mfr.manufacturer && system === sys}
+                      onClick={() => handleSystemClick(mfr.manufacturer, sys)}
+                    />
+                  ))}
+                </DropdownGroup>
               ))}
             </div>
-          </div>
+          </DropdownPanel>
         )}
       </div>
     </div>

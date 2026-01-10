@@ -1,6 +1,6 @@
 # RetroStack Web
 
-Marketing website for RetroStack - a collection of tools and resources for retro computing enthusiasts.
+Website for RetroStack - a collection of tools and resources for retro computing enthusiasts.
 
 ## Tech Stack
 
@@ -257,6 +257,15 @@ For multi-selection in grids:
 - Visual tests: `e2e/visual-<feature>.spec.ts`
 - Test fixtures: `test-fixtures/`
 
+### Testing Agents
+
+Use specialized agents proactively when implementing features:
+
+- **test-generator**: Generate comprehensive Jest tests for components and hooks
+- **e2e-generator**: Create Playwright E2E tests for user flows
+- **coverage-analyzer**: Identify test coverage gaps and prioritize testing
+- **code-reviewer**: Review code for quality, patterns, and CLAUDE.md compliance
+
 ### Patterns
 
 Extract business logic to pure functions in `/lib/`:
@@ -264,7 +273,7 @@ Extract business logic to pure functions in `/lib/`:
 ```typescript
 // Good - testable pure function
 export function processData(data: DataType[]): ResultType[] {
-  return data.filter(x => x.valid).map(x => transform(x));
+  return data.filter((x) => x.valid).map((x) => transform(x));
 }
 ```
 
@@ -279,6 +288,35 @@ export function useMyData(options?: UseMyDataOptions) {
   const storage = options?.storage ?? realStorage;
 }
 ```
+
+### Dependency Injection Requirements
+
+All hooks that use external dependencies MUST support injection:
+
+- **Storage**: Accept optional `storage?: IKeyValueStorage` parameter
+- **APIs**: Accept optional service interfaces for external data
+- **Timers**: Use testable timer patterns (e.g., `useTimer` hook)
+
+Example:
+
+```typescript
+export function useMyFeature(options?: {
+  storage?: IKeyValueStorage;
+  apiClient?: IApiClient;
+}) {
+  const storage = options?.storage ?? defaultStorage;
+  const api = options?.apiClient ?? defaultApiClient;
+}
+```
+
+### UI Verification with Playwright MCP
+
+After implementing UI features, verify they work correctly:
+
+1. Use the Playwright MCP server to interact with the running app
+2. Navigate to the feature and test user interactions
+3. Verify visual appearance matches expectations
+4. Check responsive behavior on different viewports
 
 ### Coverage Targets
 
@@ -302,23 +340,92 @@ export function useMyData(options?: UseMyDataOptions) {
 3. Extend HTML attributes
 4. Export `displayName`
 
-### Testing Checklist
+### Testing Checklist (Required for All Features)
+
+**Unit Tests:**
 
 - [ ] Extract business logic to `/lib/` as pure functions
 - [ ] Add unit tests for pure functions (>90% coverage)
-- [ ] Add hook tests with mock dependencies
-- [ ] Add E2E tests for user workflows
-- [ ] Verify UI manually or with Playwright
-- [ ] Run `npm run validate`
+- [ ] Add hook tests with mock dependencies (use dependency injection)
+- [ ] Use `test-generator` agent for comprehensive test coverage
+
+**E2E Tests:**
+
+- [ ] Add E2E tests for all user workflows (`e2e/<feature>.spec.ts`)
+- [ ] Use `e2e-generator` agent to create Playwright tests
+- [ ] Test on multiple device profiles (desktop, tablet, mobile)
+- [ ] Include error states and edge cases
+
+**Visual Tests:**
+
+- [ ] Add visual regression tests (`e2e/visual-<feature>.spec.ts`)
+- [ ] Update existing visual tests if UI changes affect them
+- [ ] Capture screenshots for key states (default, hover, active, error)
+
+**UI Verification:**
+
+- [ ] Use Playwright MCP server to manually verify the feature works
+- [ ] Test user interactions (clicks, inputs, navigation)
+- [ ] Verify responsive behavior on different screen sizes
+- [ ] Check accessibility (keyboard navigation, focus states)
+
+**Final Validation:**
+
+- [ ] Run `npm run validate` (lint + typecheck + all tests)
+- [ ] Use `code-reviewer` agent to check for issues
+
+## Documentation
+
+### Keep Documentation Updated
+
+When modifying files, always update related documentation:
+
+- **Code Comments**: Update JSDoc comments when changing function signatures or behavior
+- **README files**: Update if adding new features or changing setup
+- **CLAUDE.md**: Update if adding new patterns, conventions, or key files
+- **Type definitions**: Keep interfaces and types accurate and documented
+
+### Comment Guidelines
+
+```typescript
+/**
+ * Brief description of what this does
+ *
+ * @param paramName - Description of the parameter
+ * @returns Description of return value
+ *
+ * @example
+ * ```typescript
+ * const result = myFunction(input);
+ * ```
+ */
+export function myFunction(paramName: Type): ReturnType {
+  // Implementation
+}
+```
+
+### When to Update CLAUDE.md
+
+- Adding new reusable patterns or conventions
+- Creating new shared hooks or utilities
+- Adding new key files that others should know about
+- Changing project structure or workflows
 
 ## Key Files
 
-| File                                        | Purpose                 |
-| ------------------------------------------- | ----------------------- |
-| `/src/app/globals.css`                      | All styling             |
-| `/src/lib/constants.ts`                     | Nav items, config       |
-| `/src/components/layout/ToolLayout.tsx`     | Tool page wrapper       |
-| `/src/hooks/useDropdown.ts`                 | Dropdown state          |
-| `/src/hooks/useModalManager.ts`             | Modal management        |
-| `/src/lib/character-editor/types.ts`        | Character editor types  |
-| `/src/lib/character-editor/storage/keys.ts` | Storage keys            |
+| File                                             | Purpose                        |
+| ------------------------------------------------ | ------------------------------ |
+| `/src/app/globals.css`                           | All styling                    |
+| `/src/lib/constants.ts`                          | Nav items, config              |
+| `/src/components/layout/ToolLayout.tsx`          | Tool page wrapper              |
+| `/src/hooks/useDropdown.ts`                      | Dropdown state                 |
+| `/src/hooks/useModalManager.ts`                  | Modal management               |
+| `/src/hooks/useResizeObserver.ts`                | Element size observation       |
+| `/src/hooks/useOnboarding.ts`                    | Onboarding tour management     |
+| `/src/hooks/useTheme.ts`                         | Theme (dark/light) management  |
+| `/src/contexts/CharacterEditorContext.tsx`       | Editor display settings        |
+| `/src/components/ui/DropdownPrimitives.tsx`      | Shared dropdown UI components  |
+| `/src/lib/character-editor/types.ts`             | Character editor types         |
+| `/src/lib/character-editor/storage/keys.ts`      | Storage keys                   |
+| `/src/lib/character-editor/storage/interfaces.ts`| Storage interfaces (DI)        |
+| `/src/lib/character-editor/storage/autosave.ts`  | Auto-save utilities            |

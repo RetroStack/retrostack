@@ -2,9 +2,37 @@
 
 import { useState, useEffect, useRef, RefObject, useCallback } from "react";
 
-interface Size {
+export interface Size {
   width: number;
   height: number;
+}
+
+/**
+ * Creates a ResizeObserver for an element and returns cleanup function.
+ * Shared utility for resize observation hooks.
+ *
+ * @param element - The element to observe
+ * @param onResize - Callback when size changes
+ * @returns Cleanup function to disconnect the observer
+ */
+function createResizeObserver(
+  element: HTMLElement,
+  onResize: (size: Size) => void
+): () => void {
+  const observer = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      onResize({ width, height });
+    }
+  });
+
+  observer.observe(element);
+
+  // Get initial size
+  const rect = element.getBoundingClientRect();
+  onResize({ width: rect.width, height: rect.height });
+
+  return () => observer.disconnect();
 }
 
 /**
@@ -25,13 +53,9 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
 
   const handleResize = useCallback(
-    (entries: ResizeObserverEntry[]) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        const newSize = { width, height };
-        setSize(newSize);
-        callback?.(newSize);
-      }
+    (newSize: Size) => {
+      setSize(newSize);
+      callback?.(newSize);
     },
     [callback]
   );
@@ -40,16 +64,7 @@ export function useResizeObserver<T extends HTMLElement = HTMLElement>(
     const element = ref.current;
     if (!element) return;
 
-    const observer = new ResizeObserver(handleResize);
-    observer.observe(element);
-
-    // Get initial size
-    const rect = element.getBoundingClientRect();
-    setSize({ width: rect.width, height: rect.height });
-
-    return () => {
-      observer.disconnect();
-    };
+    return createResizeObserver(element, handleResize);
   }, [handleResize]);
 
   return { ref, size };
@@ -71,22 +86,7 @@ export function useElementSize<T extends HTMLElement>(
     const element = elementRef.current;
     if (!element) return;
 
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setSize({ width, height });
-      }
-    });
-
-    observer.observe(element);
-
-    // Get initial size
-    const rect = element.getBoundingClientRect();
-    setSize({ width: rect.width, height: rect.height });
-
-    return () => {
-      observer.disconnect();
-    };
+    return createResizeObserver(element, setSize);
   }, [elementRef]);
 
   return size;

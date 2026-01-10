@@ -3,6 +3,15 @@
 import { useMemo } from "react";
 import { ROM_CHIPS, RomChipInfo } from "@/lib/character-editor/data/manufacturers";
 import { useDropdown } from "@/hooks/useDropdown";
+import {
+  DropdownPanel,
+  DropdownSection,
+  DropdownGroup,
+  DropdownChipButton,
+  DropdownClearButton,
+  Picker3DButton,
+  pickerInputClasses,
+} from "@/components/ui/DropdownPrimitives";
 
 export interface ChipSelectProps {
   /** Currently selected chip (part number) */
@@ -47,7 +56,7 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
   const compatibleChipIds = useMemo(() => {
     if (!system) return new Set<string>();
     return new Set(
-      ROM_CHIPS.filter((c) => c.usedIn.some((s) => s.toLowerCase() === system.toLowerCase())).map((c) => c.id),
+      ROM_CHIPS.filter((c) => c.usedIn.some((s) => s.toLowerCase() === system.toLowerCase())).map((c) => c.id)
     );
   }, [system]);
 
@@ -73,94 +82,55 @@ export function ChipSelect({ chip, onChipChange, system, disabled = false, class
         onChange={(e) => onChipChange(e.target.value)}
         placeholder="e.g. MOS Technology 901225-01"
         disabled={disabled}
-        className="flex-1 min-w-0 px-3 py-2 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-retro-cyan disabled:opacity-50 disabled:cursor-not-allowed"
+        className={pickerInputClasses}
       />
 
       {/* Picker dropdown */}
       <div ref={dropdown.ref} className="relative flex-shrink-0">
-        <button
-          type="button"
-          onClick={dropdown.toggle}
-          disabled={disabled}
-          className="px-3 py-2 bg-gradient-to-b from-gray-600/50 to-gray-700/50 border border-retro-cyan/50 border-t-retro-cyan/70 hover:from-gray-500/50 hover:to-gray-600/50 hover:border-retro-cyan active:from-gray-700/50 active:to-gray-800/50 shadow-md shadow-black/30 active:shadow-sm rounded text-sm text-retro-cyan transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Select ROM chip"
-        >
-          ...
-        </button>
+        <Picker3DButton onClick={dropdown.toggle} disabled={disabled} title="Select ROM chip" />
 
         {/* Dropdown panel */}
         {dropdown.isOpen && (
-          <div
-            className="absolute z-50 top-full mt-1 max-h-80 overflow-y-auto bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl"
-            style={{ width: "240px", right: 0 }}
-          >
+          <DropdownPanel>
             {/* Clear option */}
-            {chip && (
-              <div className="p-2 border-b border-retro-grid/30">
-                <button
-                  onClick={handleClear}
-                  className="w-full text-left px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-retro-grid/20 rounded transition-colors"
-                >
-                  Clear selection
-                </button>
-              </div>
-            )}
+            {chip && <DropdownClearButton onClick={handleClear} />}
 
             {/* Compatible chips section (if system is selected) */}
             {system && compatibleChipIds.size > 0 && (
-              <div className="p-2 border-b border-retro-grid/30">
-                <div className="text-[10px] text-retro-cyan uppercase font-medium mb-2">Compatible with {system}</div>
+              <DropdownSection title={`Compatible with ${system}`}>
                 <div className="flex flex-wrap gap-1">
                   {ROM_CHIPS.filter((c) => compatibleChipIds.has(c.id)).map((chipInfo) => (
-                    <button
+                    <DropdownChipButton
                       key={chipInfo.id}
+                      label={chipInfo.partNumber}
+                      isSelected={isSelected(chipInfo.partNumber, chipInfo.manufacturer)}
                       onClick={() => handleChipClick(chipInfo.partNumber, chipInfo.manufacturer)}
                       title={`${chipInfo.manufacturer} - ${chipInfo.type} - ${chipInfo.glyph.width}x${chipInfo.glyph.height}`}
-                      className={`px-2 py-0.5 text-xs rounded transition-all ${
-                        isSelected(chipInfo.partNumber, chipInfo.manufacturer)
-                          ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
-                          : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
-                      }`}
-                    >
-                      {chipInfo.partNumber}
-                    </button>
+                    />
                   ))}
                 </div>
-              </div>
+              </DropdownSection>
             )}
 
             {/* All chips by manufacturer */}
             <div className="p-2">
               {chipsByManufacturer.map(([manufacturer, chips]) => (
-                <div key={manufacturer} className="mb-3 last:mb-0">
-                  {/* Manufacturer header */}
-                  <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded">
-                    {manufacturer}
-                  </div>
-
-                  {/* Chips for this manufacturer */}
-                  <div className="ml-3 mt-1 flex flex-wrap gap-1">
-                    {chips.map((chipInfo) => (
-                      <button
-                        key={chipInfo.id}
-                        onClick={() => handleChipClick(chipInfo.partNumber, chipInfo.manufacturer)}
-                        title={`${chipInfo.type} - ${chipInfo.glyph.width}x${chipInfo.glyph.height}${
-                          chipInfo.usedIn.length > 0 ? ` - Used in: ${chipInfo.usedIn.join(", ")}` : ""
-                        }`}
-                        className={`px-2 py-0.5 text-xs rounded transition-all ${
-                          isSelected(chipInfo.partNumber, chipInfo.manufacturer)
-                            ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
-                            : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
-                        }`}
-                      >
-                        {chipInfo.partNumber}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <DropdownGroup key={manufacturer} label={manufacturer}>
+                  {chips.map((chipInfo) => (
+                    <DropdownChipButton
+                      key={chipInfo.id}
+                      label={chipInfo.partNumber}
+                      isSelected={isSelected(chipInfo.partNumber, chipInfo.manufacturer)}
+                      onClick={() => handleChipClick(chipInfo.partNumber, chipInfo.manufacturer)}
+                      title={`${chipInfo.type} - ${chipInfo.glyph.width}x${chipInfo.glyph.height}${
+                        chipInfo.usedIn.length > 0 ? ` - Used in: ${chipInfo.usedIn.join(", ")}` : ""
+                      }`}
+                    />
+                  ))}
+                </DropdownGroup>
               ))}
             </div>
-          </div>
+          </DropdownPanel>
         )}
       </div>
     </div>

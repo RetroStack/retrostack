@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useDropdown } from "@/hooks/useDropdown";
+import { DropdownChipButton, DropdownGroup, DropdownSectionHeader } from "@/components/ui/DropdownPrimitives";
 
 const BUTTON_WIDTH = 48; // Approximate width of a preset button
 const DROPDOWN_BUTTON_WIDTH = 56; // Width of "More" button
@@ -209,95 +210,17 @@ export function AdaptivePresetSelector<T extends BasePreset>({
 }
 
 // ============================================================================
-// Shared Dropdown Section Components
+// Re-export Shared Dropdown Section Components for backward compatibility
 // ============================================================================
 
-export interface PresetDropdownSectionProps {
-  /** Section title (e.g., "Systems", "Character ROM ICs") */
-  title: string;
-  /** Whether to show a top border */
-  showDivider?: boolean;
-}
+// Re-export with Preset* naming for existing consumers
+export {
+  DropdownSectionHeader as PresetDropdownSectionHeader,
+  DropdownGroup as PresetDropdownGroup,
+  DropdownChipButton as PresetDropdownButton,
+} from "@/components/ui/DropdownPrimitives";
 
-/**
- * Header component for a dropdown section
- */
-export function PresetDropdownSectionHeader({
-  title,
-  showDivider = false,
-}: PresetDropdownSectionProps) {
-  return (
-    <>
-      {showDivider && <div className="border-t border-retro-grid/30" />}
-      <div className="px-2 pt-2 pb-1">
-        <div className="text-[10px] text-retro-cyan uppercase font-medium">
-          {title}
-        </div>
-      </div>
-    </>
-  );
-}
-
-export interface PresetDropdownGroupProps {
-  /** Group label (e.g., manufacturer name) */
-  label: string;
-  /** Children (buttons) */
-  children: ReactNode;
-}
-
-/**
- * Group component within a dropdown section (e.g., for organizing by manufacturer)
- */
-export function PresetDropdownGroup({ label, children }: PresetDropdownGroupProps) {
-  return (
-    <div className="px-2 pb-2">
-      <div className="w-full text-left px-2 py-1 text-xs font-medium text-retro-cyan bg-retro-cyan/10 rounded mb-1">
-        {label}
-      </div>
-      <div className="ml-3 flex flex-wrap gap-1">{children}</div>
-    </div>
-  );
-}
-
-export interface PresetDropdownButtonProps {
-  /** Button label */
-  label: string;
-  /** Whether the button is selected */
-  isSelected: boolean;
-  /** Click handler */
-  onClick: () => void;
-  /** Tooltip text */
-  title?: string;
-  /** Whether the button is disabled */
-  disabled?: boolean;
-}
-
-/**
- * Button component for items in dropdown sections
- */
-export function PresetDropdownButton({
-  label,
-  isSelected,
-  onClick,
-  title,
-  disabled = false,
-}: PresetDropdownButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={`
-        px-2 py-0.5 text-xs rounded transition-all
-        ${
-          isSelected
-            ? "bg-retro-amber/40 text-retro-amber ring-1 ring-retro-amber"
-            : "bg-retro-amber/15 text-retro-amber hover:bg-retro-amber/30 hover:text-white"
-        }
-        disabled:opacity-50
-      `}
-    >
-      {label}
-    </button>
-  );
-}
+// Re-export types for backward compatibility
+export type { DropdownSectionProps as PresetDropdownSectionProps } from "@/components/ui/DropdownPrimitives";
+export type { DropdownGroupProps as PresetDropdownGroupProps } from "@/components/ui/DropdownPrimitives";
+export type { DropdownChipButtonProps as PresetDropdownButtonProps } from "@/components/ui/DropdownPrimitives";

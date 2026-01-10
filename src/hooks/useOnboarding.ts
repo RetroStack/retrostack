@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING } from "@/lib/character-editor/storage/keys";
+import { IKeyValueStorage } from "@/lib/character-editor/storage/interfaces";
 
 /**
  * A single step in the onboarding tour
@@ -35,6 +36,19 @@ interface OnboardingState {
 }
 
 /**
+ * Default localStorage wrapper that implements IKeyValueStorage
+ */
+const defaultStorage: IKeyValueStorage = {
+  getItem: (key) => (typeof window !== "undefined" ? localStorage.getItem(key) : null),
+  setItem: (key, value) => {
+    if (typeof window !== "undefined") localStorage.setItem(key, value);
+  },
+  removeItem: (key) => {
+    if (typeof window !== "undefined") localStorage.removeItem(key);
+  },
+};
+
+/**
  * Get the default onboarding state
  */
 function getDefaultState(): OnboardingState {
@@ -46,31 +60,26 @@ function getDefaultState(): OnboardingState {
 }
 
 /**
- * Load onboarding state from localStorage
+ * Load onboarding state from storage
  */
-function loadState(): OnboardingState {
-  if (typeof window === "undefined") return getDefaultState();
-
+function loadState(storage: IKeyValueStorage): OnboardingState {
   try {
-    const stored = localStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING);
+    const stored = storage.getItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING);
     if (stored) {
       return JSON.parse(stored) as OnboardingState;
     }
   } catch {
     // Ignore errors
   }
-
   return getDefaultState();
 }
 
 /**
- * Save onboarding state to localStorage
+ * Save onboarding state to storage
  */
-function saveState(state: OnboardingState): void {
-  if (typeof window === "undefined") return;
-
+function saveState(storage: IKeyValueStorage, state: OnboardingState): void {
   try {
-    localStorage.setItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING, JSON.stringify(state));
+    storage.setItem(CHARACTER_EDITOR_STORAGE_KEY_ONBOARDING, JSON.stringify(state));
   } catch {
     // Ignore errors
   }
@@ -81,6 +90,8 @@ export interface UseOnboardingOptions {
   steps: OnboardingStep[];
   /** Whether the tour is enabled */
   enabled?: boolean;
+  /** Optional storage implementation for dependency injection (defaults to localStorage) */
+  storage?: IKeyValueStorage;
 }
 
 export interface UseOnboardingResult {
@@ -118,21 +129,23 @@ export interface UseOnboardingResult {
 
 /**
  * Hook for managing the onboarding tour
+ *
+ * @param options - Configuration including steps and optional storage
  */
 export function useOnboarding(options: UseOnboardingOptions): UseOnboardingResult {
-  const { steps, enabled = true } = options;
+  const { steps, enabled = true, storage = defaultStorage } = options;
 
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [state, setState] = useState<OnboardingState>(getDefaultState);
   const [mounted, setMounted] = useState(false);
 
-  // Load state from localStorage on mount
+  // Load state from storage on mount
   useEffect(() => {
-    const loaded = loadState();
+    const loaded = loadState(storage);
     setState(loaded);
     setMounted(true);
-  }, []);
+  }, [storage]);
 
   // Auto-start for first-time users
   useEffect(() => {
@@ -164,9 +177,9 @@ export function useOnboarding(options: UseOnboardingOptions): UseOnboardingResul
         updatedAt: Date.now(),
       };
       setState(newState);
-      saveState(newState);
+      saveState(storage, newState);
     }
-  }, [currentStep, steps.length]);
+  }, [currentStep, steps.length, storage]);
 
   // Go to previous step
   const prev = useCallback(() => {
@@ -184,8 +197,8 @@ export function useOnboarding(options: UseOnboardingOptions): UseOnboardingResul
       updatedAt: Date.now(),
     };
     setState(newState);
-    saveState(newState);
-  }, []);
+    saveState(storage, newState);
+  }, [storage]);
 
   // Complete the tour
   const complete = useCallback(() => {
@@ -196,16 +209,16 @@ export function useOnboarding(options: UseOnboardingOptions): UseOnboardingResul
       updatedAt: Date.now(),
     };
     setState(newState);
-    saveState(newState);
-  }, []);
+    saveState(storage, newState);
+  }, [storage]);
 
   // Reset the tour
   const reset = useCallback(() => {
     setCurrentStep(0);
     const newState = getDefaultState();
     setState(newState);
-    saveState(newState);
-  }, []);
+    saveState(storage, newState);
+  }, [storage]);
 
   return {
     isActive,
@@ -233,49 +246,57 @@ export const CHARACTER_EDITOR_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "welcome",
     title: "Welcome to Character ROM Editor",
-    description: "Create and edit character sets for retro computers and vintage display systems. Let's take a quick tour!",
+    description:
+      "Create and edit character sets for retro computers and vintage display systems. Let's take a quick tour!",
     position: "center",
   },
   {
     id: "library",
     title: "Character Set Library",
-    description: "Your character sets are stored here. Filter by size, manufacturer, system, or chip. Pin favorites and sort by any field.",
+    description:
+      "Your character sets are stored here. Filter by size, manufacturer, system, or chip. Pin favorites and sort by any field.",
     position: "center",
   },
   {
     id: "import",
     title: "Import Options",
-    description: "Import from binary ROM files, PNG image grids, font files (TTF/OTF/WOFF), or paste code from C, JavaScript, or Assembly.",
+    description:
+      "Import from binary ROM files, PNG image grids, font files (TTF/OTF/WOFF), or paste code from C, JavaScript, or Assembly.",
     position: "center",
   },
   {
     id: "editor",
     title: "Pixel Editor",
-    description: "Click to toggle pixels, drag to paint, right-click to erase. Use overlays to compare with other character sets.",
+    description:
+      "Click to toggle pixels, drag to paint, right-click to erase. Use overlays to compare with other character sets.",
     position: "center",
   },
   {
     id: "transforms",
     title: "Transform Tools",
-    description: "Rotate, flip, shift, invert, and scale characters. Copy from other sets. All transforms support batch editing.",
+    description:
+      "Rotate, flip, shift, invert, and scale characters. Copy from other sets. All transforms support batch editing.",
     position: "center",
   },
   {
     id: "keyboard",
     title: "Keyboard Shortcuts",
-    description: "Press ? to see all shortcuts. Navigate with arrow keys, undo/redo with Ctrl+Z/Y, and transform with single keys.",
+    description:
+      "Press ? to see all shortcuts. Navigate with arrow keys, undo/redo with Ctrl+Z/Y, and transform with single keys.",
     position: "center",
   },
   {
     id: "export",
     title: "Export Formats",
-    description: "Export as binary ROM, C header, assembly code, PNG image, or printable reference sheets (PNG/PDF) with custom colors.",
+    description:
+      "Export as binary ROM, C header, assembly code, PNG image, or printable reference sheets (PNG/PDF) with custom colors.",
     position: "center",
   },
   {
     id: "done",
     title: "You're Ready!",
-    description: "Start by selecting a character set from the library, or create a new one. Use snapshots to save your progress!",
+    description:
+      "Start by selecting a character set from the library, or create a new one. Use snapshots to save your progress!",
     position: "center",
   },
 ];
