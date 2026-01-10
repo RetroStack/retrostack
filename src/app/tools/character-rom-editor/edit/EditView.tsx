@@ -98,6 +98,9 @@ export function EditView() {
   // Reset confirmation state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  // Delete character confirmation state (for deleting individual characters)
+  const [showDeleteCharacterConfirm, setShowDeleteCharacterConfirm] = useState(false);
+
   // Save as dialog state
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
   const [saveAsName, setSaveAsName] = useState("");
@@ -439,7 +442,7 @@ export function EditView() {
         flipHorizontal: editor.flipSelectedHorizontal,
         flipVertical: editor.flipSelectedVertical,
         selectAll: editor.selectAll,
-        deleteSelected: editor.deleteSelected,
+        deleteSelected: () => setShowDeleteCharacterConfirm(true),
         addCharacter: editor.addCharacter,
         showHelp: () => setShowShortcutsHelp(true),
         // Navigation
@@ -462,7 +465,19 @@ export function EditView() {
         resetChanges: handleReset,
         reorderCharacters: () => setShowReorderModal(true),
       }),
-    [editor, handleSave, handleExport, handleReset, openSaveAsDialog, navigatePrev, navigateNext, navigatePageUp, navigatePageDown, navigateFirst, navigateLast],
+    [
+      editor,
+      handleSave,
+      handleExport,
+      handleReset,
+      openSaveAsDialog,
+      navigatePrev,
+      navigateNext,
+      navigatePageUp,
+      navigatePageDown,
+      navigateFirst,
+      navigateLast,
+    ],
   );
 
   useKeyboardShortcuts(shortcuts, { enabled: !showShortcutsHelp });
@@ -504,13 +519,12 @@ export function EditView() {
         label: `Delete${isMultiSelect ? ` (${selectedCount})` : ""}`,
         shortcut: "Del",
         onClick: () => {
-          editor.deleteSelected();
-          toast.success(isMultiSelect ? `${selectedCount} characters deleted` : "Character deleted");
+          setShowDeleteCharacterConfirm(true);
         },
         danger: true,
       },
     ];
-  }, [contextMenu, editor, toast]);
+  }, [contextMenu, editor]);
 
   // Toolbar actions - reorganized into logical groups
   // Priority: 3 = essential (always visible), 2 = important, 1 = normal, 0 = low (first to hide)
@@ -524,19 +538,9 @@ export function EditView() {
       icon: (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           {/* Letter A */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M7 17l3.5-10h3L17 17M8.5 13h7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17l3.5-10h3L17 17M8.5 13h7" />
           {/* Plus sign */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2.5}
-            d="M19 4v4m-2-2h4"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 4v4m-2-2h4" />
         </svg>
       ),
       onClick: editor.addCharacter,
@@ -586,12 +590,7 @@ export function EditView() {
           {/* Label area */}
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 3v5h6V3" />
           {/* Plus sign for "save as" */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2.5}
-            d="M18 8v4m-2-2h4"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 8v4m-2-2h4" />
           {/* Center label */}
           <rect x="8" y="12" width="8" height="6" rx="1" strokeWidth={2} />
         </svg>
@@ -609,12 +608,7 @@ export function EditView() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 3h4" />
           {/* Trash can body */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 6v14a2 2 0 002 2h8a2 2 0 002-2V6"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6v14a2 2 0 002 2h8a2 2 0 002-2V6" />
           {/* Lines inside */}
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 10v8M14 10v8" />
         </svg>
@@ -727,19 +721,9 @@ export function EditView() {
       icon: (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           {/* Letter A representing character */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 20l2.5-7h3L16 20M9.25 16h5.5"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20l2.5-7h3L16 20M9.25 16h5.5" />
           {/* Arrow pointing down */}
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 3v8m0 0l-3-3m3 3l3-3"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v8m0 0l-3-3m3 3l3-3" />
         </svg>
       ),
       onClick: () => setShowImportModal(true),
@@ -891,12 +875,7 @@ export function EditView() {
       shortcut: "T",
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16m-7 6h7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
         </svg>
       ),
       onClick: () => setShowTextPreview(true),
@@ -989,19 +968,25 @@ export function EditView() {
             <span className="text-gray-500">|</span>
             <button
               onClick={() => setOverlayMode("pixel")}
-              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "pixel" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+              className={`px-2 py-0.5 rounded transition-colors ${
+                overlayMode === "pixel" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"
+              }`}
             >
               1:1 Pixels
             </button>
             <button
               onClick={() => setOverlayMode("stretch")}
-              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "stretch" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+              className={`px-2 py-0.5 rounded transition-colors ${
+                overlayMode === "stretch" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"
+              }`}
             >
               Stretch
             </button>
             <button
               onClick={() => setOverlayMode("side-by-side")}
-              className={`px-2 py-0.5 rounded transition-colors ${overlayMode === "side-by-side" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"}`}
+              className={`px-2 py-0.5 rounded transition-colors ${
+                overlayMode === "side-by-side" ? "bg-retro-amber/20 text-retro-amber" : "text-gray-400 hover:text-white"
+              }`}
             >
               Side by Side
             </button>
@@ -1029,7 +1014,7 @@ export function EditView() {
                 batchSelection={editor.batchSelection}
                 onSelect={editor.toggleBatchSelection}
                 onAddCharacter={editor.addCharacter}
-                onDeleteSelected={editor.deleteSelected}
+                onDeleteSelected={() => setShowDeleteCharacterConfirm(true)}
                 onSelectAll={editor.selectAll}
                 onSelectNone={() => editor.toggleBatchSelection(editor.selectedIndex, false)}
                 onContextMenu={showContextMenu}
@@ -1052,7 +1037,7 @@ export function EditView() {
                 onFill={editor.fillSelected}
                 onCenter={editor.centerSelected}
                 onScale={() => setShowScaleModal(true)}
-                onDelete={editor.deleteSelected}
+                onDelete={() => setShowDeleteCharacterConfirm(true)}
                 onCopy={() => setShowCopyModal(true)}
                 disabled={!selectedCharacter}
                 className="h-full"
@@ -1061,7 +1046,11 @@ export function EditView() {
             rightSidebarWidth="120px"
             rightSidebarCollapsible={false}
           >
-            <div className={`h-full ${overlayMode === "side-by-side" && overlayCharacterSet ? "flex items-center justify-center gap-8" : ""}`}>
+            <div
+              className={`h-full ${
+                overlayMode === "side-by-side" && overlayCharacterSet ? "flex items-center justify-center gap-8" : ""
+              }`}
+            >
               <EditorCanvas
                 character={selectedCharacter}
                 config={editor.config}
@@ -1092,7 +1081,13 @@ export function EditView() {
                   </div>
                   <div className="border border-retro-amber/30 rounded p-1 bg-black/30">
                     <CharacterDisplay
-                      character={overlayCharacterSet.characters[editor.selectedIndex] || { pixels: Array(overlayCharacterSet.config.height).fill(null).map(() => Array(overlayCharacterSet.config.width).fill(false)) }}
+                      character={
+                        overlayCharacterSet.characters[editor.selectedIndex] || {
+                          pixels: Array(overlayCharacterSet.config.height)
+                            .fill(null)
+                            .map(() => Array(overlayCharacterSet.config.width).fill(false)),
+                        }
+                      }
                       mode="large"
                       scale={zoom}
                       foregroundColor={colors.foreground}
@@ -1103,9 +1098,7 @@ export function EditView() {
                     />
                   </div>
                   {!overlayCharacterSet.characters[editor.selectedIndex] && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      No character at this index
-                    </div>
+                    <div className="text-xs text-gray-500 mt-1">No character at this index</div>
                   )}
                 </div>
               )}
@@ -1132,11 +1125,7 @@ export function EditView() {
         isOpen={autoSave.hasRecoveryData}
         title="Recover Unsaved Changes?"
         message="We found unsaved changes from a previous session. Would you like to recover them?"
-        details={
-          autoSave.recoveryData && (
-            <>Last saved: {new Date(autoSave.recoveryData.timestamp).toLocaleString()}</>
-          )
-        }
+        details={autoSave.recoveryData && <>Last saved: {new Date(autoSave.recoveryData.timestamp).toLocaleString()}</>}
         confirmLabel="Recover"
         cancelLabel="Discard"
         variant="info"
@@ -1403,6 +1392,27 @@ export function EditView() {
         variant="warning"
         onConfirm={confirmLeave}
         onCancel={() => setShowLeaveConfirm(false)}
+      />
+
+      {/* Delete character confirmation dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteCharacterConfirm}
+        title={editor.batchSelection.size > 0 ? "Delete Characters?" : "Delete Character?"}
+        message={
+          editor.batchSelection.size > 0
+            ? `Are you sure you want to delete ${
+                editor.batchSelection.size + 1
+              } selected characters? This action cannot be undone.`
+            : "Are you sure you want to delete this character? This action cannot be undone."
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          editor.deleteSelected();
+          setShowDeleteCharacterConfirm(false);
+        }}
+        onCancel={() => setShowDeleteCharacterConfirm(false)}
       />
     </ToolLayout>
   );
