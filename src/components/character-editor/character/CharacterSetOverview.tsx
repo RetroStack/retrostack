@@ -152,12 +152,7 @@ export function CharacterSetOverview({
       char.pixels.forEach((pixelRow, py) => {
         pixelRow.forEach((pixel, px) => {
           if (pixel) {
-            ctx.fillRect(
-              x + px * pixelScale,
-              y + py * pixelScale,
-              pixelScale,
-              pixelScale
-            );
+            ctx.fillRect(x + px * pixelScale, y + py * pixelScale, pixelScale, pixelScale);
           }
         });
       });
@@ -263,7 +258,7 @@ export function CharacterSetOverview({
         onSelect(index);
       }
     },
-    [onSelect, cellWidth, cellHeight, columns, characters.length]
+    [onSelect, cellWidth, cellHeight, columns, characters.length],
   );
 
   // Handle mouse move for hover effect
@@ -291,7 +286,7 @@ export function CharacterSetOverview({
         setHoveredIndex(null);
       }
     },
-    [cellWidth, cellHeight, columns, characters.length]
+    [cellWidth, cellHeight, columns, characters.length],
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -486,22 +481,14 @@ export function CharacterSetOverview({
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
       )}
 
       {/* Canvas container */}
       {!collapsed && (
-        <div
-          className={`p-2 bg-black/30 rounded overflow-auto ${isSelectionMode ? "ring-1 ring-retro-cyan/30" : ""}`}
-          style={{ maxHeight: "150px" }}
-        >
+        <div className={`p-2 bg-black/30 rounded ${isSelectionMode ? "ring-1 ring-retro-cyan/30" : ""}`}>
           <canvas
             ref={canvasRef}
             onClick={handleClick}
