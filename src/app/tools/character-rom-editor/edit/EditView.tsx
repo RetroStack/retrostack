@@ -314,7 +314,9 @@ export function EditView() {
   // Handle export
   const handleExport = useCallback(() => {
     if (id) {
-      router.push(`/tools/character-rom-editor/export?id=${id}`);
+      router.push(
+        `/tools/character-rom-editor/export?id=${id}&from=editor&editId=${id}`
+      );
     }
   }, [id, router]);
 
@@ -660,7 +662,8 @@ export function EditView() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v6m-3-3h6" />
         </svg>
       ),
-      onClick: () => router.push("/tools/character-rom-editor/add"),
+      onClick: () =>
+        router.push(`/tools/character-rom-editor/add?from=editor&editId=${id}`),
       priority: 3,
     },
     {
@@ -980,7 +983,10 @@ export function EditView() {
           />
         </svg>
       ),
-      onClick: () => router.push("/tools/character-rom-editor/import"),
+      onClick: () =>
+        router.push(
+          `/tools/character-rom-editor/import?from=editor&editId=${id}`
+        ),
       priority: 1,
     },
     {

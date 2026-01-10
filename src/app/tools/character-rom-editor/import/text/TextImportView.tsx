@@ -15,6 +15,7 @@ import { DimensionPresetSelector } from "@/components/character-editor/selectors
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import {
   TextImportOptions,
@@ -34,6 +35,11 @@ const STEP_LABELS = ["Configure", "Metadata", "Save"];
 export function TextImportView() {
   const router = useRouter();
   const { save } = useCharacterLibrary();
+  const { buildEditorReturnParams } = useEditorReturn();
+  const editorParams = buildEditorReturnParams();
+  const importHubUrl = editorParams
+    ? `/tools/character-rom-editor/import?${editorParams}`
+    : "/tools/character-rom-editor/import";
   const { ref: previewContainerRef, size: previewSize } = useResizeObserver<HTMLDivElement>();
 
   // Current step
@@ -185,7 +191,7 @@ export function TextImportView() {
           {/* Page header */}
           <div className="mb-6">
             <Link
-              href="/tools/character-rom-editor/import"
+              href={importHubUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg

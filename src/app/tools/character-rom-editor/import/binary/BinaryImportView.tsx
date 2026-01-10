@@ -16,6 +16,7 @@ import { MetadataStep } from "@/components/character-editor/import/MetadataStep"
 import { PaddingDirectionSelector } from "@/components/character-editor/selectors/PaddingDirectionSelector";
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import {
   CharacterSetConfig,
   PaddingDirection,
@@ -61,6 +62,11 @@ const EXAMPLE_FILES: ExampleFile[] = [
 export function BinaryImportView() {
   const router = useRouter();
   const { save } = useCharacterLibrary();
+  const { buildEditorReturnParams } = useEditorReturn();
+  const editorParams = buildEditorReturnParams();
+  const importHubUrl = editorParams
+    ? `/tools/character-rom-editor/import?${editorParams}`
+    : "/tools/character-rom-editor/import";
 
   // Current step
   const [step, setStep] = useState<WizardStep>(1);
@@ -258,7 +264,7 @@ export function BinaryImportView() {
           {/* Page header */}
           <div className="mb-6">
             <Link
-              href="/tools/character-rom-editor/import"
+              href={importHubUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg

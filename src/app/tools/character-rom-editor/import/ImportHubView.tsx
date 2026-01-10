@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
@@ -132,6 +133,9 @@ const colorClasses = {
  * Import Hub - Selection page for choosing import type
  */
 export function ImportHubView() {
+  const { backUrl, backLabel, buildEditorReturnParams } = useEditorReturn();
+  const editorParams = buildEditorReturnParams();
+
   return (
     <div className="min-h-screen flex flex-col safe-top">
       <Header />
@@ -141,7 +145,7 @@ export function ImportHubView() {
           {/* Page header */}
           <div className="mb-8">
             <Link
-              href="/tools/character-rom-editor"
+              href={backUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg
@@ -157,7 +161,7 @@ export function ImportHubView() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              Back to Library
+              {backLabel}
             </Link>
             <h1 className="text-2xl sm:text-3xl font-display">
               <NeonText color="cyan">Import Character Set</NeonText>
@@ -174,7 +178,11 @@ export function ImportHubView() {
               return (
                 <Link
                   key={option.href}
-                  href={option.href}
+                  href={
+                    editorParams
+                      ? `${option.href}?${editorParams}`
+                      : option.href
+                  }
                   className={`
                     card-retro p-6 transition-all group
                     border border-retro-grid/50

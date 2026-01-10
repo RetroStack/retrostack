@@ -14,6 +14,7 @@ import { LibraryCardCompact } from "@/components/character-editor/library/Librar
 import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
 import { CharacterCountPresetSelector } from "@/components/character-editor/selectors/CharacterCountPresetSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import {
   CharacterSetConfig,
   AnchorPoint,
@@ -37,6 +38,7 @@ const ANCHOR_POSITIONS = getAnchorPositions();
 export function AddView() {
   const router = useRouter();
   const { characterSets, save, loading } = useCharacterLibrary();
+  const { backUrl, backLabel } = useEditorReturn();
 
   // Current step
   const [step, setStep] = useState<WizardStep>(1);
@@ -261,7 +263,7 @@ export function AddView() {
           {/* Page header */}
           <div className="mb-6">
             <Link
-              href="/tools/character-rom-editor"
+              href={backUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg
@@ -277,7 +279,7 @@ export function AddView() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              Back to Library
+              {backLabel}
             </Link>
             <h1 className="text-2xl sm:text-3xl font-display">
               <NeonText color="pink">Create Character Set</NeonText>

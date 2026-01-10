@@ -14,6 +14,7 @@ import { ImportStepIndicator } from "@/components/character-editor/import/Import
 import { MetadataStep } from "@/components/character-editor/import/MetadataStep";
 import { DimensionPresetSelector } from "@/components/character-editor/selectors/DimensionPresetSelector";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 import {
   ImageImportOptions,
@@ -51,6 +52,11 @@ interface PickerState {
 export function ImageImportView() {
   const router = useRouter();
   const { save } = useCharacterLibrary();
+  const { buildEditorReturnParams } = useEditorReturn();
+  const editorParams = buildEditorReturnParams();
+  const importHubUrl = editorParams
+    ? `/tools/character-rom-editor/import?${editorParams}`
+    : "/tools/character-rom-editor/import";
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { ref: previewContainerRef, size: previewSize } = useResizeObserver<HTMLDivElement>();
 
@@ -399,7 +405,7 @@ export function ImageImportView() {
           {/* Page header */}
           <div className="mb-6">
             <Link
-              href="/tools/character-rom-editor/import"
+              href={importHubUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

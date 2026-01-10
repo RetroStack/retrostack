@@ -16,6 +16,7 @@ import { PaddingDirectionSelector } from "@/components/character-editor/selector
 import { BitDirectionSelector } from "@/components/character-editor/selectors/BitDirectionSelector";
 import { CustomColors, getActiveColors } from "@/lib/character-editor/data/colorPresets";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
+import { useEditorReturn } from "@/hooks/character-editor/useEditorReturn";
 import { CharacterSet, PaddingDirection, BitDirection, bytesPerCharacter } from "@/lib/character-editor/types";
 import { createDownloadBlob, downloadBlob } from "@/lib/character-editor/import/binary";
 import { getSuggestedFilename, formatFileSize } from "@/lib/character-editor/utils";
@@ -95,6 +96,7 @@ export function ExportView() {
   const id = searchParams.get("id");
 
   const { getById } = useCharacterLibrary();
+  const { backUrl, backLabel } = useEditorReturn();
 
   // Loading and error states
   const [loading, setLoading] = useState(true);
@@ -386,10 +388,10 @@ export function ExportView() {
             </svg>
             <h2 className="text-lg font-medium text-red-400">{error}</h2>
             <Link
-              href="/tools/character-rom-editor"
+              href={backUrl}
               className="text-sm text-retro-cyan hover:text-retro-pink transition-colors"
             >
-              Back to Library
+              {backLabel}
             </Link>
           </div>
         </main>
@@ -407,13 +409,13 @@ export function ExportView() {
           {/* Page header */}
           <div className="mb-8">
             <Link
-              href="/tools/character-rom-editor"
+              href={backUrl}
               className="text-xs text-gray-500 hover:text-retro-cyan transition-colors mb-2 inline-flex items-center gap-1"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Library
+              {backLabel}
             </Link>
             <h1 className="text-2xl sm:text-3xl font-display">
               <NeonText color="pink">Export Character ROM</NeonText>
