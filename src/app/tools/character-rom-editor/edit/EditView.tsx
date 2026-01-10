@@ -51,7 +51,7 @@ import { useAutoSave } from "@/hooks/character-editor/useAutoSave";
 import { useKeyboardShortcuts, createEditorShortcuts } from "@/hooks/character-editor/useKeyboardShortcuts";
 import { useSnapshots } from "@/hooks/character-editor/useSnapshots";
 import { useCharacterEditor } from "@/hooks/character-editor/useCharacterEditor";
-import { CharacterSet, AnchorPoint } from "@/lib/character-editor/types";
+import { CharacterSet, AnchorPoint, generateId } from "@/lib/character-editor/types";
 import { getActiveColors, CustomColors } from "@/lib/character-editor/data/colorPresets";
 import { base64ToBinary, parseCharacterRom } from "@/lib/character-editor/import/binary";
 import { useToast } from "@/hooks/useToast";
@@ -108,6 +108,11 @@ export function EditView() {
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
   const [saveAsName, setSaveAsName] = useState("");
   const [savingAs, setSavingAs] = useState(false);
+
+  // Duplicate dialog state
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateName, setDuplicateName] = useState("");
+  const [duplicating, setDuplicating] = useState(false);
 
   // Resize modal state
   const [showResizeModal, setShowResizeModal] = useState(false);
@@ -421,6 +426,48 @@ export function EditView() {
     setShowSaveAsDialog(true);
   }, [characterSet?.metadata.name]);
 
+  // Open Duplicate dialog
+  const openDuplicateDialog = useCallback(() => {
+    setDuplicateName(characterSet?.metadata.name ? `${characterSet.metadata.name} (copy)` : "");
+    setShowDuplicateDialog(true);
+  }, [characterSet?.metadata.name]);
+
+  // Handle duplicate character set
+  const handleDuplicate = useCallback(async () => {
+    if (!characterSet || !duplicateName.trim()) return;
+
+    try {
+      setDuplicating(true);
+
+      // Create the duplicate using current editor state
+      const newSet: CharacterSet = {
+        metadata: {
+          ...characterSet.metadata,
+          id: generateId(),
+          name: duplicateName.trim(),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          isBuiltIn: false,
+        },
+        config: editor.config,
+        characters: editor.characters,
+      };
+
+      await save(newSet);
+      toast.success(`Duplicated as "${duplicateName.trim()}"`);
+
+      // Navigate to the new character set
+      router.push(`/tools/character-rom-editor/edit?id=${newSet.metadata.id}`);
+    } catch (e) {
+      console.error("Failed to duplicate:", e);
+      toast.error("Failed to duplicate character set");
+    } finally {
+      setDuplicating(false);
+      setShowDuplicateDialog(false);
+      setDuplicateName("");
+    }
+  }, [characterSet, duplicateName, editor, save, router, toast]);
+
   // Navigation handlers
   const totalCharacters = editor.characters.length;
 
@@ -609,6 +656,26 @@ export function EditView() {
         </svg>
       ),
       onClick: openSaveAsDialog,
+      priority: 1,
+    },
+    {
+      id: "duplicate",
+      label: "Duplicate Set",
+      tooltip: "Create a copy of this character set",
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          {/* Back document */}
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2"
+          />
+          {/* Front document */}
+          <rect x="8" y="8" width="12" height="12" rx="2" strokeWidth={2} />
+        </svg>
+      ),
+      onClick: openDuplicateDialog,
       priority: 1,
     },
     {
@@ -1335,6 +1402,52 @@ export function EditView() {
                 className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {savingAs ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate dialog */}
+      {showDuplicateDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowDuplicateDialog(false)}
+          />
+          <div className="relative w-full max-w-md bg-retro-navy border border-retro-grid/50 rounded-lg shadow-xl p-6">
+            <h2 className="text-lg font-medium text-white mb-4">Duplicate Character Set</h2>
+            <div className="mb-4">
+              <label className="block text-sm text-gray-300 mb-1">Name for duplicate</label>
+              <input
+                type="text"
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                placeholder="Character set name"
+                className="w-full px-3 py-2 bg-retro-dark border border-retro-grid/50 rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-retro-cyan"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && duplicateName.trim()) {
+                    handleDuplicate();
+                  } else if (e.key === "Escape") {
+                    setShowDuplicateDialog(false);
+                  }
+                }}
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDuplicateDialog(false)}
+                className="flex-1 px-4 py-2 text-sm border border-retro-grid/50 rounded text-gray-400 hover:border-retro-grid hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDuplicate}
+                disabled={!duplicateName.trim() || duplicating}
+                className="flex-1 px-4 py-2 text-sm bg-retro-cyan/20 border border-retro-cyan rounded text-retro-cyan hover:bg-retro-cyan/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {duplicating ? "Duplicating..." : "Duplicate"}
               </button>
             </div>
           </div>
