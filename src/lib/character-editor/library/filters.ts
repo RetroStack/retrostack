@@ -33,6 +33,16 @@ export type SortField =
 export type SortDirection = "asc" | "desc";
 
 /**
+ * isBuiltIn filter option values
+ */
+export type IsBuiltInFilterValue = "built-in" | "user-created";
+
+/**
+ * isPinned filter option values
+ */
+export type IsPinnedFilterValue = "pinned" | "not-pinned";
+
+/**
  * Library filter state
  */
 export interface LibraryFilterState {
@@ -45,6 +55,9 @@ export interface LibraryFilterState {
   chipFilters: string[];
   localeFilters: string[];
   tagFilters: string[];
+  sourceFilters: string[];
+  isBuiltInFilters: IsBuiltInFilterValue[];
+  isPinnedFilters: IsPinnedFilterValue[];
 }
 
 /**
@@ -61,6 +74,9 @@ export function createEmptyFilterState(): LibraryFilterState {
     chipFilters: [],
     localeFilters: [],
     tagFilters: [],
+    sourceFilters: [],
+    isBuiltInFilters: [],
+    isPinnedFilters: [],
   };
 }
 
@@ -77,19 +93,68 @@ export function hasActiveFilters(filters: LibraryFilterState): boolean {
     filters.systemFilters.length > 0 ||
     filters.chipFilters.length > 0 ||
     filters.localeFilters.length > 0 ||
-    filters.tagFilters.length > 0
+    filters.tagFilters.length > 0 ||
+    filters.sourceFilters.length > 0 ||
+    filters.isBuiltInFilters.length > 0 ||
+    filters.isPinnedFilters.length > 0
   );
 }
 
 /**
+ * Check if any dropdown filters are active (excludes search query)
+ * Used to determine if the filter toggle button should show active state
+ */
+export function hasActiveDropdownFilters(filters: LibraryFilterState): boolean {
+  return (
+    filters.widthFilters.length > 0 ||
+    filters.heightFilters.length > 0 ||
+    filters.characterCountFilters.length > 0 ||
+    filters.manufacturerFilters.length > 0 ||
+    filters.systemFilters.length > 0 ||
+    filters.chipFilters.length > 0 ||
+    filters.localeFilters.length > 0 ||
+    filters.tagFilters.length > 0 ||
+    filters.sourceFilters.length > 0 ||
+    filters.isBuiltInFilters.length > 0 ||
+    filters.isPinnedFilters.length > 0
+  );
+}
+
+/**
+ * Count the number of active dropdown filter categories
+ */
+export function countActiveDropdownFilters(filters: LibraryFilterState): number {
+  let count = 0;
+  if (filters.widthFilters.length > 0) count++;
+  if (filters.heightFilters.length > 0) count++;
+  if (filters.characterCountFilters.length > 0) count++;
+  if (filters.manufacturerFilters.length > 0) count++;
+  if (filters.systemFilters.length > 0) count++;
+  if (filters.chipFilters.length > 0) count++;
+  if (filters.localeFilters.length > 0) count++;
+  if (filters.tagFilters.length > 0) count++;
+  if (filters.sourceFilters.length > 0) count++;
+  if (filters.isBuiltInFilters.length > 0) count++;
+  if (filters.isPinnedFilters.length > 0) count++;
+  return count;
+}
+
+/**
  * Check if a character set matches the search query
- * Searches across name, description, source, manufacturer, system, chip, locale, and tags
+ * Searches across name, description, source, manufacturer, system, chip, locale, tags, and isBuiltIn status
  */
 export function matchesSearchQuery(set: SerializedCharacterSet, query: string): boolean {
   if (!query.trim()) return true;
 
   const lowerQuery = query.toLowerCase();
   const tagsMatch = (set.metadata.tags ?? []).some((tag) => tag.toLowerCase().includes(lowerQuery));
+
+  // Check isBuiltIn status - match common search terms
+  const builtInTerms = ["built-in", "builtin", "built in"];
+  const userTerms = ["user", "custom", "user-created"];
+  const isBuiltInMatch = set.metadata.isBuiltIn
+    ? builtInTerms.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
+    : userTerms.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term));
 
   return (
     set.metadata.name.toLowerCase().includes(lowerQuery) ||
@@ -99,7 +164,8 @@ export function matchesSearchQuery(set: SerializedCharacterSet, query: string): 
     (set.metadata.system?.toLowerCase().includes(lowerQuery) ?? false) ||
     (set.metadata.chip?.toLowerCase().includes(lowerQuery) ?? false) ||
     (set.metadata.locale?.toLowerCase().includes(lowerQuery) ?? false) ||
-    tagsMatch
+    tagsMatch ||
+    isBuiltInMatch
   );
 }
 
@@ -171,6 +237,48 @@ export function matchesTagFilter(set: SerializedCharacterSet, tagFilters: string
 }
 
 /**
+ * Check if a character set matches the source filter
+ */
+export function matchesSourceFilter(set: SerializedCharacterSet, sourceFilters: string[]): boolean {
+  if (sourceFilters.length === 0) return true;
+  return !!set.metadata.source && sourceFilters.includes(set.metadata.source);
+}
+
+/**
+ * Check if a character set matches the isBuiltIn filters
+ * Uses OR logic - matches if ANY selected filter matches
+ */
+export function matchesIsBuiltInFilter(
+  set: SerializedCharacterSet,
+  isBuiltInFilters: IsBuiltInFilterValue[],
+): boolean {
+  if (isBuiltInFilters.length === 0) return true;
+  const isBuiltIn = set.metadata.isBuiltIn;
+  return isBuiltInFilters.some((filter) => {
+    if (filter === "built-in") return isBuiltIn === true;
+    if (filter === "user-created") return isBuiltIn === false;
+    return false;
+  });
+}
+
+/**
+ * Check if a character set matches the isPinned filters
+ * Uses OR logic - matches if ANY selected filter matches
+ */
+export function matchesIsPinnedFilter(
+  set: SerializedCharacterSet,
+  isPinnedFilters: IsPinnedFilterValue[],
+): boolean {
+  if (isPinnedFilters.length === 0) return true;
+  const isPinned = set.metadata.isPinned ?? false;
+  return isPinnedFilters.some((filter) => {
+    if (filter === "pinned") return isPinned === true;
+    if (filter === "not-pinned") return isPinned === false;
+    return false;
+  });
+}
+
+/**
  * Check if a character set matches all filters
  */
 export function matchesAllFilters(set: SerializedCharacterSet, filters: LibraryFilterState): boolean {
@@ -182,7 +290,10 @@ export function matchesAllFilters(set: SerializedCharacterSet, filters: LibraryF
     matchesChipFilter(set, filters.chipFilters) &&
     matchesLocaleFilter(set, filters.localeFilters) &&
     matchesCharacterCountFilter(set, filters.characterCountFilters) &&
-    matchesTagFilter(set, filters.tagFilters)
+    matchesTagFilter(set, filters.tagFilters) &&
+    matchesSourceFilter(set, filters.sourceFilters) &&
+    matchesIsBuiltInFilter(set, filters.isBuiltInFilters) &&
+    matchesIsPinnedFilter(set, filters.isPinnedFilters)
   );
 }
 
@@ -353,6 +464,19 @@ export function getAvailableTags(sets: SerializedCharacterSet[]): string[] {
     }
   }
   return Array.from(tags).sort();
+}
+
+/**
+ * Get unique sources from character sets
+ */
+export function getAvailableSources(sets: SerializedCharacterSet[]): string[] {
+  const sources = new Set<string>();
+  for (const set of sets) {
+    if (set.metadata.source) {
+      sources.add(set.metadata.source);
+    }
+  }
+  return Array.from(sources).sort();
 }
 
 /**

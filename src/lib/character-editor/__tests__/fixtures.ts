@@ -200,6 +200,9 @@ export const emptyFilter: LibraryFilterState = {
   chipFilters: [],
   localeFilters: [],
   tagFilters: [],
+  sourceFilters: [],
+  isBuiltInFilters: [],
+  isPinnedFilters: [],
 };
 
 export const commodoreFilter: LibraryFilterState = {
@@ -228,4 +231,7 @@ export const complexFilter: LibraryFilterState = {
   chipFilters: [],
   localeFilters: ["English"],
   tagFilters: [],
+  sourceFilters: [],
+  isBuiltInFilters: [],
+  isPinnedFilters: [],
 };

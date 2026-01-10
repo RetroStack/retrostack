@@ -33,12 +33,15 @@ import {
   getAvailableLocales,
   getAvailableCharacterCounts,
   getAvailableTags,
+  getAvailableSources,
   filterInvalidSystems,
   paginateItems,
   parsePageSize,
   DEFAULT_PAGE_SIZE,
   type LibraryFilterState,
   type PageSize,
+  type IsBuiltInFilterValue,
+  type IsPinnedFilterValue,
 } from "@/lib/character-editor/library/filters";
 import {
   CHARACTER_EDITOR_STORAGE_KEY_SORT_FIELD,
@@ -86,6 +89,9 @@ export function CharacterEditorLibrary() {
   const [chipFilters, setChipFilters] = useState<string[]>([]);
   const [localeFilters, setLocaleFilters] = useState<string[]>([]);
   const [tagFilters, setTagFilters] = useState<string[]>([]);
+  const [sourceFilters, setSourceFilters] = useState<string[]>([]);
+  const [isBuiltInFilters, setIsBuiltInFilters] = useState<IsBuiltInFilterValue[]>([]);
+  const [isPinnedFilters, setIsPinnedFilters] = useState<IsPinnedFilterValue[]>([]);
 
   // Sort state (defaults to name/asc, loaded from localStorage)
   const [sortField, setSortField] = useState<SortField>(DEFAULT_SORT_FIELD);
@@ -132,6 +138,8 @@ export function CharacterEditorLibrary() {
 
   const availableTags = useMemo(() => getAvailableTags(characterSets), [characterSets]);
 
+  const availableSources = useMemo(() => getAvailableSources(characterSets), [characterSets]);
+
   // Delete confirmation state
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -156,6 +164,9 @@ export function CharacterEditorLibrary() {
       chipFilters,
       localeFilters,
       tagFilters,
+      sourceFilters,
+      isBuiltInFilters,
+      isPinnedFilters,
     }),
     [
       searchQuery,
@@ -167,6 +178,9 @@ export function CharacterEditorLibrary() {
       chipFilters,
       localeFilters,
       tagFilters,
+      sourceFilters,
+      isBuiltInFilters,
+      isPinnedFilters,
     ],
   );
 
@@ -342,6 +356,18 @@ export function CharacterEditorLibrary() {
     setTagFilters(tags);
   }, []);
 
+  const handleSourceFilterChange = useCallback((sources: string[]) => {
+    setSourceFilters(sources);
+  }, []);
+
+  const handleIsBuiltInFiltersChange = useCallback((values: IsBuiltInFilterValue[]) => {
+    setIsBuiltInFilters(values);
+  }, []);
+
+  const handleIsPinnedFiltersChange = useCallback((values: IsPinnedFilterValue[]) => {
+    setIsPinnedFilters(values);
+  }, []);
+
   const handleSortFieldChange = useCallback((field: SortField) => {
     setSortField(field);
     try {
@@ -387,6 +413,9 @@ export function CharacterEditorLibrary() {
     setChipFilters([]);
     setLocaleFilters([]);
     setTagFilters([]);
+    setSourceFilters([]);
+    setIsBuiltInFilters([]);
+    setIsPinnedFilters([]);
   }, []);
 
   // Use pure function to check if filters are active
@@ -497,6 +526,13 @@ export function CharacterEditorLibrary() {
               availableTags={availableTags}
               tagFilters={tagFilters}
               onTagFilterChange={handleTagFilterChange}
+              availableSources={availableSources}
+              sourceFilters={sourceFilters}
+              onSourceFilterChange={handleSourceFilterChange}
+              isBuiltInFilters={isBuiltInFilters}
+              onIsBuiltInFiltersChange={handleIsBuiltInFiltersChange}
+              isPinnedFilters={isPinnedFilters}
+              onIsPinnedFiltersChange={handleIsPinnedFiltersChange}
               sortField={sortField}
               sortDirection={sortDirection}
               onSortFieldChange={handleSortFieldChange}

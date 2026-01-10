@@ -18,13 +18,15 @@
  */
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 import { SingleSelectDropdown } from "@/components/ui/SingleSelectDropdown";
 import {
   PAGE_SIZE_OPTIONS,
   type PageSize,
   type PaginatedResult,
+  type IsBuiltInFilterValue,
+  type IsPinnedFilterValue,
 } from "@/lib/character-editor/library/filters";
 
 export type SortField =
@@ -57,6 +59,16 @@ export const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: "system", label: "System" },
   { value: "chip", label: "Chip" },
   { value: "locale", label: "Locale" },
+];
+
+export const IS_BUILT_IN_OPTIONS: { value: IsBuiltInFilterValue; label: string }[] = [
+  { value: "built-in", label: "Built-in" },
+  { value: "user-created", label: "User Created" },
+];
+
+export const IS_PINNED_OPTIONS: { value: IsPinnedFilterValue; label: string }[] = [
+  { value: "pinned", label: "Pinned" },
+  { value: "not-pinned", label: "Not Pinned" },
 ];
 
 export interface LibraryFiltersProps {
@@ -108,6 +120,20 @@ export interface LibraryFiltersProps {
   tagFilters?: string[];
   /** Callback when tag filters change */
   onTagFilterChange?: (tags: string[]) => void;
+  /** Available sources from library */
+  availableSources?: string[];
+  /** Current source filters (multi-select) */
+  sourceFilters?: string[];
+  /** Callback when source filters change */
+  onSourceFilterChange?: (sources: string[]) => void;
+  /** Current isBuiltIn filters (multi-select) */
+  isBuiltInFilters?: IsBuiltInFilterValue[];
+  /** Callback when isBuiltIn filters change */
+  onIsBuiltInFiltersChange?: (values: IsBuiltInFilterValue[]) => void;
+  /** Current isPinned filters (multi-select) */
+  isPinnedFilters?: IsPinnedFilterValue[];
+  /** Callback when isPinned filters change */
+  onIsPinnedFiltersChange?: (values: IsPinnedFilterValue[]) => void;
   /** Current sort field */
   sortField?: SortField;
   /** Current sort direction */
@@ -156,6 +182,13 @@ export function LibraryFilters({
   availableTags = [],
   tagFilters = [],
   onTagFilterChange,
+  availableSources = [],
+  sourceFilters = [],
+  onSourceFilterChange,
+  isBuiltInFilters = [],
+  onIsBuiltInFiltersChange,
+  isPinnedFilters = [],
+  onIsPinnedFiltersChange,
   sortField = "updatedAt",
   sortDirection = "desc",
   onSortFieldChange,
@@ -166,6 +199,9 @@ export function LibraryFilters({
   onPageSizeChange,
   onPageChange,
 }: LibraryFiltersProps) {
+  // State for collapsible filter section
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
   // Get all manufacturers from the library
   const allManufacturers = useMemo(() => {
     return [...availableManufacturers].sort();
@@ -194,6 +230,9 @@ export function LibraryFilters({
     onChipFilterChange?.([]);
     onLocaleFilterChange?.([]);
     onTagFilterChange?.([]);
+    onSourceFilterChange?.([]);
+    onIsBuiltInFiltersChange?.([]);
+    onIsPinnedFiltersChange?.([]);
   }, [
     onSearchChange,
     onSizeFilterChange,
@@ -203,6 +242,9 @@ export function LibraryFilters({
     onChipFilterChange,
     onLocaleFilterChange,
     onTagFilterChange,
+    onSourceFilterChange,
+    onIsBuiltInFiltersChange,
+    onIsPinnedFiltersChange,
   ]);
 
   const hasActiveFilters =
@@ -214,7 +256,39 @@ export function LibraryFilters({
     systemFilters.length > 0 ||
     chipFilters.length > 0 ||
     localeFilters.length > 0 ||
-    tagFilters.length > 0;
+    tagFilters.length > 0 ||
+    sourceFilters.length > 0 ||
+    isBuiltInFilters.length > 0 ||
+    isPinnedFilters.length > 0;
+
+  // Check if any dropdown filters are active (excludes search query)
+  const hasActiveDropdownFilters =
+    widthFilters.length > 0 ||
+    heightFilters.length > 0 ||
+    characterCountFilters.length > 0 ||
+    manufacturerFilters.length > 0 ||
+    systemFilters.length > 0 ||
+    chipFilters.length > 0 ||
+    localeFilters.length > 0 ||
+    tagFilters.length > 0 ||
+    sourceFilters.length > 0 ||
+    isBuiltInFilters.length > 0 ||
+    isPinnedFilters.length > 0;
+
+  // Count active dropdown filter categories for badge
+  const activeDropdownFilterCount = [
+    widthFilters.length > 0,
+    heightFilters.length > 0,
+    characterCountFilters.length > 0,
+    manufacturerFilters.length > 0,
+    systemFilters.length > 0,
+    chipFilters.length > 0,
+    localeFilters.length > 0,
+    tagFilters.length > 0,
+    sourceFilters.length > 0,
+    isBuiltInFilters.length > 0,
+    isPinnedFilters.length > 0,
+  ].filter(Boolean).length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -258,6 +332,36 @@ export function LibraryFilters({
           )}
         </div>
 
+        {/* Filter toggle button */}
+        <button
+          type="button"
+          onClick={() => setFiltersExpanded(!filtersExpanded)}
+          className={`flex items-center gap-1 px-3 py-2 border rounded-lg transition-colors ${
+            filtersExpanded
+              ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+              : hasActiveDropdownFilters
+                ? "bg-retro-cyan/20 border-retro-cyan text-retro-cyan"
+                : "bg-retro-navy/50 border-retro-grid/50 text-gray-400 hover:text-gray-200 hover:border-retro-grid"
+          }`}
+          aria-expanded={filtersExpanded}
+          aria-label={filtersExpanded ? "Hide filters" : "Show filters"}
+          title={filtersExpanded ? "Hide filters" : "Show filters"}
+        >
+          {/* Filter funnel icon */}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
+          </svg>
+          {/* Badge showing active filter count */}
+          {activeDropdownFilterCount > 0 && (
+            <span className="text-xs font-medium">{activeDropdownFilterCount}</span>
+          )}
+        </button>
+
         {/* Vertical separator */}
         {onSortFieldChange && onSortDirectionToggle && <div className="w-px bg-retro-grid/50 mx-2 self-stretch" />}
 
@@ -292,99 +396,152 @@ export function LibraryFilters({
         )}
       </div>
 
-      {/* Filter dropdowns */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-        {/* Width filter */}
-        <MultiSelectDropdown
-          label="Width"
-          options={availableWidths.map((w) => ({ value: w, label: `${w}px` }))}
-          selected={widthFilters}
-          onChange={(widths) => onSizeFilterChange(widths, heightFilters)}
-          placeholder="Width"
-          allOptionLabel="Any width"
-        />
+      {/* Collapsible filter dropdowns */}
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          filtersExpanded ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+        }`}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pt-1">
+          {/* Type (Built-in) filter */}
+          {onIsBuiltInFiltersChange && (
+            <MultiSelectDropdown
+              label="Type"
+              options={IS_BUILT_IN_OPTIONS}
+              selected={isBuiltInFilters}
+              onChange={onIsBuiltInFiltersChange}
+              placeholder="Type"
+              allOptionLabel="Any type"
+              className="min-w-[200px]"
+            />
+          )}
 
-        {/* Height filter */}
-        <MultiSelectDropdown
-          label="Height"
-          options={availableHeights.map((h) => ({ value: h, label: `${h}px` }))}
-          selected={heightFilters}
-          onChange={(heights) => onSizeFilterChange(widthFilters, heights)}
-          placeholder="Height"
-          allOptionLabel="Any height"
-        />
-
-        {/* Character count filter */}
-        {onCharacterCountFilterChange && (
+          {/* Width filter */}
           <MultiSelectDropdown
-            label="Count"
-            options={availableCharacterCounts.map((c) => ({ value: c, label: `${c} chars` }))}
-            selected={characterCountFilters}
-            onChange={onCharacterCountFilterChange}
-            placeholder="Count"
-            allOptionLabel="Any count"
+            label="Width"
+            options={availableWidths.map((w) => ({ value: w, label: `${w}px` }))}
+            selected={widthFilters}
+            onChange={(widths) => onSizeFilterChange(widths, heightFilters)}
+            placeholder="Width"
+            allOptionLabel="Any width"
+            className="min-w-[200px]"
           />
-        )}
 
-        {/* Manufacturer filter */}
-        {onManufacturerFilterChange && (
+          {/* Height filter */}
           <MultiSelectDropdown
-            label="Manufacturer"
-            options={allManufacturers.map((m) => ({ value: m, label: m }))}
-            selected={manufacturerFilters}
-            onChange={onManufacturerFilterChange}
-            placeholder="Manufacturer"
-            allOptionLabel="Any manufacturer"
+            label="Height"
+            options={availableHeights.map((h) => ({ value: h, label: `${h}px` }))}
+            selected={heightFilters}
+            onChange={(heights) => onSizeFilterChange(widthFilters, heights)}
+            placeholder="Height"
+            allOptionLabel="Any height"
+            className="min-w-[200px]"
           />
-        )}
 
-        {/* System filter */}
-        {onSystemFilterChange && (
-          <MultiSelectDropdown
-            label="System"
-            options={systemsForManufacturers.map((s) => ({ value: s, label: s }))}
-            selected={systemFilters}
-            onChange={onSystemFilterChange}
-            placeholder="System"
-            allOptionLabel="Any system"
-          />
-        )}
+          {/* Character count filter */}
+          {onCharacterCountFilterChange && (
+            <MultiSelectDropdown
+              label="Count"
+              options={availableCharacterCounts.map((c) => ({ value: c, label: `${c} chars` }))}
+              selected={characterCountFilters}
+              onChange={onCharacterCountFilterChange}
+              placeholder="Count"
+              allOptionLabel="Any count"
+              className="min-w-[200px]"
+            />
+          )}
 
-        {/* Chip filter */}
-        {onChipFilterChange && (
-          <MultiSelectDropdown
-            label="Chip"
-            options={availableChips.map((c) => ({ value: c, label: c }))}
-            selected={chipFilters}
-            onChange={onChipFilterChange}
-            placeholder="Chip"
-            allOptionLabel="Any chip"
-          />
-        )}
+          {/* Manufacturer filter */}
+          {onManufacturerFilterChange && (
+            <MultiSelectDropdown
+              label="Manufacturer"
+              options={allManufacturers.map((m) => ({ value: m, label: m }))}
+              selected={manufacturerFilters}
+              onChange={onManufacturerFilterChange}
+              placeholder="Manufacturer"
+              allOptionLabel="Any manufacturer"
+              className="min-w-[200px]"
+            />
+          )}
 
-        {/* Locale filter */}
-        {onLocaleFilterChange && (
-          <MultiSelectDropdown
-            label="Locale"
-            options={availableLocales.map((l) => ({ value: l, label: l }))}
-            selected={localeFilters}
-            onChange={onLocaleFilterChange}
-            placeholder="Locale"
-            allOptionLabel="Any locale"
-          />
-        )}
+          {/* System filter */}
+          {onSystemFilterChange && (
+            <MultiSelectDropdown
+              label="System"
+              options={systemsForManufacturers.map((s) => ({ value: s, label: s }))}
+              selected={systemFilters}
+              onChange={onSystemFilterChange}
+              placeholder="System"
+              allOptionLabel="Any system"
+              className="min-w-[200px]"
+            />
+          )}
 
-        {/* Tags filter */}
-        {onTagFilterChange && availableTags.length > 0 && (
-          <MultiSelectDropdown
-            label="Tags"
-            options={availableTags.map((t) => ({ value: t, label: t }))}
-            selected={tagFilters}
-            onChange={onTagFilterChange}
-            placeholder="Tags"
-            allOptionLabel="Any tag"
-          />
-        )}
+          {/* Chip filter */}
+          {onChipFilterChange && (
+            <MultiSelectDropdown
+              label="Chip"
+              options={availableChips.map((c) => ({ value: c, label: c }))}
+              selected={chipFilters}
+              onChange={onChipFilterChange}
+              placeholder="Chip"
+              allOptionLabel="Any chip"
+              className="min-w-[200px]"
+            />
+          )}
+
+          {/* Locale filter */}
+          {onLocaleFilterChange && (
+            <MultiSelectDropdown
+              label="Locale"
+              options={availableLocales.map((l) => ({ value: l, label: l }))}
+              selected={localeFilters}
+              onChange={onLocaleFilterChange}
+              placeholder="Locale"
+              allOptionLabel="Any locale"
+              className="min-w-[200px]"
+            />
+          )}
+
+          {/* Tags filter */}
+          {onTagFilterChange && availableTags.length > 0 && (
+            <MultiSelectDropdown
+              label="Tags"
+              options={availableTags.map((t) => ({ value: t, label: t }))}
+              selected={tagFilters}
+              onChange={onTagFilterChange}
+              placeholder="Tags"
+              allOptionLabel="Any tag"
+              className="min-w-[200px]"
+            />
+          )}
+
+          {/* Source filter */}
+          {onSourceFilterChange && availableSources.length > 0 && (
+            <MultiSelectDropdown
+              label="Source"
+              options={availableSources.map((s) => ({ value: s, label: s }))}
+              selected={sourceFilters}
+              onChange={onSourceFilterChange}
+              placeholder="Source"
+              allOptionLabel="Any source"
+              className="min-w-[200px]"
+            />
+          )}
+
+          {/* Pinned filter */}
+          {onIsPinnedFiltersChange && (
+            <MultiSelectDropdown
+              label="Pinned"
+              options={IS_PINNED_OPTIONS}
+              selected={isPinnedFilters}
+              onChange={onIsPinnedFiltersChange}
+              placeholder="Pinned"
+              allOptionLabel="Any"
+              className="min-w-[200px]"
+            />
+          )}
+        </div>
       </div>
 
       {/* Results count, pagination, and clear button */}
