@@ -141,13 +141,18 @@ export function countActiveDropdownFilters(filters: LibraryFilterState): number 
 
 /**
  * Check if a character set matches the search query
- * Searches across name, description, source, manufacturer, system, chip, locale, tags, and isBuiltIn status
+ * Searches across name, description, source, manufacturer, system, chip, locale, tags, notes, and isBuiltIn status
  */
 export function matchesSearchQuery(set: SerializedCharacterSet, query: string): boolean {
   if (!query.trim()) return true;
 
   const lowerQuery = query.toLowerCase();
   const tagsMatch = (set.metadata.tags ?? []).some((tag) => tag.toLowerCase().includes(lowerQuery));
+
+  // Check notes content
+  const notesMatch = (set.metadata.notes ?? []).some((note) =>
+    note.text.toLowerCase().includes(lowerQuery)
+  );
 
   // Check isBuiltIn status - match common search terms
   const builtInTerms = ["built-in", "builtin", "built in"];
@@ -165,6 +170,7 @@ export function matchesSearchQuery(set: SerializedCharacterSet, query: string): 
     (set.metadata.chip?.toLowerCase().includes(lowerQuery) ?? false) ||
     (set.metadata.locale?.toLowerCase().includes(lowerQuery) ?? false) ||
     tagsMatch ||
+    notesMatch ||
     isBuiltInMatch
   );
 }

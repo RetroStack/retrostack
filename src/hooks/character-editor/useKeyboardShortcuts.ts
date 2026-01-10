@@ -147,6 +147,7 @@ export function createEditorShortcuts(actions: {
   showAsciiMap?: () => void;
   showTextPreview?: () => void;
   showSnapshots?: () => void;
+  showNotes?: () => void;
   // Toolbar actions
   exportSet?: () => void;
   importSet?: () => void;
@@ -399,6 +400,16 @@ export function createEditorShortcuts(actions: {
             action: actions.showSnapshots,
             description: "Snapshots",
             context: "Editor",
+          },
+        ]
+      : []),
+    ...(actions.showNotes
+      ? [
+          {
+            key: "n",
+            action: actions.showNotes,
+            description: "Notes",
+            context: "View",
           },
         ]
       : []),

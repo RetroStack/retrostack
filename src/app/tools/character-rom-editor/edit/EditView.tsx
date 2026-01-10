@@ -45,11 +45,13 @@ import { TextPreviewModal } from "./modals/TextPreviewModal";
 import { SnapshotsModal } from "./modals/SnapshotsModal";
 import { ShareModal } from "./modals/ShareModal";
 import { OverlaySearchModal } from "./modals/OverlaySearchModal";
+import { NotesModal } from "./modals/NotesModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useCharacterLibrary } from "@/hooks/character-editor/useCharacterLibrary";
 import { useAutoSave } from "@/hooks/character-editor/useAutoSave";
 import { useKeyboardShortcuts, createEditorShortcuts } from "@/hooks/character-editor/useKeyboardShortcuts";
 import { useSnapshots } from "@/hooks/character-editor/useSnapshots";
+import { useNotes } from "@/hooks/character-editor/useNotes";
 import { useCharacterEditor } from "@/hooks/character-editor/useCharacterEditor";
 import { CharacterSet, AnchorPoint, generateId } from "@/lib/character-editor/types";
 import { getActiveColors, CustomColors } from "@/lib/character-editor/data/colorPresets";
@@ -167,6 +169,7 @@ export function EditView() {
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
 
   // Overlay state
   const [overlayCharacterSet, setOverlayCharacterSet] = useState<CharacterSet | null>(null);
@@ -191,6 +194,12 @@ export function EditView() {
 
   // Snapshots
   const snapshots = useSnapshots({
+    characterSetId: id,
+    enabled: !!characterSet,
+  });
+
+  // Notes
+  const notes = useNotes({
     characterSetId: id,
     enabled: !!characterSet,
   });
@@ -575,6 +584,7 @@ export function EditView() {
         showAsciiMap: () => setShowAsciiMap(true),
         showTextPreview: () => setShowTextPreview(true),
         showSnapshots: () => setShowSnapshots(true),
+        showNotes: () => setShowNotesModal(true),
         // Toolbar actions
         exportSet: handleExport,
         importSet: () => setShowImportModal(true),
@@ -820,6 +830,26 @@ export function EditView() {
       onClick: () => setShowReorderModal(true),
       priority: 0,
     },
+    {
+      id: "notes",
+      label: "Notes",
+      tooltip: "Add notes and annotations",
+      shortcut: "N",
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+          />
+        </svg>
+      ),
+      onClick: () => setShowNotesModal(true),
+      priority: 1,
+      active: notes.hasNotes,
+      activeVariant: "amber" as const,
+    },
     { type: "separator", id: "sep-1" },
     // Group 2: Edit history
     {
@@ -974,6 +1004,8 @@ export function EditView() {
       ),
       onClick: () => setShowSnapshots(true),
       priority: 1,
+      active: snapshots.snapshots.length > 0,
+      activeVariant: "amber" as const,
     },
     { type: "separator", id: "sep-4" },
     // Group 5: Import/Export/Share Tools
@@ -1455,6 +1487,19 @@ export function EditView() {
         onDelete={handleSnapshotDelete}
         onRename={snapshots.rename}
         onRestoreApply={handleSnapshotRestore}
+      />
+
+      {/* Notes modal */}
+      <NotesModal
+        isOpen={showNotesModal}
+        onClose={() => setShowNotesModal(false)}
+        notes={notes.notes}
+        loading={notes.loading}
+        error={notes.error}
+        characterSetName={characterSet?.metadata.name ?? ""}
+        onAdd={notes.addNote}
+        onUpdate={notes.updateNote}
+        onDelete={notes.deleteNote}
       />
 
       {/* Share modal */}

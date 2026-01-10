@@ -5,7 +5,7 @@
  * Handles CRUD operations, search, and filtering.
  */
 
-import { SerializedCharacterSet, generateId } from "../types";
+import { SerializedCharacterSet, generateId, CharacterSetNote } from "../types";
 import {
   DB_NAME,
   DB_VERSION,
@@ -205,6 +205,26 @@ class CharacterStorage implements ICharacterSetStorage {
               }
             };
           }
+
+          // Migration from v6 to v7: add notes field
+          if (oldVersion < 7) {
+            const store = transaction.objectStore(CHARACTER_EDITOR_STORE_NAME);
+
+            // Migrate existing records to add notes field
+            const cursorRequest = store.openCursor();
+            cursorRequest.onsuccess = (e) => {
+              const cursor = (e.target as IDBRequest<IDBCursorWithValue>).result;
+              if (cursor) {
+                const record = cursor.value;
+                // Add notes field if missing
+                if (record.metadata && record.metadata.notes === undefined) {
+                  record.metadata.notes = [];
+                }
+                cursor.update(record);
+                cursor.continue();
+              }
+            };
+          }
         }
 
         // Create snapshots store (for all versions, including new and migrating DBs)
@@ -234,7 +254,7 @@ class CharacterStorage implements ICharacterSetStorage {
       const data = this.kvStorage.getItem(CHARACTER_EDITOR_STORAGE_KEY_FALLBACK);
       if (!data) return [];
       const sets = JSON.parse(data) as SerializedCharacterSet[];
-      // Ensure manufacturer/system/locale/isPinned fields exist for migrated data
+      // Ensure manufacturer/system/locale/isPinned/notes fields exist for migrated data
       return sets.map((set) => ({
         ...set,
         metadata: {
@@ -243,6 +263,7 @@ class CharacterStorage implements ICharacterSetStorage {
           system: set.metadata.system ?? "",
           locale: set.metadata.locale ?? "",
           isPinned: set.metadata.isPinned ?? false,
+          notes: set.metadata.notes ?? [],
         },
       }));
     } catch {
@@ -415,6 +436,114 @@ class CharacterStorage implements ICharacterSetStorage {
 
     await this.save(updated);
     return newPinnedState;
+  }
+
+  /**
+   * Add a note to a character set
+   */
+  async addNote(id: string, text: string): Promise<CharacterSetNote> {
+    await this.initialize();
+
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const now = Date.now();
+    const note: CharacterSetNote = {
+      id: generateId(),
+      text,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: [...(set.metadata.notes ?? []), note],
+      },
+    };
+
+    await this.save(updated);
+    return note;
+  }
+
+  /**
+   * Update a note's text
+   */
+  async updateNote(id: string, noteId: string, text: string): Promise<CharacterSetNote> {
+    await this.initialize();
+
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const notes = set.metadata.notes ?? [];
+    const noteIndex = notes.findIndex((n) => n.id === noteId);
+    if (noteIndex === -1) {
+      throw new Error("Note not found");
+    }
+
+    const updatedNote: CharacterSetNote = {
+      ...notes[noteIndex],
+      text,
+      updatedAt: Date.now(),
+    };
+
+    const updatedNotes = [...notes];
+    updatedNotes[noteIndex] = updatedNote;
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: updatedNotes,
+      },
+    };
+
+    await this.save(updated);
+    return updatedNote;
+  }
+
+  /**
+   * Delete a note from a character set
+   */
+  async deleteNote(id: string, noteId: string): Promise<void> {
+    await this.initialize();
+
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const notes = set.metadata.notes ?? [];
+    const updatedNotes = notes.filter((n) => n.id !== noteId);
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: updatedNotes,
+      },
+    };
+
+    await this.save(updated);
+  }
+
+  /**
+   * Get all notes for a character set
+   */
+  async getNotes(id: string): Promise<CharacterSetNote[]> {
+    await this.initialize();
+
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    return set.metadata.notes ?? [];
   }
 
   /**

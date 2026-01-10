@@ -44,7 +44,37 @@ export interface Character {
 }
 
 /**
+ * Note attached to a character set
+ */
+export interface CharacterSetNote {
+  /** Unique identifier */
+  id: string;
+  /** Note content (text) */
+  text: string;
+  /** When the note was created */
+  createdAt: number;
+  /** When the note was last updated */
+  updatedAt: number;
+}
+
+/**
+ * User-owned metadata (modifiable even for built-in sets)
+ * These fields represent user preferences, not character set data.
+ * They are preserved when built-in character sets are updated.
+ */
+export interface UserMetadata {
+  /** Whether this character set is pinned to appear first */
+  isPinned?: boolean;
+  /** User notes attached to this character set */
+  notes?: CharacterSetNote[];
+}
+
+/**
  * Character set metadata for library storage
+ *
+ * Note: isPinned and notes are "user-owned" fields that can be modified
+ * even on built-in character sets and are preserved during updates.
+ * All other fields are "character set owned" and are read-only for built-in sets.
  */
 export interface CharacterSetMetadata {
   /** Unique identifier (UUID) */
@@ -69,12 +99,19 @@ export interface CharacterSetMetadata {
   updatedAt: number;
   /** Whether this is a built-in character set */
   isBuiltIn: boolean;
-  /** Whether this character set is pinned to appear first in search results */
-  isPinned?: boolean;
   /** Version of the built-in character set (used for auto-updates, only for isBuiltIn: true) */
   builtInVersion?: number;
   /** User-defined tags for organization */
   tags?: string[];
+
+  // ============================================================================
+  // User-owned fields (preserved during built-in updates, modifiable on any set)
+  // ============================================================================
+
+  /** Whether this character set is pinned to appear first in search results */
+  isPinned?: boolean;
+  /** User notes attached to this character set */
+  notes?: CharacterSetNote[];
 }
 
 /**

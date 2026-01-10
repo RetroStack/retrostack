@@ -5,7 +5,7 @@
  * and testing without browser APIs (localStorage, IndexedDB).
  */
 
-import type { SerializedCharacterSet, CharacterSetConfig, Character } from "../types";
+import type { SerializedCharacterSet, CharacterSetConfig, Character, CharacterSetNote } from "../types";
 
 /**
  * Key-value storage interface (localStorage abstraction)
@@ -47,6 +47,16 @@ export interface ICharacterSetStorage {
   // Metadata operations
   /** Toggle the pinned state of a character set, returns new pinned state */
   togglePinned(id: string): Promise<boolean>;
+
+  // Notes operations (user-owned, modifiable on any set including built-in)
+  /** Add a note to a character set, returns the created note */
+  addNote(id: string, text: string): Promise<CharacterSetNote>;
+  /** Update a note's text, returns updated note */
+  updateNote(id: string, noteId: string, text: string): Promise<CharacterSetNote>;
+  /** Delete a note from a character set */
+  deleteNote(id: string, noteId: string): Promise<void>;
+  /** Get all notes for a character set */
+  getNotes(id: string): Promise<CharacterSetNote[]>;
 
   // Search and filter
   /** Search character sets by text (name, description, source, etc.) */

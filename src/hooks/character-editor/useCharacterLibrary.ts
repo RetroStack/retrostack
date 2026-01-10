@@ -142,8 +142,9 @@ export function useCharacterLibrary(options?: UseCharacterLibraryOptions): UseCh
           const existing = existingById.get(id);
           const builtInSet = getBuiltInCharacterSetById(id);
           if (builtInSet && existing) {
-            // Preserve user preferences (pinned state)
+            // Preserve user-owned fields (pinned state and notes)
             builtInSet.metadata.isPinned = existing.metadata.isPinned;
+            builtInSet.metadata.notes = existing.metadata.notes;
             await storage.save(builtInSet);
           }
         }

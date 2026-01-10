@@ -18,9 +18,10 @@
  */
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { CharacterPreview } from "../character/CharacterPreview";
 import { OverflowMenu } from "@/components/ui/OverflowMenu";
+import { NotesPreviewModal } from "./NotesPreviewModal";
 import { SerializedCharacterSet } from "@/lib/character-editor/types";
 import { deserializeCharacterSet } from "@/lib/character-editor/import/binary";
 import { formatSize } from "@/lib/character-editor/utils";
@@ -70,6 +71,9 @@ export function LibraryCard({
   }, [characterSet]);
 
   const characterCount = characters.length;
+
+  // Notes preview modal state
+  const [showNotesPreview, setShowNotesPreview] = useState(false);
 
   // Format date for display
   const formatDate = (timestamp: number) => {
@@ -170,6 +174,20 @@ export function LibraryCard({
                 <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
               </svg>
             )}
+            {metadata.notes && metadata.notes.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowNotesPreview(true);
+                }}
+                className="flex items-center gap-0.5 text-retro-amber flex-shrink-0 hover:text-retro-amber/80 transition-colors"
+                title={`${metadata.notes.length} note${metadata.notes.length !== 1 ? "s" : ""} - Click to view`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+              </button>
+            )}
             {metadata.name}
           </h3>
           {(metadata.manufacturer || metadata.system || metadata.chip || metadata.locale) && (
@@ -245,6 +263,14 @@ export function LibraryCard({
           </span>
         </div>
       </div>
+
+      {/* Notes preview modal */}
+      <NotesPreviewModal
+        isOpen={showNotesPreview}
+        onClose={() => setShowNotesPreview(false)}
+        notes={metadata.notes ?? []}
+        characterSetName={metadata.name}
+      />
     </div>
   );
 }

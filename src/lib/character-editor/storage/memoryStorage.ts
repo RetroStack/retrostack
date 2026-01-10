@@ -14,7 +14,7 @@ import type {
   AutoSaveData,
   IAutoSaveStorage,
 } from "./interfaces";
-import type { SerializedCharacterSet } from "../types";
+import type { SerializedCharacterSet, CharacterSetNote } from "../types";
 import { generateId } from "../types";
 
 /**
@@ -151,6 +151,94 @@ export class InMemoryCharacterSetStorage implements ICharacterSetStorage {
 
     await this.save(updated);
     return newPinnedState;
+  }
+
+  async addNote(id: string, text: string): Promise<CharacterSetNote> {
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const now = Date.now();
+    const note: CharacterSetNote = {
+      id: generateId(),
+      text,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: [...(set.metadata.notes ?? []), note],
+      },
+    };
+
+    await this.save(updated);
+    return note;
+  }
+
+  async updateNote(id: string, noteId: string, text: string): Promise<CharacterSetNote> {
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const notes = set.metadata.notes ?? [];
+    const noteIndex = notes.findIndex((n) => n.id === noteId);
+    if (noteIndex === -1) {
+      throw new Error("Note not found");
+    }
+
+    const updatedNote: CharacterSetNote = {
+      ...notes[noteIndex],
+      text,
+      updatedAt: Date.now(),
+    };
+
+    const updatedNotes = [...notes];
+    updatedNotes[noteIndex] = updatedNote;
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: updatedNotes,
+      },
+    };
+
+    await this.save(updated);
+    return updatedNote;
+  }
+
+  async deleteNote(id: string, noteId: string): Promise<void> {
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    const notes = set.metadata.notes ?? [];
+    const updatedNotes = notes.filter((n) => n.id !== noteId);
+
+    const updated: SerializedCharacterSet = {
+      ...set,
+      metadata: {
+        ...set.metadata,
+        notes: updatedNotes,
+      },
+    };
+
+    await this.save(updated);
+  }
+
+  async getNotes(id: string): Promise<CharacterSetNote[]> {
+    const set = await this.getById(id);
+    if (!set) {
+      throw new Error("Character set not found");
+    }
+
+    return set.metadata.notes ?? [];
   }
 
   async search(query: string): Promise<SerializedCharacterSet[]> {
